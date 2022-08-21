@@ -14,33 +14,39 @@ from sklearn.metrics import mean_absolute_error
 from sklearn.metrics import r2_score
 
 
-def main(results, 
+
+def main(output_folder,
          measurement_point_name,
-         idx_slurm_array_helper,
-         n_lags_X, 
+         model_name,
+         optimization_method,
+         n_lags_X,
          n_lags_y_max,
-         model_name, 
-         optimization_method):
+         results):
     
-    results_folder = './results_' + measurement_point_name \
-                    + '_Xlag' + str(n_lags_X) \
-                    + '_ylag_max' + str(n_lags_y_max) \
-                    + '_' + model_name \
-                    + '_' + optimization_method
+    
+    dummy = '{}_{}_{}_Xlag{}_ylagmax{}'.format(measurement_point_name,
+                                                model_name,
+                                                optimization_method,
+                                                str(n_lags_X),
+                                                str(n_lags_y_max))
+    
+    results_folder = os.path.join(output_folder,
+                                  dummy)
+    
     if not os.path.exists(results_folder):
         os.makedirs(results_folder)
+    
     
     print('saveplots')
     savePlots(results, results_folder)
     
     print('save numeric')
-    saveNumeric(results,
-                measurement_point_name,
-                idx_slurm_array_helper,
-                n_lags_X,
-                n_lags_y_max,
+    saveNumeric(measurement_point_name,
                 model_name,
                 optimization_method,
+                n_lags_X,
+                n_lags_y_max,
+                results,
                 results_folder)
     
 
@@ -111,26 +117,24 @@ def savePlots(results, results_folder):
         plt.close()
     
 
-    
-    
 
-def saveNumeric(results,
-                measurement_point_name,
-                idx_slurm_array_helper,
-                n_lags_X,
-                n_lags_y_max,
+
+
+def saveNumeric(measurement_point_name,
                 model_name,
                 optimization_method,
-                results_folder):    
+                n_lags_X,
+                n_lags_y_max,
+                results,
+                results_folder):
     
-    fname = results_folder + '/' + 'results.txt'
-    f = open(fname, 'w')
-    f.close()
+    fname_res = results_folder + '/' + 'log.txt'
     
-    g = open('combined_' + measurement_point_name + '_' + str(idx_slurm_array_helper) + '.txt', 'a')
+    fname_com = os.path.join(results_folder,
+                             'results.txt')
     
     
-    with open(fname, 'a') as f:
+    with open(fname_res, 'w') as f, open(fname_com, 'a') as g:
            
         # Basic info
         s = measurement_point_name

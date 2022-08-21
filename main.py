@@ -4,7 +4,6 @@ Created on Tue Sep  1 10:35:57 2020
 
 @author: laukkara
 
-this is from the linux machine
 """
 
 import sys
@@ -25,27 +24,16 @@ import myModels
 import myResults
 
 
-"""
-load data
-split data
-
-create features
-scale
-
-create model
-fit model
-predict
-evaluate
-"""
 
 
 
-
-def load_and_split(measurement_point_name):
+def load_and_split(input_folder, measurement_point_name):
     
     print('main: load_and_split...', flush=True)
     # Read in data
-    vals = pd.read_csv('./input/' + measurement_point_name + '.csv')
+    fname = os.path.join(input_folder,
+                         measurement_point_name + '.csv')
+    vals = pd.read_csv(fname)
     y = vals.iloc[:, [0]].values
     X = vals.iloc[:, 1:].values
     y_names = vals.columns[0:1].to_list()
@@ -158,12 +146,15 @@ def predict(y0, X0, n_lags_X, n_lags_y, scaler_X, scaler_y, model):
 
 
 
-def main(measurement_point_name, n_lags_X, n_lags_y, model_name, optimization_method):
+
+def main(input_folder,
+         measurement_point_name,
+         model_name,
+         optimization_method,
+         n_lags_X,
+         n_lags_y):
     
-    # Jos tulevaisuudessa jollain on vuoden verran dataa, niin
-    # pelkästään siihen interpoloiminen voi helposti aiheuttaa ylisovittamista
-    # Yksi vaihtoehto on olla yli vuoden verran data tai sitten käyttää
-    # ristiinvalidointia.
+
     
     time_start = time.time()
     print('Start time:', \
@@ -172,7 +163,7 @@ def main(measurement_point_name, n_lags_X, n_lags_y, model_name, optimization_me
     # Create and fit model
     print('Load data, create features and fit model...', flush=True)
     X_train0, X_validate0, X_test0, y_train0, y_validate0, y_test0 \
-        = load_and_split(measurement_point_name)
+        = load_and_split(input_folder, measurement_point_name)
     
     X_train, y_train = create_features(X_train0, y_train0, n_lags_X, n_lags_y)
     X_train_scaled, y_train_scaled, scaler_X, scaler_y \
@@ -229,31 +220,31 @@ def main(measurement_point_name, n_lags_X, n_lags_y, model_name, optimization_me
     
 
 if __name__ == '__main__':
-    
-    # # Run once
-    # xopt, fopt, model, \
-    # y_train, y_train_pred, \
-    # y_validate, y_validate_pred, \
-    # y_test, y_test_pred \
-    #     = main(measurement_point_name='Tampere1', n_lags_X=0, n_lags_y=0,
-    #            model_name='xgboost_gbtree')
-
-    
-    # Run multiple times
-    
-    #measurement_point_names = ['Espoo1', 'Espoo2', 'Tampere1', 'Tampere2', 'Valkeakoski']
-    #measurement_point_names = ['Tampere2']
-    measurement_point_names = sys.argv[1:2]
-    n_lags_X = 0
-    n_lags_y_max = 1
+    """
+    # Run multiple times from command line
+    python main.py Tampere1 $idx_start $idx_end
+    python main.py 3 4 6 7 1 2
     
     
-    # These were considered too slow:
-    # model_names_removed = ['svr_poly']
-
-
-# Add OMP and PA
+    # Run once
+    xopt, fopt, model, \
+    y_train, y_train_pred, \
+    y_validate, y_validate_pred, \
+    y_test, y_test_pred \
+        = main(measurement_point_name='Tampere1', n_lags_X=0, n_lags_y=0,
+                model_name='xgboost_gbtree')
+    """
     
+    print(sys.argv)
+    
+    # measurement points
+    measurement_point_names = ['Espoo1', 'Espoo2', 'Tampere1', 'Tampere2', 'Valkeakoski']
+    measurement_point_names = measurement_point_names[int(sys.argv[1]):int(sys.argv[2])]
+    print(measurement_point_names)
+    
+    
+    
+    # ML methods
     model_names = ['dummyregressor',
                     'expfunc',
                     'piecewisefunc',
@@ -302,61 +293,86 @@ if __name__ == '__main__':
                     'lgb_rf',
                     'xgb_gbtree',
                     'xgb_dart']
-    # model_names = ['xgb_gbtree']
-
-    print(sys.argv, flush=True)
-    model_names = model_names[int(sys.argv[2]):int(sys.argv[3])]
+    model_names = model_names[int(sys.argv[3]):int(sys.argv[4])]
+    print(model_names)
+    
+    # These were considered too slow:
+    # model_names_removed = ['svr_poly']
     
     
+    # Optimization methods
+    optimization_methods = ['pso', 'randomizedsearchcv', 'bayessearchcv']
+    optimization_methods = optimization_methods[int(sys.argv[5]):int(sys.argv[6])]
+    print(optimization_methods)
+    
+    
+    
+    # Other parameters
+    input_folder = os.path.join(os.getcwd(),
+                                'input')
+    
+    time_str = time.strftime("%Y-%m-%d-%H-%M-%S",
+                                time.localtime())
+    output_folder = os.path.join(os.getcwd(),
+                                 'output_{}'.format(time_str))
+    
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
+    
+    n_lags_X = 0
+    n_lags_y_max = 1
+    
+    
+    
+    # Loop through different situations
     for measurement_point_name in measurement_point_names:
         
-        # Create/clean file
-        g = open('combined_' + measurement_point_name + '_' + str(sys.argv[2]) + '.txt', 'w')
-        g.close()
-    
         for model_name in model_names:
-        
-            for optimization_method in ['pso', 'randomizedsearchcv', 'bayessearchcv']:
-            #for optimization_method in ['pso']:
+            
+            for optimization_method in optimization_methods:
                 
                 results = []
-            
+                
                 for idx in range(n_lags_y_max):
                     
-#                    if (idx>=1 and model_name=='svr_poly') or \
-#                        (idx>=1 and model_name=='svr_linear') or \
-#                        (idx>=1 and model_name=='nusvr_rbf') or \
-#                        (idx>=1 and model_name=='nusvr_linear'):
-#                        continue
-                    
+                    # Fit model and predict
                     print('ylag:', idx)
+                    
                     xopt, fopt, model, \
                     y_train, y_train_pred, \
                     y_validate, y_validate_pred, \
                     y_test, y_test_pred, \
                     X_train_pred_scaled, X_validate_pred_scaled, X_test_pred_scaled, \
                     wall_clock_time \
-                        = main(measurement_point_name=measurement_point_name, 
-                                n_lags_X=n_lags_X, 
-                                n_lags_y=idx,
-                                model_name=model_name,
-                                optimization_method=optimization_method)
+                        = main(input_folder,
+                               measurement_point_name,
+                               model_name,
+                               optimization_method,
+                               n_lags_X,
+                               idx)
                     
                     results.append({'xopt':xopt, 'fopt':fopt, 'model':model,
                                     'y_train':y_train, 'y_train_pred':y_train_pred,
                                     'y_validate':y_validate, 'y_validate_pred':y_validate_pred,
                                     'y_test':y_test, 'y_test_pred':y_test_pred,
                                     'wall_clock_time':wall_clock_time})
-            
+                    
+                
+    
                 # Plot and save results
                 print('Export results...')
-                myResults.main(results, 
-                                measurement_point_name,
-                                sys.argv[2],
-                                n_lags_X, n_lags_y_max,
-                                model_name, optimization_method)
-
+                myResults.main(output_folder,
+                               measurement_point_name,
+                               model_name,
+                               optimization_method,
+                               n_lags_X,
+                               n_lags_y_max,
+                               results)
+    
+    
+    # combine all results files to single 
+    
     print('End', flush=True)
 
 
-    
+

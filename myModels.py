@@ -4,7 +4,6 @@ Created on Tue Sep  1 17:19:05 2020
 
 @author: laukkara
 
-this is from the linux machine
 """
 import numpy as np
 
@@ -65,8 +64,6 @@ from sklearn.ensemble import AdaBoostRegressor
 from sklearn.ensemble import BaggingRegressor
 from sklearn.ensemble import ExtraTreesRegressor
 from sklearn.ensemble import GradientBoostingRegressor
-# experimentals need to be enabled first:
-from sklearn.experimental import enable_hist_gradient_boosting
 from sklearn.ensemble import HistGradientBoostingRegressor
 from sklearn.ensemble import RandomForestRegressor
 
@@ -74,8 +71,8 @@ from sklearn.ensemble import RandomForestRegressor
 import xgboost as xgb
 import lightgbm as lgb
 
-N_CV = 5
-N_CPU = 4
+N_CV = 3
+N_CPU = 6
 
 
 
