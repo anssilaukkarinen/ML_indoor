@@ -368,7 +368,7 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
         
         elif optimization_method == 'randomizedsearchcv':
             print('Hyperparameter tuning: RandomizedSearchCV')
-            reg_model = Lars()
+            reg_model = Lars(normalize=False)
             distributions = {'n_nonzero_coefs': sp_randint(1, 50)}
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = RandomizedSearchCV(estimator=reg_model, 
@@ -385,7 +385,7 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
     
         elif optimization_method == 'bayessearchcv':
             print('Hyperparameter tuning: BayesSearchCV')
-            reg_model = Lars()
+            reg_model = Lars(normalize=False)
             distributions = {'n_nonzero_coefs': Integer(1, 50, prior='uniform')}
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = BayesSearchCV(estimator=reg_model, 
@@ -426,7 +426,7 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
         
         elif optimization_method == 'randomizedsearchcv':
             print('Hyperparameter tuning: RandomizedSearchCV')
-            reg_model = LassoLars()
+            reg_model = LassoLars(normalize=False)
             distributions = {'alpha': sp_loguniform(a=1e-5, b=100)}
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = RandomizedSearchCV(estimator=reg_model, 
@@ -443,7 +443,7 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
     
         elif optimization_method == 'bayessearchcv':
             print('Hyperparameter tuning: BayesSearchCV')
-            reg_model = LassoLars()
+            reg_model = LassoLars(normalize=False)
             distributions = {'alpha': Real(1e-5, 100, prior='log-uniform')}
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = BayesSearchCV(estimator=reg_model, 
@@ -500,7 +500,7 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
                                        n_jobs=1,
                                        cv=tss,
                                        verbose=1)
-            model.fit(X_train_scaled, y_train_scaled)
+            model.fit(X_train_scaled, y_train_scaled.ravel())
             xopt = model.best_params_
             fopt = -model.best_score_
             print('Model ready!')
@@ -537,8 +537,8 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
                       'y_train_scaled': y_train_scaled,
                       'return_model': False}
             # min_samples, residual_threshold, max_trials, stop_probability
-            lb = [0.05, 1e-3,  50.0,  0.5]
-            ub = [0.95, 100.0, 300.0, 0.95]
+            lb = [0.05, 1e-3,  50.0,  0.8]
+            ub = [0.95, 100.0, 300.0, 0.2]
             xopt, fopt = pso(ransacregressor, lb, ub,
                             kwargs=kwargs,
                             swarmsize=N_SWARMSIZE_MINIMAL_3,
@@ -557,7 +557,7 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             distributions = {'min_samples': sp_uniform(0.05, 0.9),
                              'residual_threshold':sp_loguniform(a=1e-3, b=2.0),
                              'max_trials': sp_randint(50,300),
-                             'stop_probability':sp_uniform(0.5, 0.95)}
+                             'stop_probability':sp_uniform(0.8, 0.2)}
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = RandomizedSearchCV(estimator=reg_model, 
                                        param_distributions=distributions,
@@ -577,7 +577,7 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             distributions = {'min_samples': Real(0.05, 0.9, prior='uniform'),
                              'residual_threshold': Real(1e-3, 2, prior='log-uniform'),
                              'max_trials': Integer(50, 300, prior='uniform'),
-                             'stop_probability': Real(0.5, 0.95, prior='uniform')}
+                             'stop_probability': Real(0.8, 0.2, prior='uniform')}
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = BayesSearchCV(estimator=reg_model, 
                                     search_spaces=distributions,
@@ -798,9 +798,9 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             ub = [1000, 1.0,    2,  2]
             xopt, fopt = pso(kernelridge, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=N_SWARMSIZE_MINIMAL_3,
+                            swarmsize=N_SWARMSIZE_MINIMAL_1,
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_MAXITER_MINIMAL_3, minstep=1e-8,
+                            maxiter=N_MAXITER_MINIMAL_1, minstep=1e-8,
                             minfunc=1e-5, debug=True,
                             processes=1)
             print('pso ready!')
@@ -819,7 +819,7 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = RandomizedSearchCV(estimator=reg_model, 
                                        param_distributions=distributions,
-                                       n_iter=N_ITER_MINIMAL_3,
+                                       n_iter=N_ITER_MINIMAL_1,
                                        scoring='neg_mean_absolute_error',
                                        n_jobs=1,
                                        cv=tss,
@@ -840,7 +840,7 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = BayesSearchCV(estimator=reg_model, 
                                     search_spaces=distributions,
-                                    n_iter=N_BAYESITER_MINIMAL_3,
+                                    n_iter=N_BAYESITER_MINIMAL_1,
                                     scoring='neg_mean_absolute_error',
                                     n_jobs=1,
                                     n_points=1,
@@ -3567,7 +3567,8 @@ def elasticnet(x, **kwargs):
 def lars(x, **kwargs):
     X_train_scaled = kwargs['X_train_scaled']
     y_train_scaled = kwargs['y_train_scaled']
-    model = Lars(n_nonzero_coefs=int(x))
+    model = Lars(n_nonzero_coefs=int(x),
+                 normalize=False)
     tss = TimeSeriesSplit(n_splits=N_CV)
     scores = cross_val_score(model,
                              X_train_scaled,
@@ -3587,7 +3588,8 @@ def lassolars(x, **kwargs):
     # and bayessearchcv
     X_train_scaled = kwargs['X_train_scaled']
     y_train_scaled = kwargs['y_train_scaled']
-    model = LassoLars(alpha=x)
+    model = LassoLars(alpha=x,
+                      normalize=False)
     tss = TimeSeriesSplit(n_splits=N_CV)
     scores = cross_val_score(model,
                              X_train_scaled,
