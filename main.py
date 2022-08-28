@@ -299,6 +299,8 @@ if __name__ == '__main__':
     # These were considered too slow:
     # model_names_removed = ['svr_poly']
     
+    # check randomforest, histgradientboosting
+    
     
     # Optimization methods
     optimization_methods = ['pso', 'randomizedsearchcv', 'bayessearchcv']
