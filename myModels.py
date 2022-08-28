@@ -509,7 +509,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                       'return_model': False}
             # min_samples, residual_threshold, max_trials, stop_probability
             lb = [0.05, 1e-3,  50.0,  0.8]
-            ub = [0.95, 100.0, 300.0, 0.2]
+            ub = [0.95, 100.0, 300.0, 1.0]
             xopt, fopt = pso(ransacregressor, lb, ub,
                             kwargs=kwargs,
                             swarmsize=10+10*len(lb),

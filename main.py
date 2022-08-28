@@ -4,6 +4,9 @@ Created on Tue Sep  1 10:35:57 2020
 
 @author: laukkara
 
+python3 main.py 0 5 10 11 0 3 3 4 1
+python3 main.py 0 1 10 11 0 1 3 4 1
+
 """
 
 import sys
@@ -231,6 +234,7 @@ if __name__ == '__main__':
     python main.py mp_names models optimization_methods N_CV N_ITER N_CPU
     python main.py 3 4 6 7 1 2 4 10 1
     
+    python3 main.py python main.py 0 5 0 48 0 3 4 5 1
     
     # Run once
     xopt, fopt, model, \
@@ -241,6 +245,27 @@ if __name__ == '__main__':
                 model_name='xgboost_gbtree')
     """
     
+    
+    # Input and output folder
+    input_folder = os.path.join(os.getcwd(),
+                                'input')
+    
+    time_str = time.strftime("%Y-%m-%d-%H-%M-%S",
+                                time.localtime())
+    output_folder = os.path.join(os.getcwd(),
+                                 'output_{}'.format(time_str))
+    
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
+    
+    
+    # Redirect sys.stdout
+    # sys_stdout = sys.stdout
+    # fname = os.path.join(output_folder,
+    #                      'log_all.txt')
+    # with open(fname, 'w') as sys.stdout:
+        
+    # Run all the code        
     print(sys.argv)
     
     # measurement points
@@ -323,17 +348,6 @@ if __name__ == '__main__':
     
     
     # Other parameters
-    input_folder = os.path.join(os.getcwd(),
-                                'input')
-    
-    time_str = time.strftime("%Y-%m-%d-%H-%M-%S",
-                                time.localtime())
-    output_folder = os.path.join(os.getcwd(),
-                                 'output_{}'.format(time_str))
-    
-    if not os.path.exists(output_folder):
-        os.makedirs(output_folder)
-    
     n_lags_X = 0
     n_lags_y_max = 1
     
@@ -392,6 +406,8 @@ if __name__ == '__main__':
     # combine all results files to single 
     
     print('End', flush=True)
+    
+
 
 
 
