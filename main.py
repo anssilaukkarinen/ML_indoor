@@ -152,7 +152,8 @@ def main(input_folder,
          model_name,
          optimization_method,
          n_lags_X,
-         n_lags_y):
+         n_lags_y,
+         N_CV, N_ITER, N_CPU):
     
 
     
@@ -169,10 +170,12 @@ def main(input_folder,
     X_train_scaled, y_train_scaled, scaler_X, scaler_y \
         = scale_train(X_train, y_train)
     print('scale_train ok!', flush=True)
-    xopt, fopt, model = myModels.fit_model(X_train_scaled, 
-                                           y_train_scaled,
-                                           model_name,
-                                           optimization_method)
+    xopt, fopt, model = myModels.fit_model(X_train_scaled, y_train_scaled,
+                                           model_name, optimization_method,
+                                           N_CV, N_ITER, N_CPU)
+    
+    
+
     
     # Create features for validation and test
     print('Features for validation and test sets...', flush=True)
@@ -225,6 +228,9 @@ if __name__ == '__main__':
     python main.py Tampere1 $idx_start $idx_end
     python main.py 3 4 6 7 1 2
     
+    python main.py mp_names models optimization_methods N_CV N_ITER N_CPU
+    python main.py 3 4 6 7 1 2 4 10 1
+    
     
     # Run once
     xopt, fopt, model, \
@@ -244,7 +250,7 @@ if __name__ == '__main__':
     
     
     
-    # ML methods
+    # ML methods, 0 48
     model_names = ['dummyregressor',
                     'expfunc',
                     'piecewisefunc',
@@ -308,6 +314,13 @@ if __name__ == '__main__':
     print(optimization_methods)
     
     
+    # number of runs and jobs
+    N_CV = int(sys.argv[7])
+    N_ITER = int(sys.argv[8])
+    N_CPU = int(sys.argv[9])
+    print('N_CV:', N_CV, 'N_ITER:', N_ITER, 'N_CPU:', N_CPU, flush=True)
+    
+    
     
     # Other parameters
     input_folder = os.path.join(os.getcwd(),
@@ -351,7 +364,11 @@ if __name__ == '__main__':
                                model_name,
                                optimization_method,
                                n_lags_X,
-                               idx)
+                               idx,
+                               N_CV, N_ITER, N_CPU)
+                        
+                        
+                        
                     
                     results.append({'xopt':xopt, 'fopt':fopt, 'model':model,
                                     'y_train':y_train, 'y_train_pred':y_train_pred,
