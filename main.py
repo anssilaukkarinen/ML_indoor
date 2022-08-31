@@ -4,6 +4,9 @@ Created on Tue Sep  1 10:35:57 2020
 
 @author: laukkara
 
+python3 main.py 0 5 10 11 0 3 3 4 1
+python3 main.py 0 1 10 11 0 1 3 4 1
+
 """
 
 import sys
@@ -151,7 +154,8 @@ def main(input_folder,
          model_name,
          optimization_method,
          n_lags_X,
-         n_lags_y):
+         n_lags_y,
+         N_CV, N_ITER, N_CPU):
     
 
     
@@ -168,10 +172,12 @@ def main(input_folder,
     X_train_scaled, y_train_scaled, scaler_X, scaler_y \
         = scale_train(X_train, y_train)
     print('scale_train ok!', flush=True)
-    xopt, fopt, model = myModels.fit_model(X_train_scaled, 
-                                           y_train_scaled,
-                                           model_name,
-                                           optimization_method)
+    xopt, fopt, model = myModels.fit_model(X_train_scaled, y_train_scaled,
+                                           model_name, optimization_method,
+                                           N_CV, N_ITER, N_CPU)
+    
+    
+
     
     # Create features for validation and test
     print('Features for validation and test sets...', flush=True)
@@ -224,6 +230,10 @@ if __name__ == '__main__':
     python main.py Tampere1 $idx_start $idx_end
     python main.py 3 4 6 7 1 2
     
+    python main.py mp_names models optimization_methods N_CV N_ITER N_CPU
+    python main.py 3 4 6 7 1 2 4 10 1
+    
+    python3 main.py 0 5 0 48 0 3 4 5 1
     
     # Run once
     xopt, fopt, model, \
@@ -234,6 +244,27 @@ if __name__ == '__main__':
                 model_name='xgboost_gbtree')
     """
     
+    
+    # Input and output folder
+    input_folder = os.path.join(os.getcwd(),
+                                'input')
+    
+    time_str = time.strftime("%Y-%m-%d-%H-%M-%S",
+                                time.localtime())
+    output_folder = os.path.join(os.getcwd(),
+                                 'output_{}'.format(time_str))
+    
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
+    
+    
+    # Redirect sys.stdout
+    # sys_stdout = sys.stdout
+    # fname = os.path.join(output_folder,
+    #                      'log_all.txt')
+    # with open(fname, 'w') as sys.stdout:
+        
+    # Run all the code        
     print(sys.argv)
     
     # measurement points
@@ -243,7 +274,7 @@ if __name__ == '__main__':
     
     
     
-    # ML methods
+    # ML methods, 0 48
     model_names = ['dummyregressor',
                     'expfunc',
                     'piecewisefunc',
@@ -303,6 +334,8 @@ if __name__ == '__main__':
     # nusvr_poly (convergence warning terminated early)
     # svr_poly convergence warning. solver terminated early consider pre-processing your data with standardscaler or minmaxscaler
     
+    # model_names_removed = ['svr_poly'] # with 10+10*len(lb) swarmsize very slow
+    # check randomforest, histgradientboosting
     
     
     # Optimization methods
@@ -311,19 +344,15 @@ if __name__ == '__main__':
     print(optimization_methods)
     
     
+    # number of runs and jobs
+    N_CV = int(sys.argv[7])
+    N_ITER = int(sys.argv[8])
+    N_CPU = int(sys.argv[9])
+    print('N_CV:', N_CV, 'N_ITER:', N_ITER, 'N_CPU:', N_CPU, flush=True)
+    
+    
     
     # Other parameters
-    input_folder = os.path.join(os.getcwd(),
-                                'input')
-    
-    time_str = time.strftime("%Y-%m-%d-%H-%M-%S",
-                                time.localtime())
-    output_folder = os.path.join(os.getcwd(),
-                                 'output_{}'.format(time_str))
-    
-    if not os.path.exists(output_folder):
-        os.makedirs(output_folder)
-    
     n_lags_X = 0
     n_lags_y_max = 1
     
@@ -354,7 +383,11 @@ if __name__ == '__main__':
                                model_name,
                                optimization_method,
                                n_lags_X,
-                               idx)
+                               idx,
+                               N_CV, N_ITER, N_CPU)
+                        
+                        
+                        
                     
                     results.append({'xopt':xopt, 'fopt':fopt, 'model':model,
                                     'y_train':y_train, 'y_train_pred':y_train_pred,
@@ -378,6 +411,8 @@ if __name__ == '__main__':
     # combine all results files to single 
     
     print('End', flush=True)
+    
+
 
 
 

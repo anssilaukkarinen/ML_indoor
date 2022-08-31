@@ -71,57 +71,19 @@ from sklearn.ensemble import RandomForestRegressor
 import xgboost as xgb
 import lightgbm as lgb
 
-N_CV = 3
-N_CPU = 6
 
 
 
 
 
-
-
-# 
-N_SWARMSIZE_MINIMAL_3 = 20
-N_MAXITER_MINIMAL_3 = 50
-
-N_ITER_MINIMAL_3 = 1000
-
-N_BAYESITER_MINIMAL_3 = 250
-
-
-# 
-N_SWARMSIZE_MINIMAL_2 = 10
-N_MAXITER_MINIMAL_2 = 40
-
-N_ITER_MINIMAL_2 = 400
-
-N_BAYESITER_MINIMAL_2 = 200
-
-
-
-# 
-N_SWARMSIZE_MINIMAL_1 = 10
-N_MAXITER_MINIMAL_1 = 10
-
-N_ITER_MINIMAL_1 = 100
-
-N_BAYESITER_MINIMAL_1 = 50
-
-
-
-# swarmsize 3, maxiter 2, iter 6, bayesiter 3
-N_SWARMSIZE_MINIMAL_0 = 5
-N_MAXITER_MINIMAL_0 = 8
-
-N_ITER_MINIMAL_0 = 40
-
-N_BAYESITER_MINIMAL_0 = 20
-
-
-
-def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
+def fit_model(X_train_scaled, y_train_scaled,
+              model_name, optimization_method,
+              N_CV, N_ITER, N_CPU):
 
     print(model_name, optimization_method, flush=True)
+    
+    n_swarmsize_const = 10
+    n_swarmsize_lb = 10
 
     
     
@@ -131,6 +93,7 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
         print('Hyperparameter tuning: None')
         kwargs = {'X_train_scaled': X_train_scaled,
                   'y_train_scaled': y_train_scaled,
+                  'N_CV': N_CV,
                   'return_model': True}
         xopt = np.nan
         fopt, model = dummyregressor(kwargs)
@@ -140,14 +103,17 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
         print('ML: expfunc')
         print('Hyperparameter tuning: None')
         kwargs = {'X_train_scaled': X_train_scaled, 
-                  'y_train_scaled': y_train_scaled}
+                  'y_train_scaled': y_train_scaled,
+                  'N_CV': N_CV}
         xopt, fopt, model = expfunc(kwargs)
-        
+    
+    
     elif model_name == 'piecewisefunc':
         print('ML: piecewisefunc')
         print('Hyperparameter tuning: None')
         kwargs = {'X_train_scaled': X_train_scaled, 
-                  'y_train_scaled': y_train_scaled}
+                  'y_train_scaled': y_train_scaled,
+                  'N_CV': N_CV}
         xopt, fopt, model = piecewise(kwargs)
     
     
@@ -158,6 +124,7 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
         
         kwargs = {'X_train_scaled': X_train_scaled,
                   'y_train_scaled': y_train_scaled,
+                  'N_CV': N_CV,
                   'return_model': True}
         xopt = np.nan
         fopt, model = linearregression(kwargs)
@@ -172,16 +139,17 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             print('hyperparameter tuning: pso')
             kwargs = {'X_train_scaled': X_train_scaled,
                       'y_train_scaled': y_train_scaled,
+                      'N_CV': N_CV,
                       'return_model': False}
             lb = [10.0]
             ub = [10000.0]
             xopt, fopt = pso(ridge, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=N_SWARMSIZE_MINIMAL_3,
+                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_MAXITER_MINIMAL_3, minstep=1e-8,
+                            maxiter=N_ITER, minstep=1e-8,
                             minfunc=1e-5, debug=True,
-                            processes=1)
+                            processes=N_CPU)
             print('pso ready!')
             # Fit model with best hyperparameters:
             kwargs['return_model'] = True
@@ -195,9 +163,9 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = RandomizedSearchCV(estimator=reg_model, 
                                        param_distributions=distributions,
-                                       n_iter=N_ITER_MINIMAL_3,
+                                       n_iter=N_ITER,
                                        scoring='neg_mean_absolute_error',
-                                       n_jobs=1,
+                                       n_jobs=N_CPU,
                                        cv=tss,
                                        verbose=1)
             model.fit(X_train_scaled, y_train_scaled)
@@ -212,9 +180,9 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = BayesSearchCV(estimator=reg_model, 
                                     search_spaces=distributions,
-                                    n_iter=N_BAYESITER_MINIMAL_3,
+                                    n_iter=N_ITER,
                                     scoring='neg_mean_absolute_error',
-                                    n_jobs=1,
+                                    n_jobs=N_CPU,
                                     n_points=1,
                                     cv=tss,
                                     verbose=1)
@@ -233,16 +201,17 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             print('hyperparameter tuning: pso')
             kwargs = {'X_train_scaled': X_train_scaled,
                       'y_train_scaled': y_train_scaled,
+                      'N_CV': N_CV,
                       'return_model': False}
             lb = [1e-1]
             ub = [10]
             xopt, fopt = pso(lasso, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=N_SWARMSIZE_MINIMAL_3,
+                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_MAXITER_MINIMAL_3, minstep=1e-8,
+                            maxiter=N_ITER, minstep=1e-8,
                             minfunc=1e-5, debug=True,
-                            processes=1)
+                            processes=N_CPU)
             print('pso ready!')
             kwargs['return_model'] = True
             fopt, model = lasso(xopt, **kwargs)
@@ -255,9 +224,9 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = RandomizedSearchCV(estimator=reg_model, 
                                        param_distributions=distributions,
-                                       n_iter=N_ITER_MINIMAL_3,
+                                       n_iter=N_ITER,
                                        scoring='neg_mean_absolute_error',
-                                       n_jobs=1,
+                                       n_jobs=N_CPU,
                                        cv=tss,
                                        verbose=1)
             model.fit(X_train_scaled, y_train_scaled)
@@ -272,9 +241,9 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = BayesSearchCV(estimator=reg_model, 
                                     search_spaces=distributions,
-                                    n_iter=N_BAYESITER_MINIMAL_3,
+                                    n_iter=N_ITER,
                                     scoring='neg_mean_absolute_error',
-                                    n_jobs=1,
+                                    n_jobs=N_CPU,
                                     n_points=1,
                                     cv=tss,
                                     verbose=1)
@@ -291,16 +260,17 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             print('hyperparameter tuning: pso')
             kwargs = {'X_train_scaled': X_train_scaled,
                       'y_train_scaled': y_train_scaled,
+                      'N_CV': N_CV,
                       'return_model': False}
             lb = [1e-5,  0.01]
             ub = [100.0, 0.99]
             xopt, fopt = pso(elasticnet, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=N_SWARMSIZE_MINIMAL_3,
+                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_MAXITER_MINIMAL_3, minstep=1e-8,
+                            maxiter=N_ITER, minstep=1e-8,
                             minfunc=1e-5, debug=True,
-                            processes=1)
+                            processes=N_CPU)
             print('pso ready!')
             kwargs['return_model'] = True
             fopt, model = elasticnet(xopt, **kwargs)
@@ -314,9 +284,9 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = RandomizedSearchCV(estimator=reg_model, 
                                        param_distributions=distributions,
-                                       n_iter=N_ITER_MINIMAL_3,
+                                       n_iter=N_ITER,
                                        scoring='neg_mean_absolute_error',
-                                       n_jobs=1,
+                                       n_jobs=N_CPU,
                                        cv=tss,
                                        verbose=1)
             model.fit(X_train_scaled, y_train_scaled)
@@ -332,9 +302,9 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = BayesSearchCV(estimator=reg_model, 
                                     search_spaces=distributions,
-                                    n_iter=N_BAYESITER_MINIMAL_3,
+                                    n_iter=N_ITER,
                                     scoring='neg_mean_absolute_error',
-                                    n_jobs=1,
+                                    n_jobs=N_CPU,
                                     n_points=1,
                                     cv=tss,
                                     verbose=1)
@@ -351,16 +321,17 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             print('hyperparameter tuning: pso')
             kwargs = {'X_train_scaled': X_train_scaled,
                       'y_train_scaled': y_train_scaled,
+                      'N_CV': N_CV,
                       'return_model': False}
             lb = [1]
             ub = [50]
             xopt, fopt = pso(lars, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=N_SWARMSIZE_MINIMAL_3,
+                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_MAXITER_MINIMAL_3, minstep=1e-8,
+                            maxiter=N_ITER, minstep=1e-8,
                             minfunc=1e-5, debug=True,
-                            processes=1)
+                            processes=N_CPU)
             print('pso ready!')
             kwargs['return_model'] = True
             fopt, model = lars(xopt, **kwargs)
@@ -368,14 +339,14 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
         
         elif optimization_method == 'randomizedsearchcv':
             print('Hyperparameter tuning: RandomizedSearchCV')
-            reg_model = Lars()
+            reg_model = Lars(normalize=False)
             distributions = {'n_nonzero_coefs': sp_randint(1, 50)}
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = RandomizedSearchCV(estimator=reg_model, 
                                        param_distributions=distributions,
-                                       n_iter= N_ITER_MINIMAL_3,
+                                       n_iter= N_ITER,
                                        scoring='neg_mean_absolute_error',
-                                       n_jobs=1,
+                                       n_jobs=N_CPU,
                                        cv=tss,
                                        verbose=1)
             model.fit(X_train_scaled, y_train_scaled)
@@ -385,14 +356,14 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
     
         elif optimization_method == 'bayessearchcv':
             print('Hyperparameter tuning: BayesSearchCV')
-            reg_model = Lars()
+            reg_model = Lars(normalize=False)
             distributions = {'n_nonzero_coefs': Integer(1, 50, prior='uniform')}
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = BayesSearchCV(estimator=reg_model, 
                                     search_spaces=distributions,
-                                    n_iter=N_BAYESITER_MINIMAL_3,
+                                    n_iter=N_ITER,
                                     scoring='neg_mean_absolute_error',
-                                    n_jobs=1,
+                                    n_jobs=N_CPU,
                                     n_points=1,
                                     cv=tss,
                                     verbose=1)
@@ -409,16 +380,17 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             print('hyperparameter tuning: pso')
             kwargs = {'X_train_scaled': X_train_scaled,
                       'y_train_scaled': y_train_scaled,
+                      'N_CV': N_CV,
                       'return_model': False}
             lb = [1e-5]
             ub = [50]
             xopt, fopt = pso(lassolars, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=N_SWARMSIZE_MINIMAL_3,
+                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_MAXITER_MINIMAL_3, minstep=1e-8,
+                            maxiter=N_ITER, minstep=1e-8,
                             minfunc=1e-5, debug=True,
-                            processes=1)
+                            processes=N_CPU)
             print('pso ready!')
             kwargs['return_model'] = True
             fopt, model = lassolars(xopt, **kwargs)
@@ -426,14 +398,14 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
         
         elif optimization_method == 'randomizedsearchcv':
             print('Hyperparameter tuning: RandomizedSearchCV')
-            reg_model = LassoLars()
+            reg_model = LassoLars(normalize=False)
             distributions = {'alpha': sp_loguniform(a=1e-5, b=100)}
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = RandomizedSearchCV(estimator=reg_model, 
                                        param_distributions=distributions,
-                                       n_iter=N_ITER_MINIMAL_3,
+                                       n_iter=N_ITER,
                                        scoring='neg_mean_absolute_error',
-                                       n_jobs=1,
+                                       n_jobs=N_CPU,
                                        cv=tss,
                                        verbose=1)
             model.fit(X_train_scaled, y_train_scaled)
@@ -443,14 +415,14 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
     
         elif optimization_method == 'bayessearchcv':
             print('Hyperparameter tuning: BayesSearchCV')
-            reg_model = LassoLars()
+            reg_model = LassoLars(normalize=False)
             distributions = {'alpha': Real(1e-5, 100, prior='log-uniform')}
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = BayesSearchCV(estimator=reg_model, 
                                     search_spaces=distributions,
-                                    n_iter=N_BAYESITER_MINIMAL_3,
+                                    n_iter=N_ITER,
                                     scoring='neg_mean_absolute_error',
-                                    n_jobs=1,
+                                    n_jobs=N_CPU,
                                     n_points=1,
                                     cv=tss,
                                     verbose=1)
@@ -470,17 +442,18 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             print('hyperparameter tuning: pso')
             kwargs = {'X_train_scaled': X_train_scaled,
                       'y_train_scaled': y_train_scaled,
+                      'N_CV': N_CV,
                       'max_iter': 10000,
                       'return_model': False}
             lb = [1.01, 1e-5]
             ub = [2.0,    1e5]
             xopt, fopt = pso(huberregressor, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=N_SWARMSIZE_MINIMAL_3,
+                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_MAXITER_MINIMAL_3, minstep=1e-8,
+                            maxiter=N_ITER, minstep=1e-8,
                             minfunc=1e-5, debug=True,
-                            processes=1)
+                            processes=N_CPU)
             print('pso ready!')
             kwargs['return_model'] = True
             fopt, model = huberregressor(xopt, **kwargs)
@@ -495,12 +468,12 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = RandomizedSearchCV(estimator=reg_model, 
                                        param_distributions=distributions,
-                                       n_iter=N_ITER_MINIMAL_3,
+                                       n_iter=N_ITER,
                                        scoring='neg_mean_absolute_error',
-                                       n_jobs=1,
+                                       n_jobs=N_CPU,
                                        cv=tss,
                                        verbose=1)
-            model.fit(X_train_scaled, y_train_scaled)
+            model.fit(X_train_scaled, y_train_scaled.ravel())
             xopt = model.best_params_
             fopt = -model.best_score_
             print('Model ready!')
@@ -514,9 +487,9 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = BayesSearchCV(estimator=reg_model, 
                                     search_spaces=distributions,
-                                    n_iter=N_BAYESITER_MINIMAL_3,
+                                    n_iter=N_ITER,
                                     scoring='neg_mean_absolute_error',
-                                    n_jobs=1,
+                                    n_jobs=N_CPU,
                                     n_points=1,
                                     cv=tss,
                                     verbose=1)
@@ -535,17 +508,18 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             print('hyperparameter tuning: pso')
             kwargs = {'X_train_scaled': X_train_scaled,
                       'y_train_scaled': y_train_scaled,
+                      'N_CV': N_CV,
                       'return_model': False}
             # min_samples, residual_threshold, max_trials, stop_probability
-            lb = [0.05, 1e-3,  50.0,  0.5]
-            ub = [0.95, 100.0, 300.0, 0.95]
+            lb = [0.05, 1e-3,  50.0,  0.8]
+            ub = [0.95, 100.0, 300.0, 1.0]
             xopt, fopt = pso(ransacregressor, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=N_SWARMSIZE_MINIMAL_3,
+                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_MAXITER_MINIMAL_3, minstep=1e-8,
+                            maxiter=N_ITER, minstep=1e-8,
                             minfunc=1e-5, debug=True,
-                            processes=1)
+                            processes=N_CPU)
             print('pso ready!')
             kwargs['return_model'] = True
             fopt, model = ransacregressor(xopt, **kwargs)
@@ -557,13 +531,13 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             distributions = {'min_samples': sp_uniform(0.05, 0.9),
                              'residual_threshold':sp_loguniform(a=1e-3, b=2.0),
                              'max_trials': sp_randint(50,300),
-                             'stop_probability':sp_uniform(0.5, 0.95)}
+                             'stop_probability':sp_uniform(0.8, 0.2)}
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = RandomizedSearchCV(estimator=reg_model, 
                                        param_distributions=distributions,
-                                       n_iter=N_ITER_MINIMAL_3,
+                                       n_iter=N_ITER,
                                        scoring='neg_mean_absolute_error',
-                                       n_jobs=1,
+                                       n_jobs=N_CPU,
                                        cv=tss,
                                        verbose=1)
             model.fit(X_train_scaled, y_train_scaled)
@@ -577,13 +551,13 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             distributions = {'min_samples': Real(0.05, 0.9, prior='uniform'),
                              'residual_threshold': Real(1e-3, 2, prior='log-uniform'),
                              'max_trials': Integer(50, 300, prior='uniform'),
-                             'stop_probability': Real(0.5, 0.95, prior='uniform')}
+                             'stop_probability': Real(0.8, 1.0, prior='uniform')}
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = BayesSearchCV(estimator=reg_model, 
                                     search_spaces=distributions,
-                                    n_iter=N_BAYESITER_MINIMAL_3,
+                                    n_iter=N_ITER,
                                     scoring='neg_mean_absolute_error',
-                                    n_jobs=1,
+                                    n_jobs=N_CPU,
                                     n_points=1,
                                     cv=tss,
                                     verbose=1)
@@ -602,16 +576,17 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             kwargs = {'X_train_scaled': X_train_scaled,
                       'y_train_scaled': y_train_scaled.ravel(),
                       'n_jobs': 1,
+                      'N_CV': N_CV,
                       'return_model': False}
             lb = [1000,  200]
             ub = [10000, 1000]
             xopt, fopt = pso(theilsenregressor, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=N_SWARMSIZE_MINIMAL_3,
+                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_MAXITER_MINIMAL_3, minstep=1e-8,
+                            maxiter=N_ITER, minstep=1e-8,
                             minfunc=1e-5, debug=True,
-                            processes=1)
+                            processes=N_CPU)
             print('pso ready!')
             kwargs['return_model'] = True
             fopt, model = theilsenregressor(xopt, **kwargs)
@@ -626,9 +601,9 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = RandomizedSearchCV(estimator=reg_model, 
                                        param_distributions=distributions,
-                                       n_iter=N_ITER_MINIMAL_3,
+                                       n_iter=N_ITER,
                                        scoring='neg_mean_absolute_error',
-                                       n_jobs=1,
+                                       n_jobs=N_CPU,
                                        cv=tss,
                                        verbose=1)
             model.fit(X_train_scaled, y_train_scaled.ravel())
@@ -645,9 +620,9 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = BayesSearchCV(estimator=reg_model, 
                                     search_spaces=distributions,
-                                    n_iter=N_BAYESITER_MINIMAL_3,
+                                    n_iter=N_ITER,
                                     scoring='neg_mean_absolute_error',
-                                    n_jobs=1, # This was slow with 1; Might have been wrong and this should be 1
+                                    n_jobs=N_CPU, # This was slow with 1; Might have been wrong and this should be 1
                                     n_points=1, # This was slow with 1
                                     cv=tss,
                                     verbose=1)
@@ -666,17 +641,18 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             kwargs = {'X_train_scaled': X_train_scaled,
                       'y_train_scaled': y_train_scaled.ravel(),
                       'kernel': 'cosine',
+                      'N_CV': N_CV,
                       'return_model': False}
             # # alpha
             lb = [1.0]
             ub = [1000.0]
             xopt, fopt = pso(kernelridge, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=N_SWARMSIZE_MINIMAL_3,
+                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_MAXITER_MINIMAL_3, minstep=1e-8,
+                            maxiter=N_ITER, minstep=1e-8,
                             minfunc=1e-5, debug=True,
-                            processes=1)
+                            processes=N_CPU)
             print('pso ready!')
             kwargs['return_model'] = True
             fopt, model = kernelridge(xopt, **kwargs)
@@ -690,9 +666,9 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = RandomizedSearchCV(estimator=reg_model, 
                                        param_distributions=distributions,
-                                       n_iter=N_ITER_MINIMAL_3,
+                                       n_iter=N_ITER,
                                        scoring='neg_mean_absolute_error',
-                                       n_jobs=1,
+                                       n_jobs=N_CPU,
                                        cv=tss,
                                        verbose=1)
             model.fit(X_train_scaled, y_train_scaled.ravel())
@@ -708,9 +684,9 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = BayesSearchCV(estimator=reg_model, 
                                     search_spaces=distributions,
-                                    n_iter=N_BAYESITER_MINIMAL_3,
+                                    n_iter=N_ITER,
                                     scoring='neg_mean_absolute_error',
-                                    n_jobs=1,
+                                    n_jobs=N_CPU,
                                     n_points=1,
                                     cv=tss,
                                     verbose=1)
@@ -729,17 +705,18 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             kwargs = {'X_train_scaled': X_train_scaled,
                       'y_train_scaled': y_train_scaled.ravel(),
                       'kernel': 'linear',
+                      'N_CV': N_CV,
                       'return_model': False}
             # alpha, gamma, degree, coef0
             lb = [1,    1e-3,   1,  0]
             ub = [1000, 1.0,    3,  3]
             xopt, fopt = pso(kernelridge, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=N_SWARMSIZE_MINIMAL_3,
+                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_MAXITER_MINIMAL_3, minstep=1e-8,
+                            maxiter=N_ITER, minstep=1e-8,
                             minfunc=1e-5, debug=True,
-                            processes=1)
+                            processes=N_CPU)
             print('pso ready!')
             kwargs['return_model'] = True
             fopt, model = kernelridge(xopt, **kwargs)
@@ -753,9 +730,9 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = RandomizedSearchCV(estimator=reg_model, 
                                        param_distributions=distributions,
-                                       n_iter=N_ITER_MINIMAL_3,
+                                       n_iter=N_ITER,
                                        scoring='neg_mean_absolute_error',
-                                       n_jobs=1,
+                                       n_jobs=N_CPU,
                                        cv=tss,
                                        verbose=1)
             model.fit(X_train_scaled, y_train_scaled.ravel())
@@ -771,9 +748,9 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = BayesSearchCV(estimator=reg_model, 
                                     search_spaces=distributions,
-                                    n_iter=N_BAYESITER_MINIMAL_3,
+                                    n_iter=N_ITER,
                                     scoring='neg_mean_absolute_error',
-                                    n_jobs=1,
+                                    n_jobs=N_CPU,
                                     n_points=1,
                                     cv=tss,
                                     verbose=1)
@@ -792,17 +769,18 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             kwargs = {'X_train_scaled': X_train_scaled,
                       'y_train_scaled': y_train_scaled.ravel(),
                       'kernel': 'polynomial',
+                      'N_CV': N_CV,
                       'return_model': False}
             # alpha, gamma, degree, coef0
             lb = [1,    1e-3,   1,  0]
             ub = [1000, 1.0,    2,  2]
             xopt, fopt = pso(kernelridge, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=N_SWARMSIZE_MINIMAL_3,
+                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_MAXITER_MINIMAL_3, minstep=1e-8,
+                            maxiter=N_ITER, minstep=1e-8,
                             minfunc=1e-5, debug=True,
-                            processes=1)
+                            processes=N_CPU)
             print('pso ready!')
             kwargs['return_model'] = True
             fopt, model = kernelridge(xopt, **kwargs)
@@ -819,9 +797,9 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = RandomizedSearchCV(estimator=reg_model, 
                                        param_distributions=distributions,
-                                       n_iter=N_ITER_MINIMAL_3,
+                                       n_iter=N_ITER,
                                        scoring='neg_mean_absolute_error',
-                                       n_jobs=1,
+                                       n_jobs=N_CPU,
                                        cv=tss,
                                        verbose=1)
             model.fit(X_train_scaled, y_train_scaled.ravel())
@@ -840,9 +818,9 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = BayesSearchCV(estimator=reg_model, 
                                     search_spaces=distributions,
-                                    n_iter=N_BAYESITER_MINIMAL_3,
+                                    n_iter=N_ITER,
                                     scoring='neg_mean_absolute_error',
-                                    n_jobs=1,
+                                    n_jobs=N_CPU,
                                     n_points=1,
                                     cv=tss,
                                     verbose=1)
@@ -860,17 +838,18 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             kwargs = {'X_train_scaled': X_train_scaled,
                       'y_train_scaled': y_train_scaled.ravel(),
                       'kernel': 'sigmoid',
+                      'N_CV': N_CV,
                       'return_model': False}
             # alpha, gamma, degree, coef0
             lb = [0.1,  1e-3,   1,  0]
             ub = [1000, 1.0,    2,  2]
             xopt, fopt = pso(kernelridge, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=N_SWARMSIZE_MINIMAL_1,
-                            omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_MAXITER_MINIMAL_1, minstep=1e-8,
+                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
+                            omega=0.5, phip=0.5, phig=0.5,
+                            maxiter=N_ITER, minstep=1e-8,
                             minfunc=1e-5, debug=True,
-                            processes=1)
+                            processes=N_CPU)
             print('pso ready!')
             kwargs['return_model'] = True
             fopt, model = kernelridge(xopt, **kwargs)
@@ -887,9 +866,9 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = RandomizedSearchCV(estimator=reg_model, 
                                        param_distributions=distributions,
-                                       n_iter=N_ITER_MINIMAL_1,
+                                       n_iter=N_ITER,
                                        scoring='neg_mean_absolute_error',
-                                       n_jobs=1,
+                                       n_jobs=N_CPU,
                                        cv=tss,
                                        verbose=1)
             model.fit(X_train_scaled, y_train_scaled.ravel())
@@ -908,9 +887,9 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = BayesSearchCV(estimator=reg_model, 
                                     search_spaces=distributions,
-                                    n_iter=N_BAYESITER_MINIMAL_1,
+                                    n_iter=N_ITER,
                                     scoring='neg_mean_absolute_error',
-                                    n_jobs=1,
+                                    n_jobs=N_CPU,
                                     n_points=1,
                                     cv=tss,
                                     verbose=1)
@@ -929,17 +908,18 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             kwargs = {'X_train_scaled': X_train_scaled,
                       'y_train_scaled': y_train_scaled.ravel(),
                       'kernel': 'rbf',
+                      'N_CV': N_CV,
                       'return_model': False}
             # alpha, gamma, degree, coef0
             lb = [0.01, 1e-4,   1,  0]
             ub = [100,  10.0,    2,  2]
             xopt, fopt = pso(kernelridge, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=N_SWARMSIZE_MINIMAL_2,
+                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_MAXITER_MINIMAL_2, minstep=1e-8,
+                            maxiter=N_ITER, minstep=1e-8,
                             minfunc=1e-5, debug=True,
-                            processes=1)
+                            processes=N_CPU)
             print('pso ready!')
             kwargs['return_model'] = True
             fopt, model = kernelridge(xopt, **kwargs)
@@ -956,9 +936,9 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = RandomizedSearchCV(estimator=reg_model, 
                                        param_distributions=distributions,
-                                       n_iter=N_ITER_MINIMAL_2,
+                                       n_iter=N_ITER,
                                        scoring='neg_mean_absolute_error',
-                                       n_jobs=1,
+                                       n_jobs=N_CPU,
                                        cv=tss,
                                        verbose=1)
             model.fit(X_train_scaled, y_train_scaled.ravel())
@@ -977,9 +957,9 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = BayesSearchCV(estimator=reg_model, 
                                     search_spaces=distributions,
-                                    n_iter=N_BAYESITER_MINIMAL_2,
+                                    n_iter=N_ITER,
                                     scoring='neg_mean_absolute_error',
-                                    n_jobs=1,
+                                    n_jobs=N_CPU,
                                     n_points=1,
                                     cv=tss,
                                     verbose=1)
@@ -998,17 +978,18 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             kwargs = {'X_train_scaled': X_train_scaled,
                       'y_train_scaled': y_train_scaled.ravel(),
                       'kernel': 'laplacian',
+                      'N_CV': N_CV,
                       'return_model': False}
             # alpha, gamma, degree, coef0
             lb = [0.01, 1e-4,   1,  0]
             ub = [100,  10.0,    2,  2]
             xopt, fopt = pso(kernelridge, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=N_SWARMSIZE_MINIMAL_2,
+                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_MAXITER_MINIMAL_2, minstep=1e-8,
+                            maxiter=N_ITER, minstep=1e-8,
                             minfunc=1e-5, debug=True,
-                            processes=1)
+                            processes=N_CPU)
             print('pso ready!')
             kwargs['return_model'] = True
             fopt, model = kernelridge(xopt, **kwargs)
@@ -1025,9 +1006,9 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = RandomizedSearchCV(estimator=reg_model, 
                                        param_distributions=distributions,
-                                       n_iter=N_ITER_MINIMAL_2,
+                                       n_iter=N_ITER,
                                        scoring='neg_mean_absolute_error',
-                                       n_jobs=1,
+                                       n_jobs=N_CPU,
                                        cv=tss,
                                        verbose=1)
             model.fit(X_train_scaled, y_train_scaled.ravel())
@@ -1046,9 +1027,9 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = BayesSearchCV(estimator=reg_model, 
                                     search_spaces=distributions,
-                                    n_iter=N_BAYESITER_MINIMAL_2,
+                                    n_iter=N_ITER,
                                     scoring='neg_mean_absolute_error',
-                                    n_jobs=1,
+                                    n_jobs=N_CPU,
                                     n_points=1,
                                     cv=tss,
                                     verbose=1)
@@ -1057,6 +1038,8 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             fopt = -model.best_score_
             print('Model ready!')
 
+
+    
 
 
     elif model_name == 'linearsvr':
@@ -1069,17 +1052,18 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
                       'loss': 'squared_epsilon_insensitive',
                       'dual': False,
                       'max_iter': 2000,
+                      'N_CV': N_CV,
                       'return_model': False}
             # epsilon, C
             lb = [0.01, 0.1]
             ub = [1.0, 100.0]
             xopt, fopt = pso(linearsvr, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=N_SWARMSIZE_MINIMAL_3,
+                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_MAXITER_MINIMAL_3, minstep=1e-8,
+                            maxiter=N_ITER, minstep=1e-8,
                             minfunc=1e-5, debug=True,
-                            processes=1)
+                            processes=N_CPU)
             print('pso ready!')
             kwargs['return_model'] = True
             fopt, model = linearsvr(xopt, **kwargs)
@@ -1098,9 +1082,9 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = RandomizedSearchCV(estimator=reg_model, 
                                        param_distributions=distributions,
-                                       n_iter=N_ITER_MINIMAL_3,
+                                       n_iter=N_ITER,
                                        scoring='neg_mean_absolute_error',
-                                       n_jobs=1,
+                                       n_jobs=N_CPU,
                                        cv=tss,
                                        verbose=1)
             model.fit(X_train_scaled, y_train_scaled.ravel())
@@ -1119,9 +1103,9 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = BayesSearchCV(estimator=reg_model, 
                                     search_spaces=distributions,
-                                    n_iter=N_BAYESITER_MINIMAL_3,
+                                    n_iter=N_ITER,
                                     scoring='neg_mean_absolute_error',
-                                    n_jobs=1,
+                                    n_jobs=N_CPU,
                                     n_points=1,
                                     cv=tss,
                                     verbose=1)
@@ -1144,15 +1128,16 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
                       'shrinking':  True,
                       'cache_size': 1000,
                       'max_iter': -1,
+                      'N_CV': N_CV,
                       'return_model': False}
             # nu, C, degree, gamma, coef0
             lb = [0.05, -5, 2, 0.01, 0]
             ub = [0.5,  0, 4,  1.0,  2]
             xopt, fopt = pso(nusvr, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=N_SWARMSIZE_MINIMAL_3,
+                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_MAXITER_MINIMAL_3, minstep=1e-8,
+                            maxiter=N_ITER, minstep=1e-8,
                             minfunc=1e-5, debug=True,
                             processes=N_CPU)
             print('pso ready!')
@@ -1177,7 +1162,7 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = RandomizedSearchCV(estimator=reg_model, 
                                        param_distributions=distributions,
-                                       n_iter=N_ITER_MINIMAL_3,
+                                       n_iter=N_ITER,
                                        scoring='neg_mean_absolute_error',
                                        n_jobs=N_CPU,
                                        cv=tss,
@@ -1202,10 +1187,10 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = BayesSearchCV(estimator=reg_model, 
                                     search_spaces=distributions,
-                                    n_iter=N_BAYESITER_MINIMAL_3,
+                                    n_iter=N_ITER,
                                     scoring='neg_mean_absolute_error',
                                     n_jobs=N_CPU,
-                                    n_points=N_CPU // N_CV,
+                                    n_points=1,
                                     cv=tss,
                                     verbose=1)
             model.fit(X_train_scaled, y_train_scaled.ravel())
@@ -1228,18 +1213,19 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
                       'kernel': 'poly',
                       'shrinking':  True,
                       'cache_size': 1000,
-                      'max_iter': 1e6, # This is changed to
+                      'max_iter': 1e6,
+                      'N_CV': N_CV,
                       'return_model': False}
             # nu, C, degree, gamma, coef0
             lb = [0.2, -5, 2,  0.01, 0]
             ub = [0.5, 0,  3,  0.5,  2]
             xopt, fopt = pso(nusvr, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=N_SWARMSIZE_MINIMAL_1,
+                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_MAXITER_MINIMAL_1, minstep=1e-8,
+                            maxiter=N_ITER, minstep=1e-8,
                             minfunc=1e-5, debug=True,
-                            processes=1)
+                            processes=N_CPU)
             print('pso ready!')
             kwargs['return_model'] = True
             fopt, model = nusvr(xopt, **kwargs)
@@ -1262,9 +1248,9 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = RandomizedSearchCV(estimator=reg_model, 
                                        param_distributions=distributions,
-                                       n_iter=N_ITER_MINIMAL_1,
+                                       n_iter=N_ITER,
                                        scoring='neg_mean_absolute_error',
-                                       n_jobs=1,
+                                       n_jobs=N_CPU,
                                        cv=tss,
                                        verbose=1)
             model.fit(X_train_scaled, y_train_scaled.ravel())
@@ -1287,9 +1273,9 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = BayesSearchCV(estimator=reg_model, 
                                     search_spaces=distributions,
-                                    n_iter=N_BAYESITER_MINIMAL_1,
+                                    n_iter=N_ITER,
                                     scoring='neg_mean_absolute_error',
-                                    n_jobs=1,
+                                    n_jobs=N_CPU,
                                     n_points=1,
                                     cv=tss,
                                     verbose=1)
@@ -1314,15 +1300,16 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
                       'shrinking':  True,
                       'cache_size': 1000,
                       'max_iter': -1,
+                      'N_CV': N_CV,
                       'return_model': False}
             # nu, C, degree, gamma, coef0
             lb = [0.2, -5, 2,  0.01, 0]
             ub = [0.5,  0, 4,  0.5,  2]
             xopt, fopt = pso(nusvr, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=N_SWARMSIZE_MINIMAL_3,
+                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_MAXITER_MINIMAL_3, minstep=1e-8,
+                            maxiter=N_ITER, minstep=1e-8,
                             minfunc=1e-5, debug=True,
                             processes=N_CPU)
             print('pso ready!')
@@ -1347,7 +1334,7 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = RandomizedSearchCV(estimator=reg_model, 
                                        param_distributions=distributions,
-                                       n_iter=N_ITER_MINIMAL_3,
+                                       n_iter=N_ITER,
                                        scoring='neg_mean_absolute_error',
                                        n_jobs=N_CPU,
                                        cv=tss,
@@ -1372,10 +1359,10 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = BayesSearchCV(estimator=reg_model, 
                                     search_spaces=distributions,
-                                    n_iter=N_BAYESITER_MINIMAL_3,
+                                    n_iter=N_ITER,
                                     scoring='neg_mean_absolute_error',
                                     n_jobs=N_CPU,
-                                    n_points=N_CPU // N_CV,
+                                    n_points=1,
                                     cv=tss,
                                     verbose=1)
             model.fit(X_train_scaled, y_train_scaled.ravel())
@@ -1397,15 +1384,16 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
                       'shrinking':  True,
                       'cache_size': 1000,
                       'max_iter': -1,
+                      'N_CV': N_CV,
                       'return_model': False}
             # nu, C, degree, gamma, coef0
             lb = [0.2, -5, 2,  0.01, 0]
             ub = [0.5,  0, 4,  0.5,  2]
             xopt, fopt = pso(nusvr, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=N_SWARMSIZE_MINIMAL_3,
+                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_MAXITER_MINIMAL_3, minstep=1e-8,
+                            maxiter=N_ITER, minstep=1e-8,
                             minfunc=1e-5, debug=True,
                             processes=N_CPU)
             print('pso ready!')
@@ -1430,7 +1418,7 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = RandomizedSearchCV(estimator=reg_model, 
                                        param_distributions=distributions,
-                                       n_iter=N_ITER_MINIMAL_3,
+                                       n_iter=N_ITER,
                                        scoring='neg_mean_absolute_error',
                                        n_jobs=N_CPU,
                                        cv=tss,
@@ -1455,10 +1443,10 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = BayesSearchCV(estimator=reg_model, 
                                     search_spaces=distributions,
-                                    n_iter=N_BAYESITER_MINIMAL_3,
+                                    n_iter=N_ITER,
                                     scoring='neg_mean_absolute_error',
                                     n_jobs=N_CPU,
-                                    n_points=N_CPU // N_CV,
+                                    n_points=1,
                                     cv=tss,
                                     verbose=1)
             model.fit(X_train_scaled, y_train_scaled.ravel())
@@ -1481,17 +1469,18 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
                       'shrinking':  True,
                       'cache_size': 1000,
                       'max_iter': -1,
+                      'N_CV': N_CV,
                       'return_model': False}
             # epsilon, C, degree, gamma, coef0
             lb = [0.01, -3, 2, 0.01, 0]
             ub = [0.5,  2,  4, 0.5,  2]
             xopt, fopt = pso(svr, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=N_SWARMSIZE_MINIMAL_2,
+                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_MAXITER_MINIMAL_2, minstep=1e-8,
+                            maxiter=N_ITER, minstep=1e-8,
                             minfunc=1e-5, debug=True,
-                            processes=1)
+                            processes=N_CPU)
             print('pso ready!')
             kwargs['return_model'] = True
             fopt, model = svr(xopt, **kwargs)
@@ -1514,7 +1503,7 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = RandomizedSearchCV(estimator=reg_model, 
                                        param_distributions=distributions,
-                                       n_iter=N_ITER_MINIMAL_2,
+                                       n_iter=N_ITER,
                                        scoring='neg_mean_absolute_error',
                                        n_jobs=N_CPU,
                                        cv=tss,
@@ -1539,10 +1528,10 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = BayesSearchCV(estimator=reg_model, 
                                     search_spaces=distributions,
-                                    n_iter=N_BAYESITER_MINIMAL_2,
+                                    n_iter=N_ITER,
                                     scoring='neg_mean_absolute_error',
                                     n_jobs=N_CPU,
-                                    n_points=N_CPU // N_CV,
+                                    n_points=1,
                                     cv=tss,
                                     verbose=1)
             model.fit(X_train_scaled, y_train_scaled.ravel())
@@ -1564,17 +1553,18 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
                       'shrinking': True,
                       'cache_size': 10000,
                       'max_iter': 1e6,
+                      'N_CV': N_CV,
                       'return_model': False}
             # epsilon, C, degree, gamma, coef0; C is given as log10(C)
             lb = [0.01, -3, 2, 0.01, 0]
             ub = [0.4,  0,  4, 0.5,  2]
             xopt, fopt = pso(svr, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=N_SWARMSIZE_MINIMAL_0,
+                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_MAXITER_MINIMAL_0, minstep=1e-8,
+                            maxiter=N_ITER, minstep=1e-8,
                             minfunc=1e-5, debug=True,
-                            processes=1) # This was exceptionally slow with N_CPU
+                            processes=N_CPU) # This was exceptionally slow with N_CPU
             print('pso ready!', flush=True)
             kwargs['return_model'] = True
             fopt, model = svr(xopt, **kwargs)
@@ -1597,9 +1587,9 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = RandomizedSearchCV(estimator=reg_model, 
                                        param_distributions=distributions,
-                                       n_iter=N_ITER_MINIMAL_0,
+                                       n_iter=N_ITER,
                                        scoring='neg_mean_absolute_error',
-                                       n_jobs=1, # This is changed to N_CPU
+                                       n_jobs=N_CPU,
                                        cv=tss,
                                        verbose=1)
             model.fit(X_train_scaled, y_train_scaled.ravel())
@@ -1622,10 +1612,10 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = BayesSearchCV(estimator=reg_model, 
                                     search_spaces=distributions,
-                                    n_iter=N_BAYESITER_MINIMAL_0,
+                                    n_iter=N_ITER,
                                     scoring='neg_mean_absolute_error',
-                                    n_jobs=1, # This is changed to 
-                                    n_points=1, # This is changed to 
+                                    n_jobs=N_CPU,
+                                    n_points=1,
                                     cv=tss,
                                     verbose=1)
             model.fit(X_train_scaled, y_train_scaled.ravel())
@@ -1649,15 +1639,16 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
                       'shrinking':  True,
                       'cache_size': 1000,
                       'max_iter': -1,
+                      'N_CV': N_CV,
                       'return_model': False}
             # epsilon, C, degree, gamma, coef0
             lb = [0.01, -3, 2, 0.01, 0]
             ub = [0.5,  2,  4, 0.5,  2]
             xopt, fopt = pso(svr, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=N_SWARMSIZE_MINIMAL_3,
+                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_MAXITER_MINIMAL_3, minstep=1e-8,
+                            maxiter=N_ITER, minstep=1e-8,
                             minfunc=1e-5, debug=True,
                             processes=N_CPU)
             print('pso ready!')
@@ -1682,7 +1673,7 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = RandomizedSearchCV(estimator=reg_model, 
                                        param_distributions=distributions,
-                                       n_iter=N_ITER_MINIMAL_3,
+                                       n_iter=N_ITER,
                                        scoring='neg_mean_absolute_error',
                                        n_jobs=N_CPU,
                                        cv=tss,
@@ -1707,10 +1698,10 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = BayesSearchCV(estimator=reg_model, 
                                     search_spaces=distributions,
-                                    n_iter=N_BAYESITER_MINIMAL_3,
+                                    n_iter=N_ITER,
                                     scoring='neg_mean_absolute_error',
                                     n_jobs=N_CPU,
-                                    n_points=N_CPU // N_CV,
+                                    n_points=1,
                                     cv=tss,
                                     verbose=1)
             model.fit(X_train_scaled, y_train_scaled.ravel())
@@ -1733,15 +1724,16 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
                       'shrinking':  True,
                       'cache_size': 1000,
                       'max_iter': -1,
+                      'N_CV': N_CV,
                       'return_model': False}
             # epsilon, C, degree, gamma, coef0
             lb = [0.01, -3, 2, 0.01, 0]
             ub = [0.5,  2,  4, 0.5,  2]
             xopt, fopt = pso(svr, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=N_SWARMSIZE_MINIMAL_3,
+                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_MAXITER_MINIMAL_3, minstep=1e-8,
+                            maxiter=N_ITER, minstep=1e-8,
                             minfunc=1e-5, debug=True,
                             processes=N_CPU)
             print('pso ready!')
@@ -1766,7 +1758,7 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = RandomizedSearchCV(estimator=reg_model, 
                                        param_distributions=distributions,
-                                       n_iter=N_ITER_MINIMAL_3,
+                                       n_iter=N_ITER,
                                        scoring='neg_mean_absolute_error',
                                        n_jobs=N_CPU,
                                        cv=tss,
@@ -1791,10 +1783,10 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = BayesSearchCV(estimator=reg_model, 
                                     search_spaces=distributions,
-                                    n_iter=N_BAYESITER_MINIMAL_3,
+                                    n_iter=N_ITER,
                                     scoring='neg_mean_absolute_error',
                                     n_jobs=N_CPU,
-                                    n_points=N_CPU // N_CV,
+                                    n_points=1,
                                     cv=tss,
                                     verbose=1)
             model.fit(X_train_scaled, y_train_scaled.ravel())
@@ -1815,15 +1807,16 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
                       'y_train_scaled': y_train_scaled.ravel(),
                       'weights': 'uniform',
                       'n_jobs': 1,
+                      'N_CV': N_CV,
                       'return_model': False}
             # n_neighbors, leaf_size, p
             lb = [3,  2,  2]
             ub = [30, 20, 4]
             xopt, fopt = pso(kneighborsregressor, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=N_SWARMSIZE_MINIMAL_3,
+                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_MAXITER_MINIMAL_3, minstep=1e-8,
+                            maxiter=N_ITER, minstep=1e-8,
                             minfunc=1e-5, debug=True,
                             processes=N_CPU) # Changed this to 1
             print('pso ready!')
@@ -1842,7 +1835,7 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = RandomizedSearchCV(estimator=reg_model, 
                                        param_distributions=distributions,
-                                       n_iter=N_ITER_MINIMAL_3,
+                                       n_iter=N_ITER,
                                        scoring='neg_mean_absolute_error',
                                        n_jobs=N_CPU,
                                        cv=tss,
@@ -1863,10 +1856,10 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = BayesSearchCV(estimator=reg_model, 
                                     search_spaces=distributions,
-                                    n_iter=N_BAYESITER_MINIMAL_3,
+                                    n_iter=N_ITER,
                                     scoring='neg_mean_absolute_error',
-                                    n_jobs=N_CPU, # Changed this to 1
-                                    n_points=N_CPU // N_CV, # Changed this to 1
+                                    n_jobs=N_CPU,
+                                    n_points=1,
                                     cv=tss,
                                     verbose=1)
             model.fit(X_train_scaled, y_train_scaled.ravel())
@@ -1886,15 +1879,16 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
                       'y_train_scaled': y_train_scaled.ravel(),
                       'weights': 'distance',
                       'n_jobs': 1,
+                      'N_CV': N_CV,
                       'return_model': False}
             # n_neighbors, leaf_size, p
             lb = [3,  2,  2]
             ub = [30, 20, 4]
             xopt, fopt = pso(kneighborsregressor, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=N_SWARMSIZE_MINIMAL_3,
+                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_MAXITER_MINIMAL_3, minstep=1e-8,
+                            maxiter=N_ITER, minstep=1e-8,
                             minfunc=1e-5, debug=True,
                             processes=N_CPU)
             print('pso ready!')
@@ -1913,7 +1907,7 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = RandomizedSearchCV(estimator=reg_model, 
                                        param_distributions=distributions,
-                                       n_iter=N_ITER_MINIMAL_3,
+                                       n_iter=N_ITER,
                                        scoring='neg_mean_absolute_error',
                                        n_jobs=N_CPU,
                                        cv=tss,
@@ -1934,10 +1928,10 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = BayesSearchCV(estimator=reg_model, 
                                     search_spaces=distributions,
-                                    n_iter=N_BAYESITER_MINIMAL_3,
+                                    n_iter=N_ITER,
                                     scoring='neg_mean_absolute_error',
                                     n_jobs=N_CPU,
-                                    n_points=N_CPU // N_CV,
+                                    n_points=1,
                                     cv=tss,
                                     verbose=1)
             model.fit(X_train_scaled, y_train_scaled.ravel())
@@ -1958,18 +1952,19 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             kwargs = {'X_train_scaled': X_train_scaled,
                       'y_train_scaled': y_train_scaled.ravel(),
                       'splitter': 'best', # best, random
-                      'criterion': 'mae', # mse, friedman_mse, mae
+                      'criterion': 'absolute_error', # mse, friedman_mse, mae
                       'max_features': 'auto', # auto, sqrt, log2
                       'max_depth': None,
+                      'N_CV': N_CV,
                       'return_model': False}
             # 'min_samples_leaf', 'min_samples_split', 'min_weight_fraction_leaf'
             lb = [1,  3,  1e-5]
             ub = [30, 30, 0.1]
             xopt, fopt = pso(decisiontreeregressor, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=N_SWARMSIZE_MINIMAL_3,
+                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_MAXITER_MINIMAL_3, minstep=1e-8,
+                            maxiter=N_ITER, minstep=1e-8,
                             minfunc=1e-5, debug=True,
                             processes=N_CPU)
             print('pso ready!')
@@ -1984,13 +1979,13 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
                              'min_samples_split': sp_randint(3,31),
                              'min_weight_fraction_leaf': sp_loguniform(a=1e-5, b=0.1),
                              'splitter':['best'],
-                             'criterion':['mae'],
+                             'criterion':['absolute_error'],
                              'max_features':['auto'],
                              'max_depth': [None]}
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = RandomizedSearchCV(estimator=reg_model, 
                                        param_distributions=distributions,
-                                       n_iter=N_ITER_MINIMAL_3,
+                                       n_iter=N_ITER,
                                        scoring='neg_mean_absolute_error',
                                        n_jobs=N_CPU,
                                        cv=tss,
@@ -2007,16 +2002,16 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
                              'min_samples_split': Integer(3, 31, prior='uniform'),
                              'min_weight_fraction_leaf': Real(1e-5, 0.1, prior='log-uniform'),
                              'splitter': Categorical(['best']),
-                             'criterion': Categorical(['mae']),
+                             'criterion': Categorical(['absolute_error']),
                              'max_features': Categorical(['auto']),
                              'max_depth': Categorical([None])}
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = BayesSearchCV(estimator=reg_model, 
                                     search_spaces=distributions,
-                                    n_iter=N_BAYESITER_MINIMAL_3,
+                                    n_iter=N_ITER,
                                     scoring='neg_mean_absolute_error',
                                     n_jobs=N_CPU,
-                                    n_points=N_CPU // N_CV,
+                                    n_points=1,
                                     cv=tss,
                                     verbose=1)
             model.fit(X_train_scaled, y_train_scaled.ravel())
@@ -2036,18 +2031,19 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             kwargs = {'X_train_scaled': X_train_scaled,
                       'y_train_scaled': y_train_scaled.ravel(),
                       'splitter': 'random', # best, random
-                      'criterion': 'mae', # mse, friedman_mse, mae
+                      'criterion': 'absolute_error', # mse, friedman_mse, mae
                       'max_features': 'auto', # auto, sqrt, log2
                       'max_depth': None,
+                      'N_CV': N_CV,
                       'return_model': False}
             # randint 'min_samples_leaf', randint 'min_samples_split', loguniform 'min_weight_fraction_leaf'
             lb = [1,  3,  1e-5]
             ub = [30, 30, 0.1]
             xopt, fopt = pso(decisiontreeregressor, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=N_SWARMSIZE_MINIMAL_3,
+                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_MAXITER_MINIMAL_3, minstep=1e-8,
+                            maxiter=N_ITER, minstep=1e-8,
                             minfunc=1e-5, debug=True,
                             processes=N_CPU)
             print('pso ready!')
@@ -2062,13 +2058,13 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
                              'min_samples_split': sp_randint(3,31),
                              'min_weight_fraction_leaf': sp_loguniform(a=1e-5, b=0.1),
                              'splitter':['random'],
-                             'criterion':['mae'],
+                             'criterion':['absolute_error'],
                              'max_features':['auto'],
                              'max_depth': [None]}
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = RandomizedSearchCV(estimator=reg_model, 
                                        param_distributions=distributions,
-                                       n_iter=N_ITER_MINIMAL_3,
+                                       n_iter=N_ITER,
                                        scoring='neg_mean_absolute_error',
                                        n_jobs=N_CPU,
                                        cv=tss,
@@ -2085,16 +2081,16 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
                              'min_samples_split': Integer(3, 31, prior='uniform'),
                              'min_weight_fraction_leaf': Real(1e-5, 0.1, prior='log-uniform'),
                              'splitter': Categorical(['random']),
-                             'criterion': Categorical(['mae']),
+                             'criterion': Categorical(['absolute_error']),
                              'max_features': Categorical(['auto']),
                              'max_depth': Categorical([None])}
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = BayesSearchCV(estimator=reg_model, 
                                     search_spaces=distributions,
-                                    n_iter=N_BAYESITER_MINIMAL_3,
+                                    n_iter=N_ITER,
                                     scoring='neg_mean_absolute_error',
                                     n_jobs=N_CPU,
-                                    n_points=N_CPU // N_CV,
+                                    n_points=1,
                                     cv=tss,
                                     verbose=1)
             model.fit(X_train_scaled, y_train_scaled.ravel())
@@ -2114,19 +2110,20 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             print('hyperparameter tuning: pso')
             kwargs = {'X_train_scaled': X_train_scaled,
                       'y_train_scaled': y_train_scaled.ravel(),
-                      'criterion': 'mae',
+                      'criterion': 'absolute_error',
                       'splitter': 'best',
                       'max_depth': None,
                       'max_features': 'auto',
+                      'N_CV': N_CV,
                       'return_model': False}
             # int min_samples_leaf, int min_samples_split, loguniform min_weight_fraction_leaf
             lb = [1,  3,  1e-5]
             ub = [30, 30, 0.1]
             xopt, fopt = pso(extratreeregressor, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=N_SWARMSIZE_MINIMAL_3,
+                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_MAXITER_MINIMAL_3, minstep=1e-8,
+                            maxiter=N_ITER, minstep=1e-8,
                             minfunc=1e-5, debug=True,
                             processes=N_CPU)
             print('pso ready!')
@@ -2141,13 +2138,13 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
                              'min_samples_split': sp_randint(3,30),
                              'min_weight_fraction_leaf': sp_loguniform(a=1e-5, b=0.1),
                              'splitter':['best'],
-                             'criterion':['mae'],
+                             'criterion':['absolute_error'],
                              'max_features':['auto'],
                              'max_depth': [None]}
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = RandomizedSearchCV(estimator=reg_model, 
                                        param_distributions=distributions,
-                                       n_iter=N_ITER_MINIMAL_3,
+                                       n_iter=N_ITER,
                                        scoring='neg_mean_absolute_error',
                                        n_jobs=N_CPU,
                                        cv=tss,
@@ -2164,16 +2161,16 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
                              'min_samples_split': Integer(3, 30, prior='uniform'),
                              'min_weight_fraction_leaf': Real(1e-5, 0.1, prior='log-uniform'),
                              'splitter': Categorical(['best']),
-                             'criterion': Categorical(['mae']),
+                             'criterion': Categorical(['absolute_error']),
                              'max_features': Categorical(['auto']),
                              'max_depth': Categorical([None])}
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = BayesSearchCV(estimator=reg_model, 
                                     search_spaces=distributions,
-                                    n_iter=N_BAYESITER_MINIMAL_3,
+                                    n_iter=N_ITER,
                                     scoring='neg_mean_absolute_error',
                                     n_jobs=N_CPU,
-                                    n_points=N_CPU // N_CV,
+                                    n_points=1,
                                     cv=tss,
                                     verbose=1)
             model.fit(X_train_scaled, y_train_scaled.ravel())
@@ -2193,19 +2190,20 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             print('hyperparameter tuning: pso')
             kwargs = {'X_train_scaled': X_train_scaled,
                       'y_train_scaled': y_train_scaled.ravel(),
-                      'criterion': 'mae',
+                      'criterion': 'absolute_error',
                       'splitter': 'random',
                       'max_depth': None,
                       'max_features': 'auto',
+                      'N_CV': N_CV,
                       'return_model': False}
             # int min_samples_leaf, int min_samples_split, loguniform min_weight_fraction_leaf
             lb = [1,  3,  1e-5]
             ub = [30, 30, 0.1]
             xopt, fopt = pso(extratreeregressor, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=N_SWARMSIZE_MINIMAL_3,
+                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_MAXITER_MINIMAL_3, minstep=1e-8,
+                            maxiter=N_ITER, minstep=1e-8,
                             minfunc=1e-5, debug=True,
                             processes=N_CPU)
             print('pso ready!')
@@ -2220,13 +2218,13 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
                              'min_samples_split': sp_randint(3,30),
                              'min_weight_fraction_leaf': sp_loguniform(a=1e-5, b=0.1),
                              'splitter':['random'],
-                             'criterion':['mae'],
+                             'criterion':['absolute_error'],
                              'max_features':['auto'],
                              'max_depth': [None]}
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = RandomizedSearchCV(estimator=reg_model, 
                                        param_distributions=distributions,
-                                       n_iter=N_ITER_MINIMAL_3,
+                                       n_iter=N_ITER,
                                        scoring='neg_mean_absolute_error',
                                        n_jobs=N_CPU,
                                        cv=tss,
@@ -2243,16 +2241,16 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
                              'min_samples_split': Integer(3, 30, prior='uniform'),
                              'min_weight_fraction_leaf': Real(1e-5, 0.1, prior='log-uniform'),
                              'splitter': Categorical(['random']),
-                             'criterion': Categorical(['mae']),
+                             'criterion': Categorical(['absolute_error']),
                              'max_features': Categorical(['auto']),
                              'max_depth': Categorical([None])}
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = BayesSearchCV(estimator=reg_model, 
                                     search_spaces=distributions,
-                                    n_iter=N_BAYESITER_MINIMAL_3,
+                                    n_iter=int(N_ITER),
                                     scoring='neg_mean_absolute_error',
                                     n_jobs=N_CPU,
-                                    n_points=N_CPU // N_CV,
+                                    n_points=1,
                                     cv=tss,
                                     verbose=1)
             model.fit(X_train_scaled, y_train_scaled.ravel())
@@ -2270,15 +2268,16 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             print('hyperparameter tuning: pso')
             kwargs = {'X_train_scaled': X_train_scaled,
                       'y_train_scaled': y_train_scaled.ravel(),
+                      'N_CV': N_CV,
                       'return_model': False}
             # n_estimators, learning_rate, base_estimator__max_depth
             lb = [50,  0.1, 1]
             ub = [300, 1.0, 5]
             xopt, fopt = pso(adaboost_decisiontree, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=N_SWARMSIZE_MINIMAL_3,
+                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_MAXITER_MINIMAL_3, minstep=1e-8,
+                            maxiter=N_ITER, minstep=1e-8,
                             minfunc=1e-5, debug=True,
                             processes=N_CPU)
             print('pso ready!')
@@ -2296,7 +2295,7 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = RandomizedSearchCV(estimator=reg_model, 
                                        param_distributions=distributions,
-                                       n_iter=N_ITER_MINIMAL_3,
+                                       n_iter=N_ITER,
                                        scoring='neg_mean_absolute_error',
                                        n_jobs=N_CPU,
                                        cv=tss,
@@ -2316,10 +2315,10 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = BayesSearchCV(estimator=reg_model, 
                                     search_spaces=distributions,
-                                    n_iter=N_BAYESITER_MINIMAL_3,
+                                    n_iter=N_ITER,
                                     scoring='neg_mean_absolute_error',
                                     n_jobs=N_CPU,
-                                    n_points=N_CPU // N_CV,
+                                    n_points=1,
                                     cv=tss,
                                     verbose=1)
             model.fit(X_train_scaled, y_train_scaled.ravel())
@@ -2338,15 +2337,16 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             print('hyperparameter tuning: pso')
             kwargs = {'X_train_scaled': X_train_scaled,
                       'y_train_scaled': y_train_scaled.ravel(),
+                      'N_CV': N_CV,
                       'return_model': False}
             # n_estimators, learning_rate, base_estimator__max_depth
             lb = [50,  0.1, 1]
             ub = [300, 1.0, 5]
             xopt, fopt = pso(adaboost_extratree, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=N_SWARMSIZE_MINIMAL_3,
+                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_MAXITER_MINIMAL_3, minstep=1e-8,
+                            maxiter=N_ITER, minstep=1e-8,
                             minfunc=1e-5, debug=True,
                             processes=N_CPU)
             print('pso ready!')
@@ -2364,7 +2364,7 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = RandomizedSearchCV(estimator=reg_model, 
                                        param_distributions=distributions,
-                                       n_iter=N_ITER_MINIMAL_3,
+                                       n_iter=N_ITER,
                                        scoring='neg_mean_absolute_error',
                                        n_jobs=N_CPU,
                                        cv=tss,
@@ -2384,10 +2384,10 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = BayesSearchCV(estimator=reg_model, 
                                     search_spaces=distributions,
-                                    n_iter=N_BAYESITER_MINIMAL_3,
+                                    n_iter=N_ITER,
                                     scoring='neg_mean_absolute_error',
                                     n_jobs=N_CPU,
-                                    n_points=N_CPU // N_CV,
+                                    n_points=1,
                                     cv=tss,
                                     verbose=1)
             model.fit(X_train_scaled, y_train_scaled.ravel())
@@ -2406,15 +2406,16 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             kwargs = {'X_train_scaled': X_train_scaled,
                       'y_train_scaled': y_train_scaled.ravel(),
                       'n_jobs': 1,
+                      'N_CV': N_CV,
                       'return_model': False}
             # n_estimators, base_estimator__max_depth
             lb = [50,  1]
             ub = [300, 5]
             xopt, fopt = pso(bagging_decisiontree, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=N_SWARMSIZE_MINIMAL_3,
+                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_MAXITER_MINIMAL_3, minstep=1e-8,
+                            maxiter=N_ITER, minstep=1e-8,
                             minfunc=1e-5, debug=True,
                             processes=N_CPU)
             print('pso ready!')
@@ -2432,7 +2433,7 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = RandomizedSearchCV(estimator=reg_model, 
                                        param_distributions=distributions,
-                                       n_iter=N_ITER_MINIMAL_3,
+                                       n_iter=N_ITER,
                                        scoring='neg_mean_absolute_error',
                                        n_jobs=N_CPU,
                                        cv=tss,
@@ -2452,10 +2453,10 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = BayesSearchCV(estimator=reg_model, 
                                     search_spaces=distributions,
-                                    n_iter=N_BAYESITER_MINIMAL_3,
+                                    n_iter=N_ITER,
                                     scoring='neg_mean_absolute_error',
                                     n_jobs=N_CPU,
-                                    n_points=N_CPU // N_CV,
+                                    n_points=1,
                                     cv=tss,
                                     verbose=1)
             model.fit(X_train_scaled, y_train_scaled.ravel())
@@ -2473,15 +2474,16 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             kwargs = {'X_train_scaled': X_train_scaled,
                       'y_train_scaled': y_train_scaled.ravel(),
                       'n_jobs': 1,
+                      'N_CV': N_CV,
                       'return_model': False}
             # n_estimators, base_estimator__max_depth
             lb = [50,  1]
             ub = [300, 5]
             xopt, fopt = pso(bagging_extratree, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=N_SWARMSIZE_MINIMAL_3,
+                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_MAXITER_MINIMAL_3, minstep=1e-8,
+                            maxiter=N_ITER, minstep=1e-8,
                             minfunc=1e-5, debug=True,
                             processes=N_CPU)
             print('pso ready!')
@@ -2499,7 +2501,7 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = RandomizedSearchCV(estimator=reg_model, 
                                        param_distributions=distributions,
-                                       n_iter=N_ITER_MINIMAL_3,
+                                       n_iter=N_ITER,
                                        scoring='neg_mean_absolute_error',
                                        n_jobs=N_CPU,
                                        cv=tss,
@@ -2519,10 +2521,10 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = BayesSearchCV(estimator=reg_model, 
                                     search_spaces=distributions,
-                                    n_iter=N_BAYESITER_MINIMAL_3,
+                                    n_iter=N_ITER,
                                     scoring='neg_mean_absolute_error',
                                     n_jobs=N_CPU,
-                                    n_points=N_CPU // N_CV,
+                                    n_points=1,
                                     cv=tss,
                                     verbose=1)
             model.fit(X_train_scaled, y_train_scaled.ravel())
@@ -2542,10 +2544,11 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             print('hyperparameter tuning: pso')
             kwargs = {'X_train_scaled': X_train_scaled,
                       'y_train_scaled': y_train_scaled.ravel(),
-                      'criterion': 'mae',
+                      'criterion': 'absolute_error',
                       'max_features': 'auto',
                       'bootstrap': False,
                       'n_jobs': 1,
+                      'N_CV': N_CV,
                       'return_model': False}
             # int n_estimators, int max_depth,
             # int min_samples_split, int min_samples_leaf, float min_weight_fraction_leaf
@@ -2553,11 +2556,11 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             ub = [150, 7, 30, 30, 1e-2]
             xopt, fopt = pso(extratreesregressor, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=N_SWARMSIZE_MINIMAL_0,
+                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_MAXITER_MINIMAL_0, minstep=1e-8,
+                            maxiter=N_ITER, minstep=1e-8,
                             minfunc=1e-5, debug=True,
-                            processes=1)
+                            processes=N_CPU)
             print('pso ready!')
             kwargs['return_model'] = True
             fopt, model = extratreesregressor(xopt, **kwargs)
@@ -2571,16 +2574,16 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
                              'min_samples_split': sp_randint(3, 31),
                              'min_samples_leaf': sp_randint(3, 31),
                              'min_weight_fraction_leaf': sp_loguniform(a=1e-6, b=1e-2),
-                             'criterion': ['mae'],
+                             'criterion': ['absolute_error'],
                              'max_features': ['auto'],
                              'n_jobs': [1],
                              'bootstrap': [False]}
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = RandomizedSearchCV(estimator=reg_model, 
                                        param_distributions=distributions,
-                                       n_iter=N_ITER_MINIMAL_0,
+                                       n_iter=N_ITER,
                                        scoring='neg_mean_absolute_error',
-                                       n_jobs=1,
+                                       n_jobs=N_CPU,
                                        cv=tss,
                                        verbose=1)
             model.fit(X_train_scaled, y_train_scaled.ravel())
@@ -2596,16 +2599,16 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
                              'min_samples_split': Integer(3, 30, prior='uniform'),
                              'min_samples_leaf': Integer(3, 30, prior='uniform'),
                              'min_weight_fraction_leaf': Real(1e-6, 1e-2, prior='log-uniform'),
-                             'criterion': Categorical(['mae']),
+                             'criterion': Categorical(['absolute_error']),
                              'max_features': Categorical(['auto']),
                              'n_jobs': [1],
                              'bootstrap': Categorical([False])}
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = BayesSearchCV(estimator=reg_model, 
                                     search_spaces=distributions,
-                                    n_iter=N_BAYESITER_MINIMAL_0,
+                                    n_iter=N_ITER,
                                     scoring='neg_mean_absolute_error',
-                                    n_jobs=1,
+                                    n_jobs=N_CPU,
                                     n_points=1,
                                     cv=tss,
                                     verbose=1)
@@ -2624,10 +2627,11 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             print('hyperparameter tuning: pso')
             kwargs = {'X_train_scaled': X_train_scaled,
                       'y_train_scaled': y_train_scaled.ravel(),
-                      'criterion': 'mae',
+                      'criterion': 'absolute_error',
                       'max_features': 'auto',
                       'bootstrap': True,
                       'n_jobs': 1,
+                      'N_CV': N_CV,
                       'return_model': False}
             # int n_estimators, int max_depth,
             # int min_samples_split, int min_samples_leaf, float min_weight_fraction_leaf
@@ -2635,11 +2639,11 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             ub = [150, 7, 30, 30, 1e-2]
             xopt, fopt = pso(extratreesregressor, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=N_SWARMSIZE_MINIMAL_1,
+                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_MAXITER_MINIMAL_1, minstep=1e-8,
+                            maxiter=N_ITER, minstep=1e-8,
                             minfunc=1e-5, debug=True,
-                            processes=1)
+                            processes=N_CPU)
             print('pso ready!')
             kwargs['return_model'] = True
             fopt, model = extratreesregressor(xopt, **kwargs)
@@ -2653,16 +2657,16 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
                              'min_samples_split': sp_randint(3, 31),
                              'min_samples_leaf': sp_randint(3, 31),
                              'min_weight_fraction_leaf': sp_loguniform(a=1e-6, b=1e-2),
-                             'criterion': ['mae'],
+                             'criterion': ['absolute_error'],
                              'max_features': ['auto'],
                              'n_jobs': [1],
                              'bootstrap': [True]}
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = RandomizedSearchCV(estimator=reg_model, 
                                        param_distributions=distributions,
-                                       n_iter=N_ITER_MINIMAL_1,
+                                       n_iter=N_ITER,
                                        scoring='neg_mean_absolute_error',
-                                       n_jobs=1,
+                                       n_jobs=N_CPU,
                                        cv=tss,
                                        verbose=1)
             model.fit(X_train_scaled, y_train_scaled.ravel())
@@ -2678,16 +2682,16 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
                              'min_samples_split': Integer(3, 30, prior='uniform'),
                              'min_samples_leaf': Integer(3, 30, prior='uniform'),
                              'min_weight_fraction_leaf': Real(1e-6, 1e-2, prior='log-uniform'),
-                             'criterion': Categorical(['mae']),
+                             'criterion': Categorical(['absolute_error']),
                              'max_features': Categorical(['auto']),
                              'n_jobs': [1],
                              'bootstrap': Categorical([True])}
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = BayesSearchCV(estimator=reg_model, 
                                     search_spaces=distributions,
-                                    n_iter=N_BAYESITER_MINIMAL_1,
+                                    n_iter=N_ITER,
                                     scoring='neg_mean_absolute_error',
-                                    n_jobs=1,
+                                    n_jobs=N_CPU,
                                     n_points=1,
                                     cv=tss,
                                     verbose=1)
@@ -2706,9 +2710,10 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             print('hyperparameter tuning: pso')
             kwargs = {'X_train_scaled': X_train_scaled,
                       'y_train_scaled': y_train_scaled.ravel(),
-                      'loss': 'lad',
-                      'criterion': 'mae',
+                      'loss': 'absolute_error',
+                      'criterion': 'friedman_mse',
                       'max_features': 'auto',
+                      'N_CV': N_CV,
                       'return_model': False}
             # learning_rate, n_estimators, subsample, min_samples_split,
             # min_samples_leaf, min_weight_fraction_leaf, max_depth
@@ -2716,9 +2721,9 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             ub = [0.9,  20, 1.0, 31, 31, 1e-2, 10]
             xopt, fopt = pso(gradientboostingregressor, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=N_SWARMSIZE_MINIMAL_2, # SMALL was too much
+                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_MAXITER_MINIMAL_2, minstep=1e-8,
+                            maxiter=N_ITER, minstep=1e-8,
                             minfunc=1e-5, debug=True,
                             processes=N_CPU)
             print('pso ready!')
@@ -2736,13 +2741,13 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
                              'min_samples_leaf': sp_randint(2, 31),
                              'min_weight_fraction_leaf': sp_loguniform(a=1e-6, b=1e-2),
                              'max_depth': sp_randint(5, 10),
-                             'loss': ['lad'],
-                             'criterion': ['mae'],
+                             'loss': ['absolute_error'],
+                             'criterion': ['friedman_mse'],
                              'max_features': ['auto']}
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = RandomizedSearchCV(estimator=reg_model, 
                                        param_distributions=distributions,
-                                       n_iter=N_ITER_MINIMAL_2,
+                                       n_iter=N_ITER,
                                        scoring='neg_mean_absolute_error',
                                        n_jobs=N_CPU,
                                        cv=tss,
@@ -2762,16 +2767,16 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
                              'min_samples_leaf': Integer(2, 30, prior='uniform'),
                              'min_weight_fraction_leaf': Real(1e-6, 1e-2, prior='log-uniform'),
                              'max_depth': Integer(5, 10, prior='uniform'),
-                             'loss': Categorical(['lad']),
-                             'criterion': Categorical(['mae']),
+                             'loss': Categorical(['absolute_error']),
+                             'criterion': Categorical(['friedman_mse']),
                              'max_features': Categorical(['auto'])}
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = BayesSearchCV(estimator=reg_model, 
                                     search_spaces=distributions,
-                                    n_iter=N_BAYESITER_MINIMAL_2,
+                                    n_iter=N_ITER,
                                     scoring='neg_mean_absolute_error',
                                     n_jobs=N_CPU,
-                                    n_points=N_CPU // N_CV,
+                                    n_points=1,
                                     cv=tss,
                                     verbose=1)
             model.fit(X_train_scaled, y_train_scaled.ravel())
@@ -2789,8 +2794,9 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             print('hyperparameter tuning: pso')
             kwargs = {'X_train_scaled': X_train_scaled,
                       'y_train_scaled': y_train_scaled.ravel(),
-                      'loss': 'least_absolute_deviation',
+                      'loss': 'absolute_error',
                       'early_stopping': False,
+                      'N_CV': N_CV,
                       'return_model': False}
             # learning_rate, max_iter, max_leaf_nodes, max_depth,
             # min_samples_leaf, l2_regularization, max_bins, 
@@ -2798,11 +2804,11 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             ub = [0.9, 20, 300, 6, 30, 1e-2, 255]
             xopt, fopt = pso(histgradientboostingregressor, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=N_SWARMSIZE_MINIMAL_3,
+                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_MAXITER_MINIMAL_3, minstep=1e-8,
+                            maxiter=N_ITER, minstep=1e-8,
                             minfunc=1e-5, debug=True,
-                            processes=1)
+                            processes=N_CPU)
             print('pso ready!')
             kwargs['return_model'] = True
             fopt, model = histgradientboostingregressor(xopt, **kwargs)
@@ -2818,14 +2824,14 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
                              'min_samples_leaf': sp_randint(2, 31),
                              'l2_regularization': sp_loguniform(a=1e-6, b=1e-2),
                              'max_bins': sp_randint(100, 255),
-                             'loss': ['least_absolute_deviation'],
+                             'loss': ['absolute_error'],
                              'early_stopping': [False]}
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = RandomizedSearchCV(estimator=reg_model, 
                                        param_distributions=distributions,
-                                       n_iter=N_ITER_MINIMAL_3,
+                                       n_iter=N_ITER,
                                        scoring='neg_mean_absolute_error',
-                                       n_jobs=1,
+                                       n_jobs=N_CPU,
                                        cv=tss,
                                        verbose=1)
             model.fit(X_train_scaled, y_train_scaled.ravel())
@@ -2843,14 +2849,14 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
                              'min_samples_leaf': Integer(2, 30, prior='uniform'),
                              'l2_regularization': Real(1e-6, 1e-2, prior='log-uniform'),
                              'max_bins': Integer(100, 255, prior='uniform'),
-                             'loss': Categorical(['least_absolute_deviation']),
+                             'loss': Categorical(['absolute_error']),
                              'early_stopping': Categorical([False])}
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = BayesSearchCV(estimator=reg_model, 
                                     search_spaces=distributions,
-                                    n_iter=N_BAYESITER_MINIMAL_3,
+                                    n_iter=N_ITER,
                                     scoring='neg_mean_absolute_error',
-                                    n_jobs=1,
+                                    n_jobs=N_CPU,
                                     n_points=1,
                                     cv=tss,
                                     verbose=1)
@@ -2876,15 +2882,17 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             print('Hyperparameter tuning: PSO')
             kwargs = {'X_train_scaled': X_train_scaled,
                       'y_train_scaled': y_train_scaled.ravel(),
+                      'criterion': 'absolute_error',
                       'n_jobs': 1,
+                      'N_CV': N_CV,
                       'return_model': False}
             lb = [30,  2,  1,  1,  0.2, 0.2]
             ub = [300, 10, 20, 20, 1.0, 0.99]
             xopt, fopt = pso(randomforest, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=N_SWARMSIZE_MINIMAL_3,
+                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_MAXITER_MINIMAL_3, minstep=1e-8,
+                            maxiter=N_ITER, minstep=1e-8,
                             minfunc=1e-5, debug=True,
                             processes=N_CPU)
             print('pso ready!')
@@ -2897,10 +2905,11 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             print('Hyperparameter tuning: RandomizedSearchCV')
             reg_model = RandomForestRegressor()
             distributions = {'n_estimators': sp_randint(30, 300),
+                             'criterion': ['absolute_error'],
                              'max_depth': sp_randint(2, 10),
-                             'min_samples_split': sp_randint(1, 21),
+                             'min_samples_split': sp_randint(2, 21),
                              'min_samples_leaf': sp_randint(1, 21),
-                             'max_features': sp_uniform(loc=0.2, scale=0.8),
+                             'max_features': sp_uniform(loc=0.5, scale=0.5),
                              'max_leaf_nodes': [None],
                              'min_impurity_decrease': [0.0],
                              'n_jobs': [1],
@@ -2908,7 +2917,7 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = RandomizedSearchCV(estimator=reg_model, 
                                        param_distributions=distributions,
-                                       n_iter=N_ITER_MINIMAL_3,
+                                       n_iter=N_ITER,
                                        scoring='neg_mean_absolute_error',
                                        n_jobs=N_CPU,
                                        cv=tss,
@@ -2923,6 +2932,7 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             print('Hyperparameter tuning: BayesSearchCV')
             reg_model = RandomForestRegressor()
             distributions = {'n_estimators': Integer(30, 300, prior='uniform'),
+                             'criterion': Categorical(['absolute_error']),
                              'max_depth': Integer(2, 10, prior='uniform'),
                              'min_samples_split': Integer(1, 20, prior='uniform'),
                              'min_samples_leaf': Integer(1, 20, prior='uniform'),
@@ -2934,10 +2944,10 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = BayesSearchCV(estimator=reg_model, 
                                     search_spaces=distributions,
-                                    n_iter=N_BAYESITER_MINIMAL_3,
+                                    n_iter=N_ITER,
                                     scoring='neg_mean_absolute_error',
                                     n_jobs=N_CPU,
-                                    n_points=N_CPU // N_CV,
+                                    n_points=1,
                                     cv=tss,
                                     verbose=1)
             model.fit(X_train_scaled, y_train_scaled.ravel())
@@ -2956,6 +2966,7 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
                       'y_train_scaled': y_train_scaled.ravel(),
                       'boosting_type': 'gbdt',
                       'n_jobs': 1,
+                      'N_CV': N_CV,
                       'return_model':False}
             # num_leaves, max_depth, min_child_samples, learning_rate, n_estimators,
             # reg_alpha, reg_lambda
@@ -2963,9 +2974,9 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             ub = [40, 10, 30, 0.9,  300, 1e-1, 1e1]
             xopt, fopt = pso(lgb_regressor, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=N_SWARMSIZE_MINIMAL_3,
+                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_MAXITER_MINIMAL_3, minstep=1e-8,
+                            maxiter=N_ITER, minstep=1e-8,
                             minfunc=1e-5, debug=False,
                             processes=N_CPU)
             print(model_name, 'ready!')
@@ -2987,7 +2998,7 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = RandomizedSearchCV(estimator=reg_model, 
                                        param_distributions=distributions,
-                                       n_iter=N_ITER_MINIMAL_3,
+                                       n_iter=N_ITER,
                                        scoring='neg_mean_absolute_error',
                                        n_jobs=N_CPU,
                                        cv=tss,
@@ -3011,10 +3022,10 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = BayesSearchCV(estimator=reg_model, 
                                     search_spaces=distributions,
-                                    n_iter=N_BAYESITER_MINIMAL_3,
+                                    n_iter=N_ITER,
                                     scoring='neg_mean_absolute_error',
                                     n_jobs=N_CPU,
-                                    n_points=N_CPU // N_CV,
+                                    n_points=1,
                                     cv=tss,
                                     verbose=1)
             model.fit(X_train_scaled, y_train_scaled.ravel())
@@ -3034,6 +3045,7 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
                       'y_train_scaled': y_train_scaled.ravel(),
                       'boosting_type': 'goss',
                       'n_jobs': 1,
+                      'N_CV': N_CV,
                       'return_model':False}
             # num_leaves, max_depth, min_child_samples, learning_rate, n_estimators,
             # reg_alpha, reg_lambda
@@ -3041,9 +3053,9 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             ub = [40, 10, 30, 0.9,  300, 1e-1, 1e1]
             xopt, fopt = pso(lgb_regressor, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=N_SWARMSIZE_MINIMAL_3,
+                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_MAXITER_MINIMAL_3, minstep=1e-8,
+                            maxiter=N_ITER, minstep=1e-8,
                             minfunc=1e-5, debug=False,
                             processes=N_CPU)
             print(model_name, 'ready!')
@@ -3065,7 +3077,7 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = RandomizedSearchCV(estimator=reg_model, 
                                        param_distributions=distributions,
-                                       n_iter=N_ITER_MINIMAL_3,
+                                       n_iter=N_ITER,
                                        scoring='neg_mean_absolute_error',
                                        n_jobs=N_CPU,
                                        cv=tss,
@@ -3089,10 +3101,10 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = BayesSearchCV(estimator=reg_model, 
                                     search_spaces=distributions,
-                                    n_iter=N_BAYESITER_MINIMAL_3,
+                                    n_iter=N_ITER,
                                     scoring='neg_mean_absolute_error',
                                     n_jobs=N_CPU,
-                                    n_points=N_CPU // N_CV,
+                                    n_points=1,
                                     cv=tss,
                                     verbose=1)
             model.fit(X_train_scaled, y_train_scaled.ravel())
@@ -3109,6 +3121,7 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
                       'y_train_scaled': y_train_scaled.ravel(),
                       'boosting_type': 'dart',
                       'n_jobs': 1,
+                      'N_CV': N_CV,
                       'return_model':False}
             # num_leaves, max_depth, min_child_samples, learning_rate, n_estimators,
             # reg_alpha, reg_lambda
@@ -3116,9 +3129,9 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             ub = [40, 10, 30, 0.9,  300, 1e-1, 1e1]
             xopt, fopt = pso(lgb_regressor, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=N_SWARMSIZE_MINIMAL_3,
+                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_MAXITER_MINIMAL_3, minstep=1e-8,
+                            maxiter=N_ITER, minstep=1e-8,
                             minfunc=1e-5, debug=False,
                             processes=N_CPU)
             print(model_name, 'ready!')
@@ -3140,7 +3153,7 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = RandomizedSearchCV(estimator=reg_model, 
                                        param_distributions=distributions,
-                                       n_iter=N_ITER_MINIMAL_3,
+                                       n_iter=N_ITER,
                                        scoring='neg_mean_absolute_error',
                                        n_jobs=N_CPU,
                                        cv=tss,
@@ -3164,10 +3177,10 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = BayesSearchCV(estimator=reg_model, 
                                     search_spaces=distributions,
-                                    n_iter=N_BAYESITER_MINIMAL_3,
+                                    n_iter=N_ITER,
                                     scoring='neg_mean_absolute_error',
                                     n_jobs=N_CPU,
-                                    n_points=N_CPU // N_CV,
+                                    n_points=1,
                                     cv=tss,
                                     verbose=1)
             model.fit(X_train_scaled, y_train_scaled.ravel())
@@ -3184,6 +3197,7 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
                       'y_train_scaled': y_train_scaled.ravel(),
                       'boosting_type': 'rf',
                       'n_jobs': 1,
+                      'N_CV': N_CV,
                       'return_model':False}
             # num_leaves, max_depth, min_child_samples, learning_rate, n_estimators,
             # subsample, subsample_freq, reg_alpha, reg_lambda
@@ -3191,9 +3205,9 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             ub = [31, 6, 30, 0.9,  300, 0.9, 3, 1e-1, 1e1]
             xopt, fopt = pso(lgb_regressor, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=N_SWARMSIZE_MINIMAL_3,
+                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_MAXITER_MINIMAL_3, minstep=1e-8,
+                            maxiter=N_ITER, minstep=1e-8,
                             minfunc=1e-5, debug=False,
                             processes=N_CPU)
             print(model_name, 'ready!')
@@ -3217,7 +3231,7 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = RandomizedSearchCV(estimator=reg_model, 
                                        param_distributions=distributions,
-                                       n_iter=N_ITER_MINIMAL_3,
+                                       n_iter=N_ITER,
                                        scoring='neg_mean_absolute_error',
                                        n_jobs=N_CPU,
                                        cv=tss,
@@ -3243,10 +3257,10 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = BayesSearchCV(estimator=reg_model, 
                                     search_spaces=distributions,
-                                    n_iter=N_BAYESITER_MINIMAL_3,
+                                    n_iter=N_ITER,
                                     scoring='neg_mean_absolute_error',
                                     n_jobs=N_CPU,
-                                    n_points=N_CPU // N_CV,
+                                    n_points=1,
                                     cv=tss,
                                     verbose=1)
             model.fit(X_train_scaled, y_train_scaled.ravel())
@@ -3272,6 +3286,7 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
                       'booster': 'gbtree',
                       'objective': 'reg:squarederror',
                       'n_jobs': 1,
+                      'N_CV': N_CV,
                       'return_model':False}
             #n_estimators, max_depth, learning_rate, gamma, subsample,
             # reg_alpha, reg_lambda
@@ -3279,9 +3294,9 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             ub = [100, 5, 1.0,  1e1,  1.0, 1e-1,  1e1]
             xopt, fopt = pso(xgb_gbtree, lb, ub,
                              kwargs=kwargs,
-                             swarmsize=N_SWARMSIZE_MINIMAL_3,
+                             swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
                              omega=0.5, phip=0.5, phig=0.5, 
-                             maxiter=N_MAXITER_MINIMAL_3, minstep=1e-8,
+                             maxiter=N_ITER, minstep=1e-8,
                              minfunc=1e-5, debug=False,
                              processes=N_CPU)
             kwargs['return_model'] = True
@@ -3302,7 +3317,7 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = RandomizedSearchCV(estimator=reg_model, 
                                        param_distributions=distributions,
-                                       n_iter=N_ITER_MINIMAL_3,
+                                       n_iter=N_ITER,
                                        scoring='neg_mean_absolute_error',
                                        n_jobs=N_CPU,
                                        cv=tss,
@@ -3326,10 +3341,10 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = BayesSearchCV(estimator=reg_model, 
                                   search_spaces=distributions,
-                                  n_iter=N_BAYESITER_MINIMAL_3,
+                                  n_iter=N_ITER,
                                   scoring='neg_mean_absolute_error',
                                   n_jobs=N_CPU,
-                                  n_points=N_CPU // N_CV,
+                                  n_points=1,
                                   cv=tss,
                                   verbose=1)
             model.fit(X_train_scaled, y_train_scaled)
@@ -3350,6 +3365,7 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
                       'booster': 'dart',
                       'objective': 'reg:squarederror',
                       'n_jobs': 1,
+                      'N_CV': N_CV,
                       'return_model':False}
             #n_estimators, max_depth, learning_rate, gamma, subsample,
             # reg_alpha, reg_lambda
@@ -3357,9 +3373,9 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             ub = [100, 10, 1.0,  1e1,  1.0, 1e-1,  1e1]
             xopt, fopt = pso(xgb_gbtree, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=N_SWARMSIZE_MINIMAL_3,
+                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_MAXITER_MINIMAL_3, minstep=1e-8,
+                            maxiter=N_ITER, minstep=1e-8,
                             minfunc=1e-5, debug=False,
                             processes=N_CPU)
             kwargs['return_model'] = True
@@ -3380,7 +3396,7 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = RandomizedSearchCV(estimator=reg_model, 
                                        param_distributions=distributions,
-                                       n_iter=N_ITER_MINIMAL_3,
+                                       n_iter=N_ITER,
                                        scoring='neg_mean_absolute_error',
                                        n_jobs=N_CPU,
                                        cv=tss,
@@ -3404,10 +3420,10 @@ def fit_model(X_train_scaled, y_train_scaled, model_name, optimization_method):
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = BayesSearchCV(estimator=reg_model, 
                                     search_spaces=distributions,
-                                    n_iter=N_BAYESITER_MINIMAL_3,
+                                    n_iter=N_ITER,
                                     scoring='neg_mean_absolute_error',
                                     n_jobs=N_CPU,
-                                    n_points=N_CPU // N_CV,
+                                    n_points=1,
                                     cv=tss,
                                     verbose=1)
             model.fit(X_train_scaled, y_train_scaled)
@@ -3433,7 +3449,7 @@ def dummyregressor(kwargs):
     X_train_scaled = kwargs['X_train_scaled']
     y_train_scaled = kwargs['y_train_scaled']
     model = DummyRegressor()
-    tss = TimeSeriesSplit(n_splits=N_CV)
+    tss = TimeSeriesSplit(n_splits=kwargs['N_CV'])
     scores = cross_val_score(model,
                              X_train_scaled,
                              y_train_scaled,
@@ -3452,7 +3468,7 @@ def expfunc(kwargs):
     X_train_scaled = kwargs['X_train_scaled']
     y_train_scaled = kwargs['y_train_scaled']
     model = myClasses.ExpFuncRegressor()
-    tss = TimeSeriesSplit(n_splits=N_CV)
+    tss = TimeSeriesSplit(n_splits=kwargs['N_CV'])
     scores = cross_val_score(model, 
                              X_train_scaled,
                              y_train_scaled,
@@ -3469,7 +3485,7 @@ def piecewise(kwargs):
     X_train_scaled = kwargs['X_train_scaled']
     y_train_scaled = kwargs['y_train_scaled']
     model = myClasses.PiecewiseRegressor()
-    tss = TimeSeriesSplit(n_splits=N_CV)
+    tss = TimeSeriesSplit(n_splits=kwargs['N_CV'])
     scores = cross_val_score(model, 
                              X_train_scaled,
                              y_train_scaled,
@@ -3488,7 +3504,7 @@ def linearregression(kwargs):
     y_train_scaled = kwargs['y_train_scaled']
     model = LinearRegression(n_jobs=1)
     
-    tss = TimeSeriesSplit(n_splits=N_CV)
+    tss = TimeSeriesSplit(n_splits=kwargs['N_CV'])
     scores = cross_val_score(model,
                              X_train_scaled,
                              y_train_scaled,
@@ -3509,7 +3525,7 @@ def ridge(x, **kwargs):
     X_train_scaled = kwargs['X_train_scaled']
     y_train_scaled = kwargs['y_train_scaled']
     model = Ridge(alpha=x)
-    tss = TimeSeriesSplit(n_splits=N_CV)
+    tss = TimeSeriesSplit(n_splits=kwargs['N_CV'])
     scores = cross_val_score(model,
                              X_train_scaled,
                              y_train_scaled,
@@ -3530,7 +3546,7 @@ def lasso(x, **kwargs):
     X_train_scaled = kwargs['X_train_scaled']
     y_train_scaled = kwargs['y_train_scaled']
     model = Lasso(alpha=x)
-    tss = TimeSeriesSplit(n_splits=N_CV)
+    tss = TimeSeriesSplit(n_splits=kwargs['N_CV'])
     scores = cross_val_score(model,
                              X_train_scaled,
                              y_train_scaled,
@@ -3549,7 +3565,7 @@ def elasticnet(x, **kwargs):
     X_train_scaled = kwargs['X_train_scaled']
     y_train_scaled = kwargs['y_train_scaled']
     model = ElasticNet(alpha=x[0], l1_ratio=x[1])
-    tss = TimeSeriesSplit(n_splits=N_CV)
+    tss = TimeSeriesSplit(n_splits=kwargs['N_CV'])
     scores = cross_val_score(model,
                              X_train_scaled,
                              y_train_scaled,
@@ -3567,8 +3583,9 @@ def elasticnet(x, **kwargs):
 def lars(x, **kwargs):
     X_train_scaled = kwargs['X_train_scaled']
     y_train_scaled = kwargs['y_train_scaled']
-    model = Lars(n_nonzero_coefs=int(x))
-    tss = TimeSeriesSplit(n_splits=N_CV)
+    model = Lars(n_nonzero_coefs=int(x),
+                 normalize=False)
+    tss = TimeSeriesSplit(n_splits=kwargs['N_CV'])
     scores = cross_val_score(model,
                              X_train_scaled,
                              y_train_scaled,
@@ -3587,8 +3604,9 @@ def lassolars(x, **kwargs):
     # and bayessearchcv
     X_train_scaled = kwargs['X_train_scaled']
     y_train_scaled = kwargs['y_train_scaled']
-    model = LassoLars(alpha=x)
-    tss = TimeSeriesSplit(n_splits=N_CV)
+    model = LassoLars(alpha=x,
+                      normalize=False)
+    tss = TimeSeriesSplit(n_splits=kwargs['N_CV'])
     scores = cross_val_score(model,
                              X_train_scaled,
                              y_train_scaled,
@@ -3612,7 +3630,7 @@ def huberregressor(x, **kwargs):
     model = HuberRegressor(epsilon=epsilon,
                            max_iter=max_iter,
                            alpha=alpha)
-    tss = TimeSeriesSplit(n_splits=N_CV)
+    tss = TimeSeriesSplit(n_splits=kwargs['N_CV'])
     scores = cross_val_score(model,
                              X_train_scaled,
                              y_train_scaled,
@@ -3639,7 +3657,7 @@ def ransacregressor(x, **kwargs):
                             residual_threshold=residual_threshold,
                             max_trials=max_trials,
                             stop_probability=stop_probability)
-    tss = TimeSeriesSplit(n_splits=N_CV)
+    tss = TimeSeriesSplit(n_splits=kwargs['N_CV'])
     scores = cross_val_score(model,
                              X_train_scaled,
                              y_train_scaled,
@@ -3664,7 +3682,7 @@ def theilsenregressor(x, **kwargs):
     model = TheilSenRegressor(max_subpopulation=max_subpopulation,
                               n_subsamples=n_subsamples,
                               n_jobs=n_jobs)
-    tss = TimeSeriesSplit(n_splits=N_CV)
+    tss = TimeSeriesSplit(n_splits=kwargs['N_CV'])
     scores = cross_val_score(model,
                              X_train_scaled,
                              y_train_scaled,
@@ -3677,6 +3695,7 @@ def theilsenregressor(x, **kwargs):
     else:
         model.fit(X_train_scaled, y_train_scaled)
         return(score, model)
+
 
 
 def kernelridge(x, **kwargs):
@@ -3700,7 +3719,7 @@ def kernelridge(x, **kwargs):
         model = KernelRidge(alpha=alpha, kernel=kernel, gamma=gamma,
                             degree=degree, coef0=coef0)
     
-    tss = TimeSeriesSplit(n_splits=N_CV)
+    tss = TimeSeriesSplit(n_splits=kwargs['N_CV'])
     scores = cross_val_score(model,
                              X_train_scaled,
                              y_train_scaled,
@@ -3730,7 +3749,7 @@ def linearsvr(x, **kwargs):
     model = LinearSVR(epsilon=epsilon,
                         C=C, loss=loss, dual=dual,
                         max_iter=max_iter)
-    tss = TimeSeriesSplit(n_splits=N_CV)
+    tss = TimeSeriesSplit(n_splits=kwargs['N_CV'])
     scores = cross_val_score(model,
                              X_train_scaled,
                              y_train_scaled,
@@ -3763,7 +3782,7 @@ def nusvr(x, **kwargs):
                   kernel=kernel, shrinking=shrinking,
                   cache_size=cache_size,
                   max_iter=max_iter)
-    tss = TimeSeriesSplit(n_splits=N_CV)
+    tss = TimeSeriesSplit(n_splits=kwargs['N_CV'])
     scores = cross_val_score(model,
                              X_train_scaled,
                              y_train_scaled,
@@ -3793,7 +3812,7 @@ def svr(x, **kwargs):
     model = SVR(kernel=kernel, degree=degree, gamma=gamma, coef0=coef0,
                 C=C, epsilon=epsilon, shrinking=shrinking,
                 cache_size=cache_size)
-    tss = TimeSeriesSplit(n_splits=N_CV)
+    tss = TimeSeriesSplit(n_splits=kwargs['N_CV'])
     scores = cross_val_score(model,
                              X_train_scaled,
                              y_train_scaled,
@@ -3821,7 +3840,7 @@ def kneighborsregressor(x, **kwargs):
                                 leaf_size=leaf_size, p=p,
                                 weights=weights,
                                 n_jobs=n_jobs)
-    tss = TimeSeriesSplit(n_splits=N_CV)
+    tss = TimeSeriesSplit(n_splits=kwargs['N_CV'])
     scores = cross_val_score(model,
                              X_train_scaled,
                              y_train_scaled,
@@ -3854,7 +3873,7 @@ def decisiontreeregressor(x, **kwargs):
                                   min_samples_leaf=min_samples_leaf,
                                   min_weight_fraction_leaf=min_weight_fraction_leaf,
                                   max_features=kwargs['max_features'])
-    tss = TimeSeriesSplit(n_splits=N_CV)
+    tss = TimeSeriesSplit(n_splits=kwargs['N_CV'])
     scores = cross_val_score(model,
                              X_train_scaled,
                              y_train_scaled,
@@ -3886,7 +3905,7 @@ def extratreeregressor(x, **kwargs):
                                   min_samples_leaf=min_samples_leaf,
                                   min_weight_fraction_leaf=min_weight_fraction_leaf,
                                   max_features=kwargs['max_features'])
-    tss = TimeSeriesSplit(n_splits=N_CV)
+    tss = TimeSeriesSplit(n_splits=kwargs['N_CV'])
     scores = cross_val_score(model,
                              X_train_scaled,
                              y_train_scaled,
@@ -3915,7 +3934,7 @@ def adaboost_decisiontree(x, **kwargs):
     model = AdaBoostRegressor(base_estimator=base_estimator,
                               n_estimators=n_estimators,
                               learning_rate=learning_rate)
-    tss = TimeSeriesSplit(n_splits=N_CV)
+    tss = TimeSeriesSplit(n_splits=kwargs['N_CV'])
     scores = cross_val_score(model,
                              X_train_scaled,
                              y_train_scaled,
@@ -3944,7 +3963,7 @@ def adaboost_extratree(x, **kwargs):
     model = AdaBoostRegressor(base_estimator=base_estimator,
                               n_estimators=n_estimators,
                               learning_rate=learning_rate)
-    tss = TimeSeriesSplit(n_splits=N_CV)
+    tss = TimeSeriesSplit(n_splits=kwargs['N_CV'])
     scores = cross_val_score(model,
                              X_train_scaled,
                              y_train_scaled,
@@ -3971,7 +3990,7 @@ def bagging_decisiontree(x, **kwargs):
     model = BaggingRegressor(base_estimator=base_estimator,
                              n_estimators=n_estimators,
                              n_jobs=n_jobs)
-    tss = TimeSeriesSplit(n_splits=N_CV)
+    tss = TimeSeriesSplit(n_splits=kwargs['N_CV'])
     scores = cross_val_score(model,
                              X_train_scaled,
                              y_train_scaled,
@@ -3997,7 +4016,7 @@ def bagging_extratree(x, **kwargs):
     model = BaggingRegressor(base_estimator=base_estimator,
                              n_estimators=n_estimators,
                              n_jobs=n_jobs)
-    tss = TimeSeriesSplit(n_splits=N_CV)
+    tss = TimeSeriesSplit(n_splits=kwargs['N_CV'])
     scores = cross_val_score(model,
                              X_train_scaled,
                              y_train_scaled,
@@ -4037,7 +4056,7 @@ def extratreesregressor(x, **kwargs):
                                 min_weight_fraction_leaf=min_weight_fraction_leaf,
                                 n_jobs=n_jobs,
                                 verbose=2)
-    tss = TimeSeriesSplit(n_splits=N_CV)
+    tss = TimeSeriesSplit(n_splits=kwargs['N_CV'])
     scores = cross_val_score(model,
                              X_train_scaled,
                              y_train_scaled,
@@ -4075,7 +4094,7 @@ def gradientboostingregressor(x, **kwargs):
                                       min_samples_leaf=min_samples_leaf,
                                       min_weight_fraction_leaf=min_weight_fraction_leaf,
                                       max_depth=max_depth)
-    tss = TimeSeriesSplit(n_splits=N_CV)
+    tss = TimeSeriesSplit(n_splits=kwargs['N_CV'])
     scores = cross_val_score(model,
                              X_train_scaled,
                              y_train_scaled,
@@ -4110,7 +4129,7 @@ def histgradientboostingregressor(x, **kwargs):
                                           max_bins=max_bins,
                                           loss=kwargs['loss'],
                                           early_stopping=kwargs['early_stopping'])
-    tss = TimeSeriesSplit(n_splits=N_CV)
+    tss = TimeSeriesSplit(n_splits=kwargs['N_CV'])
     scores = cross_val_score(model,
                              X_train_scaled,
                              y_train_scaled,
@@ -4138,8 +4157,10 @@ def randomforest(x, **kwargs):
     
     X_train_scaled = kwargs['X_train_scaled']
     y_train_scaled = kwargs['y_train_scaled']
+    criterion = kwargs['criterion']
     n_jobs = kwargs['n_jobs']
     model = RandomForestRegressor(n_estimators=n_estimators,
+                                  criterion=criterion,
                                   max_depth=max_depth,
                                   min_samples_split=min_samples_split,
                                   min_samples_leaf=min_samples_leaf,
@@ -4148,7 +4169,7 @@ def randomforest(x, **kwargs):
                                   min_impurity_decrease=0.0,
                                   max_samples=max_samples,
                                   n_jobs=n_jobs)
-    tss = TimeSeriesSplit(n_splits=N_CV)
+    tss = TimeSeriesSplit(n_splits=kwargs['N_CV'])
     scores = cross_val_score(model,
                              X_train_scaled,
                              y_train_scaled,
@@ -4214,7 +4235,7 @@ def lgb_regressor(x, **kwargs):
                                   reg_lambda=reg_lambda,
                                   n_jobs=n_jobs)
     
-    tss = TimeSeriesSplit(n_splits=N_CV)
+    tss = TimeSeriesSplit(n_splits=kwargs['N_CV'])
     scores = cross_val_score(model, 
                              X_train_scaled, 
                              y_train_scaled, 
@@ -4254,7 +4275,7 @@ def xgb_gbtree(x, **kwargs):
                              objective=objective,
                              booster=booster,
                              n_jobs=n_jobs)
-    tss = TimeSeriesSplit(n_splits=N_CV)
+    tss = TimeSeriesSplit(n_splits=kwargs['N_CV'])
     scores = cross_val_score(model, 
                              X_train_scaled, 
                              y_train_scaled, 
