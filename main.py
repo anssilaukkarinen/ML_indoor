@@ -136,7 +136,6 @@ def scale_train(X_train, y_train):
 def predict(y0, X0, n_lags_X, n_lags_y, scaler_X, scaler_y, model):
     print('We are at main_predict', flush=True)
     y_pred = 22.0 * np.ones(y0.shape)
-    print('foobar1', flush=True)
     X_pred, y_pred = create_features(X0, y_pred, n_lags_X, n_lags_y)
     X_pred_scaled = scaler_X.transform(X_pred)
     y_pred_scaled = scaler_y.transform(y_pred)
@@ -234,7 +233,7 @@ if __name__ == '__main__':
     python main.py mp_names models optimization_methods N_CV N_ITER N_CPU
     python main.py 3 4 6 7 1 2 4 10 1
     
-    python3 main.py python main.py 0 5 0 48 0 3 4 5 1
+    python3 main.py 0 5 0 48 0 3 4 5 1
     
     # Run once
     xopt, fopt, model, \
@@ -328,7 +327,7 @@ if __name__ == '__main__':
     print(model_names)
     
     # These were considered too slow:
-    # model_names_removed = ['svr_poly']
+    # model_names_removed = ['svr_poly'] # with 10+10*len(lb) swarmsize very slow
     
     # check randomforest, histgradientboosting
     
