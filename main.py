@@ -133,7 +133,6 @@ def scale_train(X_train, y_train):
 def predict(y0, X0, n_lags_X, n_lags_y, scaler_X, scaler_y, model):
     print('We are at main_predict', flush=True)
     y_pred = 22.0 * np.ones(y0.shape)
-    print('foobar1', flush=True)
     X_pred, y_pred = create_features(X0, y_pred, n_lags_X, n_lags_y)
     X_pred_scaled = scaler_X.transform(X_pred)
     y_pred_scaled = scaler_y.transform(y_pred)
@@ -284,7 +283,7 @@ if __name__ == '__main__':
                     'bagging_extratree',
                     'extratreesregressor_bootstrapfalse',
                     'extratreesregressor_bootstraptrue',
-                    'gradientboostingregressor_lad',
+                     'gradientboostingregressor_lad',
                     'histgradientboostingregressor_lad',
                     'randomforest',
                     'lgb_gbdt',
@@ -298,6 +297,12 @@ if __name__ == '__main__':
     
     # These were considered too slow:
     # model_names_removed = ['svr_poly']
+    # theilsen, ransac, kernelridge_sigmoid
+    
+    # ridge, 
+    # nusvr_poly (convergence warning terminated early)
+    # svr_poly convergence warning. solver terminated early consider pre-processing your data with standardscaler or minmaxscaler
+    
     
     
     # Optimization methods
