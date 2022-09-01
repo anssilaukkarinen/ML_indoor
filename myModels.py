@@ -82,8 +82,8 @@ def fit_model(X_train_scaled, y_train_scaled,
 
     print(model_name, optimization_method, flush=True)
     
-    n_swarmsize_const = 10
-    n_swarmsize_lb = 10
+    n_swarmsize_const = 1
+    n_swarmsize_lb = 1
 
     
     
@@ -1953,7 +1953,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                       'y_train_scaled': y_train_scaled.ravel(),
                       'splitter': 'best', # best, random
                       'criterion': 'absolute_error', # mse, friedman_mse, mae
-                      'max_features': 'auto', # auto, sqrt, log2
+                      'max_features': None, # None, sqrt, log2
                       'max_depth': None,
                       'N_CV': N_CV,
                       'return_model': False}
@@ -1980,7 +1980,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                              'min_weight_fraction_leaf': sp_loguniform(a=1e-5, b=0.1),
                              'splitter':['best'],
                              'criterion':['absolute_error'],
-                             'max_features':['auto'],
+                             'max_features':[None],
                              'max_depth': [None]}
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = RandomizedSearchCV(estimator=reg_model, 
@@ -2003,7 +2003,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                              'min_weight_fraction_leaf': Real(1e-5, 0.1, prior='log-uniform'),
                              'splitter': Categorical(['best']),
                              'criterion': Categorical(['absolute_error']),
-                             'max_features': Categorical(['auto']),
+                             'max_features': Categorical([None]),
                              'max_depth': Categorical([None])}
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = BayesSearchCV(estimator=reg_model, 
@@ -2032,7 +2032,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                       'y_train_scaled': y_train_scaled.ravel(),
                       'splitter': 'random', # best, random
                       'criterion': 'absolute_error', # mse, friedman_mse, mae
-                      'max_features': 'auto', # auto, sqrt, log2
+                      'max_features': None, # None, sqrt, log2
                       'max_depth': None,
                       'N_CV': N_CV,
                       'return_model': False}
@@ -2059,7 +2059,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                              'min_weight_fraction_leaf': sp_loguniform(a=1e-5, b=0.1),
                              'splitter':['random'],
                              'criterion':['absolute_error'],
-                             'max_features':['auto'],
+                             'max_features':[None],
                              'max_depth': [None]}
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = RandomizedSearchCV(estimator=reg_model, 
@@ -2082,7 +2082,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                              'min_weight_fraction_leaf': Real(1e-5, 0.1, prior='log-uniform'),
                              'splitter': Categorical(['random']),
                              'criterion': Categorical(['absolute_error']),
-                             'max_features': Categorical(['auto']),
+                             'max_features': Categorical([None]),
                              'max_depth': Categorical([None])}
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = BayesSearchCV(estimator=reg_model, 
@@ -2545,7 +2545,7 @@ def fit_model(X_train_scaled, y_train_scaled,
             kwargs = {'X_train_scaled': X_train_scaled,
                       'y_train_scaled': y_train_scaled.ravel(),
                       'criterion': 'absolute_error',
-                      'max_features': 'auto',
+                      'max_features': 1.0,
                       'bootstrap': False,
                       'n_jobs': 1,
                       'N_CV': N_CV,
@@ -2575,7 +2575,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                              'min_samples_leaf': sp_randint(3, 31),
                              'min_weight_fraction_leaf': sp_loguniform(a=1e-6, b=1e-2),
                              'criterion': ['absolute_error'],
-                             'max_features': ['auto'],
+                             'max_features': [1.0],
                              'n_jobs': [1],
                              'bootstrap': [False]}
             tss = TimeSeriesSplit(n_splits=N_CV)
@@ -2600,7 +2600,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                              'min_samples_leaf': Integer(3, 30, prior='uniform'),
                              'min_weight_fraction_leaf': Real(1e-6, 1e-2, prior='log-uniform'),
                              'criterion': Categorical(['absolute_error']),
-                             'max_features': Categorical(['auto']),
+                             'max_features': Categorical([1.0]),
                              'n_jobs': [1],
                              'bootstrap': Categorical([False])}
             tss = TimeSeriesSplit(n_splits=N_CV)
@@ -2628,7 +2628,7 @@ def fit_model(X_train_scaled, y_train_scaled,
             kwargs = {'X_train_scaled': X_train_scaled,
                       'y_train_scaled': y_train_scaled.ravel(),
                       'criterion': 'absolute_error',
-                      'max_features': 'auto',
+                      'max_features': 1.0,
                       'bootstrap': True,
                       'n_jobs': 1,
                       'N_CV': N_CV,
@@ -2658,7 +2658,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                              'min_samples_leaf': sp_randint(3, 31),
                              'min_weight_fraction_leaf': sp_loguniform(a=1e-6, b=1e-2),
                              'criterion': ['absolute_error'],
-                             'max_features': ['auto'],
+                             'max_features': [1.0],
                              'n_jobs': [1],
                              'bootstrap': [True]}
             tss = TimeSeriesSplit(n_splits=N_CV)
@@ -2683,7 +2683,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                              'min_samples_leaf': Integer(3, 30, prior='uniform'),
                              'min_weight_fraction_leaf': Real(1e-6, 1e-2, prior='log-uniform'),
                              'criterion': Categorical(['absolute_error']),
-                             'max_features': Categorical(['auto']),
+                             'max_features': Categorical([1.0]),
                              'n_jobs': [1],
                              'bootstrap': Categorical([True])}
             tss = TimeSeriesSplit(n_splits=N_CV)
@@ -2886,7 +2886,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                       'n_jobs': 1,
                       'N_CV': N_CV,
                       'return_model': False}
-            lb = [30,  2,  1,  1,  0.2, 0.2]
+            lb = [30,  2,  2,  1,  0.2, 0.2]
             ub = [300, 10, 20, 20, 1.0, 0.99]
             xopt, fopt = pso(randomforest, lb, ub,
                             kwargs=kwargs,
@@ -2909,7 +2909,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                              'max_depth': sp_randint(2, 10),
                              'min_samples_split': sp_randint(2, 21),
                              'min_samples_leaf': sp_randint(1, 21),
-                             'max_features': sp_uniform(loc=0.5, scale=0.5),
+                             'max_features': sp_uniform(loc=0.2, scale=0.8),
                              'max_leaf_nodes': [None],
                              'min_impurity_decrease': [0.0],
                              'n_jobs': [1],
@@ -3545,7 +3545,7 @@ def lasso(x, **kwargs):
     # and bayessearchcv
     X_train_scaled = kwargs['X_train_scaled']
     y_train_scaled = kwargs['y_train_scaled']
-    model = Lasso(alpha=x)
+    model = Lasso(alpha=x[0])
     tss = TimeSeriesSplit(n_splits=kwargs['N_CV'])
     scores = cross_val_score(model,
                              X_train_scaled,

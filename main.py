@@ -233,15 +233,7 @@ if __name__ == '__main__':
     python main.py mp_names models optimization_methods N_CV N_ITER N_CPU
     python main.py 3 4 6 7 1 2 4 10 1
     
-    python3 main.py 0 5 0 48 0 3 4 5 1
-    
-    # Run once
-    xopt, fopt, model, \
-    y_train, y_train_pred, \
-    y_validate, y_validate_pred, \
-    y_test, y_test_pred \
-        = main(measurement_point_name='Tampere1', n_lags_X=0, n_lags_y=0,
-                model_name='xgboost_gbtree')
+    python3 main.py 0 5 0 48 0 3 3 2 1
     """
     
     
@@ -265,12 +257,12 @@ if __name__ == '__main__':
     # with open(fname, 'w') as sys.stdout:
         
     # Run all the code        
-    print(sys.argv)
+    print(sys.argv, flush=True)
     
     # measurement points
     measurement_point_names = ['Espoo1', 'Espoo2', 'Tampere1', 'Tampere2', 'Valkeakoski']
     measurement_point_names = measurement_point_names[int(sys.argv[1]):int(sys.argv[2])]
-    print(measurement_point_names)
+    print(measurement_point_names, flush=True)
     
     
     
@@ -314,7 +306,7 @@ if __name__ == '__main__':
                     'bagging_extratree',
                     'extratreesregressor_bootstrapfalse',
                     'extratreesregressor_bootstraptrue',
-                     'gradientboostingregressor_lad',
+                    'gradientboostingregressor_lad',
                     'histgradientboostingregressor_lad',
                     'randomforest',
                     'lgb_gbdt',
@@ -324,24 +316,22 @@ if __name__ == '__main__':
                     'xgb_gbtree',
                     'xgb_dart']
     model_names = model_names[int(sys.argv[3]):int(sys.argv[4])]
-    print(model_names)
+    print(model_names, flush=True)
     
-    # These were considered too slow:
-    # model_names_removed = ['svr_poly']
-    # theilsen, ransac, kernelridge_sigmoid
+    # svr_poly is very slow
+    # kernelridge_sigmoid gives dual problem/least squares warnings, and LinAlgError errors
+    # nusvr_poly: convergence warning terminated early (max_iter=1000000)
+
+
+    # theilsen, ransac
     
-    # ridge, 
-    # nusvr_poly (convergence warning terminated early)
-    # svr_poly convergence warning. solver terminated early consider pre-processing your data with standardscaler or minmaxscaler
-    
-    # model_names_removed = ['svr_poly'] # with 10+10*len(lb) swarmsize very slow
     # check randomforest, histgradientboosting
     
     
     # Optimization methods
     optimization_methods = ['pso', 'randomizedsearchcv', 'bayessearchcv']
     optimization_methods = optimization_methods[int(sys.argv[5]):int(sys.argv[6])]
-    print(optimization_methods)
+    print(optimization_methods, flush=True)
     
     
     # number of runs and jobs
@@ -359,18 +349,19 @@ if __name__ == '__main__':
     
     
     # Loop through different situations
-    for measurement_point_name in measurement_point_names:
+    
+    for model_name in model_names:
         
-        for model_name in model_names:
+        for optimization_method in optimization_methods:
             
-            for optimization_method in optimization_methods:
+            for measurement_point_name in measurement_point_names:            
                 
                 results = []
                 
                 for idx in range(n_lags_y_max):
                     
                     # Fit model and predict
-                    print('ylag:', idx)
+                    print('\n\nylag:', idx, flush=True)
                     
                     xopt, fopt, model, \
                     y_train, y_train_pred, \
@@ -398,7 +389,7 @@ if __name__ == '__main__':
                 
     
                 # Plot and save results
-                print('Export results...')
+                print('Export results...', flush=True)
                 myResults.main(output_folder,
                                measurement_point_name,
                                model_name,
