@@ -236,21 +236,37 @@ if __name__ == '__main__':
     python3 main.py 0 5 0 48 0 3 3 2 1
     """
     
-    
     # Input and output folder
-    input_folder = os.path.join(os.getcwd(),
-                                'input')
     
+    root_folder = r'/home/anssi/Software/github/ML_indoor'
+    input_folder = os.path.join(root_folder,
+                                'input')
     time_str = time.strftime("%Y-%m-%d-%H-%M-%S",
                                 time.localtime())
     output_folder = os.path.join(os.getcwd(),
                                  'output_{}'.format(time_str))
-    
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
     
     
-    # Redirect sys.stdout
+    # Redirect stdout and stderr
+    sys_stdout_original = sys.stdout
+    sys_stderr_original = sys.stderr
+    
+    fname = os.path.join(output_folder,
+                         'std_out_and_err_file.txt')
+    f_out = open(fname, 'w')
+    sys.stdout = f_out
+    sys.stderr = f_out
+    # sys.stderr = sys.stdout
+    
+    # fname = os.path.join(output_folder,
+    #                      'std_err_file.txt')
+    # f_stderr = open(fname, 'w')
+    # sys.stderr = f_stderr
+    
+    
+    
     # sys_stdout = sys.stdout
     # fname = os.path.join(output_folder,
     #                      'log_all.txt')
@@ -267,6 +283,7 @@ if __name__ == '__main__':
     
     
     # ML methods, 0 48
+    # kneighbors uniform and onwards 27 48
     model_names = ['dummyregressor',
                     'expfunc',
                     'piecewisefunc',
@@ -396,11 +413,16 @@ if __name__ == '__main__':
                                optimization_method,
                                n_lags_X,
                                n_lags_y_max,
+                               N_CV, N_ITER, N_CPU,
                                results)
     
     
     # combine all results files to single 
     
+    
+    # End
+    sys.stdout = sys_stdout_original
+    sys.stderr = sys_stderr_original
     print('End', flush=True)
     
 

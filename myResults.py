@@ -21,14 +21,17 @@ def main(output_folder,
          optimization_method,
          n_lags_X,
          n_lags_y_max,
+         N_CV, N_ITER, N_CPU,
          results):
     
     
-    dummy = '{}_{}_{}_Xlag{}_ylagmax{}'.format(measurement_point_name,
+    dummy = '{}_{}_Xlag{}_ylagmax{}_NCV{}_NITER{}_NCPU{}_{}'.format(
                                                 model_name,
                                                 optimization_method,
                                                 str(n_lags_X),
-                                                str(n_lags_y_max))
+                                                str(n_lags_y_max),
+                                                str(N_CV), str(N_ITER), str(N_CPU),
+                                                measurement_point_name,)
     
     results_folder = os.path.join(output_folder,
                                   dummy)
