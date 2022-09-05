@@ -148,6 +148,46 @@ def predict(y0, X0, n_lags_X, n_lags_y, scaler_X, scaler_y, model):
 
 
 
+def combine_results_files(output_fold):
+    # Go through the output folder and read the contents of all 'results.txt'
+    # files to a single text file
+    
+    # Read
+    dummy = []
+    
+    for item in os.listdir(output_fold):
+        
+        subdir = os.path.join(output_fold, item)
+        if os.path.isdir(subdir):
+            
+            folder_identifiers = item.split('/')[-1].split('_')
+            
+            fname = os.path.join(output_fold, item, 'results.txt')
+            
+            with open(fname, 'r') as f:
+                lines = f.readlines()
+                lines = [line.rstrip() for line in lines]
+                
+                for line in lines:
+                    
+                    results_identifiers = line.split()
+                    
+                    dummy.append(folder_identifiers + results_identifiers)
+    
+    # Write
+    fname = os.path.join(output_fold,
+                         'combined.txt')
+    with open(fname, 'w') as f:
+        
+        for line in dummy:
+            f.write(f'{line}\n')
+    
+    
+        
+
+
+
+
 
 def main(input_folder,
          measurement_point_name,
@@ -296,53 +336,54 @@ if __name__ == '__main__':
                     'huberregressor',
                     'ransacregressor',
                     'theilsenregressor',
-                    'kernelridge_cosine',
-                    'kernelridge_linear',
-                    'kernelridge_polynomial',
-                    'kernelridge_sigmoid',
-                    'kernelridge_rbf',
-                    'kernelridge_laplacian',
+                    'kernelridgecosine',
+                    'kernelridgelinear',
+                    'kernelridgepolynomial',
+                    'kernelridgesigmoid',
+                    'kernelridgerbf',
+                    'kernelridgelaplacian',
                     'linearsvr',
-                    'nusvr_linear',
-                    'nusvr_poly',
-                    'nusvr_rbf',
-                    'nusvr_sigmoid',
-                    'svr_linear',
-                    'svr_poly',
-                    'svr_rbf',
-                    'svr_sigmoid',
-                    'kneighborsregressor_uniform',
-                    'kneighborsregressor_distance',
-                    'decisiontreeregressor_best',
-                    'decisiontreeregressor_random',
-                    'extratreeregressor_best',
-                    'extratreeregressor_random',
-                    'adaboost_decisiontree',
-                    'adaboost_extratree',
-                    'bagging_decisiontree',
-                    'bagging_extratree',
-                    'extratreesregressor_bootstrapfalse',
-                    'extratreesregressor_bootstraptrue',
-                    'gradientboostingregressor_lad',
-                    'histgradientboostingregressor_lad',
+                    'nusvrlinear',
+                    'nusvrpoly',
+                    'nusvrrbf',
+                    'nusvrsigmoid',
+                    'svrlinear',
+                    'svrpoly',
+                    'svrrbf',
+                    'svrsigmoid',
+                    'kneighborsregressoruniform',
+                    'kneighborsregressordistance',
+                    'decisiontreeregressorbest',
+                    'decisiontreeregressorrandom',
+                    'extratreeregressorbest',
+                    'extratreeregressorrandom',
+                    'adaboostdecisiontree',
+                    'adaboostextratree',
+                    'baggingdecisiontree',
+                    'baggingextratree',
+                    'extratreesregressorbootstrapfalse',
+                    'extratreesregressorbootstraptrue',
+                    'gradientboostingregressor',
+                    'histgradientboostingregressor',
                     'randomforest',
-                    'lgb_gbdt',
-                    'lgb_goss',
-                    'lgb_dart',
-                    'lgb_rf',
-                    'xgb_gbtree',
-                    'xgb_dart']
+                    'lgbgbdt',
+                    'lgbgoss',
+                    'lgbdart',
+                    'lgbrf',
+                    'xgbgbtree',
+                    'xgbdart']
     model_names = model_names[int(sys.argv[3]):int(sys.argv[4])]
     print(model_names, flush=True)
     
     # svr_poly is very slow
-    # kernelridge_sigmoid gives dual problem/least squares warnings, and LinAlgError errors
-    # nusvr_poly: convergence warning terminated early (max_iter=1000000)
-
-
-    # theilsen, ransac
     
-    # check randomforest, histgradientboosting
+    # kernelridge_poly is a bit slow compared to earlier methods,
+    # but stil ran through in a reasonable time
+    
+    # kernelridge_sigmoid gives dual problem/least squares warnings, and LinAlgError errors
+    
+    # nusvr_poly: convergence warning terminated early (max_iter=1000000)
+    
     
     
     # Optimization methods
@@ -368,10 +409,13 @@ if __name__ == '__main__':
     # Loop through different situations
     
     for model_name in model_names:
+        print('model_name:', model_name, flush=True)
         
         for optimization_method in optimization_methods:
+            print('optimization_method:', optimization_method, flush=True)
             
-            for measurement_point_name in measurement_point_names:            
+            for measurement_point_name in measurement_point_names:  
+                print('measurement_point_name:', measurement_point_name, flush=True)
                 
                 results = []
                 
@@ -417,7 +461,10 @@ if __name__ == '__main__':
                                results)
     
     
-    # combine all results files to single 
+    # combine all results files to single file
+    combine_results_files(output_folder)
+    
+
     
     
     # End

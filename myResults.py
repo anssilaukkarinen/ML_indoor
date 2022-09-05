@@ -11,6 +11,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from sklearn.metrics import mean_absolute_error
+from sklearn.metrics import mean_squared_error
 from sklearn.metrics import r2_score
 
 
@@ -169,6 +170,17 @@ def saveNumeric(measurement_point_name,
                 .format(mae_train, mae_validate, mae_test)
             f.write(s + '\n')
             
+            # RMSE
+            rmse_train = mean_squared_error(results[idx]['y_train'],
+                                            results[idx]['y_train_pred'])
+            rmse_validate = mean_squared_error(results[idx]['y_validate'],
+                                               results[idx]['y_validate_pred'])
+            rmse_test = mean_squared_error(results[idx]['y_test'],
+                                           results[idx]['y_test_pred'])
+            s = 'RMSE_y train {:.4f} validate {:.4f} test {:.4f}' \
+                .format(rmse_train, rmse_validate, rmse_test)
+            f.write(s + '\n')
+            
             
             # R2
             R2_train = r2_score(results[idx]['y_train'], 
@@ -252,7 +264,7 @@ def saveNumeric(measurement_point_name,
             f.write(s + '\n')
     
     
-            # the other file
+            # the other file, the short results.txt
             line2write = measurement_point_name \
                     + ' ' + model_name \
                     + ' ' + optimization_method \
@@ -260,6 +272,8 @@ def saveNumeric(measurement_point_name,
                     + ' y_lag_' + str(idx) \
                     + ' MAE_y {:.4f} {:.4f} {:.4f}' \
                             .format(mae_train, mae_validate, mae_test) \
+                    + ' RMSE_y {:.4f} {:.4f} {:.4f}' \
+                            .format(rmse_train, rmse_validate, rmse_test) \
                     + ' R2 {:.4f} {:.4f} {:.4f}' \
                             .format(R2_train, R2_validate, R2_test) \
                     + ' wall_clock_minutes {:.5f}'.format(results[idx]['wall_clock_time']/60)

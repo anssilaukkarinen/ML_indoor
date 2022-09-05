@@ -89,7 +89,7 @@ def fit_model(X_train_scaled, y_train_scaled,
     
     
     if model_name == 'dummyregressor':
-        print('ML: dummyregressor')
+        print('ML:', model_name)
         print('Hyperparameter tuning: None')
         kwargs = {'X_train_scaled': X_train_scaled,
                   'y_train_scaled': y_train_scaled,
@@ -100,7 +100,7 @@ def fit_model(X_train_scaled, y_train_scaled,
         
     
     elif model_name == 'expfunc':
-        print('ML: expfunc')
+        print('ML:', model_name)
         print('Hyperparameter tuning: None')
         kwargs = {'X_train_scaled': X_train_scaled, 
                   'y_train_scaled': y_train_scaled,
@@ -109,7 +109,7 @@ def fit_model(X_train_scaled, y_train_scaled,
     
     
     elif model_name == 'piecewisefunc':
-        print('ML: piecewisefunc')
+        print('ML:', model_name)
         print('Hyperparameter tuning: None')
         kwargs = {'X_train_scaled': X_train_scaled, 
                   'y_train_scaled': y_train_scaled,
@@ -119,7 +119,7 @@ def fit_model(X_train_scaled, y_train_scaled,
     
     elif model_name == 'linearregression':
         
-        print('ML: linearregression')
+        print('ML:', model_name)
         print('Hyperparameter tuning: None')
         
         kwargs = {'X_train_scaled': X_train_scaled,
@@ -131,7 +131,7 @@ def fit_model(X_train_scaled, y_train_scaled,
         
     
     elif model_name == 'ridge':
-        print('ML: ridge')
+        print('ML:', model_name)
         # Alpha must be a positive float in Ridge
         # Larger values mean stronger regularization
         
@@ -143,11 +143,13 @@ def fit_model(X_train_scaled, y_train_scaled,
                       'return_model': False}
             lb = [10.0]
             ub = [10000.0]
+            n_swarm = n_swarmsize_const+n_swarmsize_lb*len(lb)
+            n_iter = round(N_ITER / n_swarm)
             xopt, fopt = pso(ridge, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
+                            swarmsize=n_swarm,
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_ITER, minstep=1e-8,
+                            maxiter=n_iter, minstep=1e-8,
                             minfunc=1e-5, debug=True,
                             processes=N_CPU)
             print('pso ready!')
@@ -195,7 +197,7 @@ def fit_model(X_train_scaled, y_train_scaled,
 
 
     elif model_name == 'lasso':
-        print('ML: lasso')
+        print('ML:', model_name)
         
         if optimization_method == 'pso':
             print('hyperparameter tuning: pso')
@@ -205,11 +207,13 @@ def fit_model(X_train_scaled, y_train_scaled,
                       'return_model': False}
             lb = [1e-1]
             ub = [10]
+            n_swarm = n_swarmsize_const+n_swarmsize_lb*len(lb)
+            n_iter = round(N_ITER / n_swarm)
             xopt, fopt = pso(lasso, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
+                            swarmsize=n_swarm,
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_ITER, minstep=1e-8,
+                            maxiter=n_iter, minstep=1e-8,
                             minfunc=1e-5, debug=True,
                             processes=N_CPU)
             print('pso ready!')
@@ -254,7 +258,7 @@ def fit_model(X_train_scaled, y_train_scaled,
     
     
     elif model_name == 'elasticnet':
-        print('ML: elasticnet')
+        print('ML:', model_name)
         
         if optimization_method == 'pso':
             print('hyperparameter tuning: pso')
@@ -264,11 +268,13 @@ def fit_model(X_train_scaled, y_train_scaled,
                       'return_model': False}
             lb = [1e-5,  0.01]
             ub = [100.0, 0.99]
+            n_swarm = n_swarmsize_const+n_swarmsize_lb*len(lb)
+            n_iter = round(N_ITER / n_swarm)
             xopt, fopt = pso(elasticnet, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
+                            swarmsize=n_swarm,
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_ITER, minstep=1e-8,
+                            maxiter=n_iter, minstep=1e-8,
                             minfunc=1e-5, debug=True,
                             processes=N_CPU)
             print('pso ready!')
@@ -315,7 +321,7 @@ def fit_model(X_train_scaled, y_train_scaled,
     
     
     elif model_name == 'lars':
-        print('ML: lars')
+        print('ML:', model_name)
         
         if optimization_method == 'pso':
             print('hyperparameter tuning: pso')
@@ -325,11 +331,13 @@ def fit_model(X_train_scaled, y_train_scaled,
                       'return_model': False}
             lb = [1]
             ub = [50]
+            n_swarm = n_swarmsize_const+n_swarmsize_lb*len(lb)
+            n_iter = round(N_ITER / n_swarm)
             xopt, fopt = pso(lars, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
+                            swarmsize=n_swarm,
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_ITER, minstep=1e-8,
+                            maxiter=n_iter, minstep=1e-8,
                             minfunc=1e-5, debug=True,
                             processes=N_CPU)
             print('pso ready!')
@@ -374,7 +382,7 @@ def fit_model(X_train_scaled, y_train_scaled,
 
 
     elif model_name == 'lassolars':
-        print('ML: lassolars')
+        print('ML:', model_name)
         
         if optimization_method == 'pso':
             print('hyperparameter tuning: pso')
@@ -384,11 +392,13 @@ def fit_model(X_train_scaled, y_train_scaled,
                       'return_model': False}
             lb = [1e-5]
             ub = [50]
+            n_swarm = n_swarmsize_const+n_swarmsize_lb*len(lb)
+            n_iter = round(N_ITER / n_swarm)
             xopt, fopt = pso(lassolars, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
+                            swarmsize=n_swarm,
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_ITER, minstep=1e-8,
+                            maxiter=n_iter, minstep=1e-8,
                             minfunc=1e-5, debug=True,
                             processes=N_CPU)
             print('pso ready!')
@@ -433,7 +443,7 @@ def fit_model(X_train_scaled, y_train_scaled,
 
 
     elif model_name == 'huberregressor':
-        print('ML: huberregressor')
+        print('ML:', model_name)
         # epsilon: min=1.0, default=1.35
         # as epsilon increases, Huber approaches ridge
         # epsilon is the width of the standardized tube
@@ -447,11 +457,13 @@ def fit_model(X_train_scaled, y_train_scaled,
                       'return_model': False}
             lb = [1.01, 1e-5]
             ub = [2.0,    1e5]
+            n_swarm = n_swarmsize_const+n_swarmsize_lb*len(lb)
+            n_iter = round(N_ITER / n_swarm)
             xopt, fopt = pso(huberregressor, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
+                            swarmsize=n_swarm,
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_ITER, minstep=1e-8,
+                            maxiter=n_iter, minstep=1e-8,
                             minfunc=1e-5, debug=True,
                             processes=N_CPU)
             print('pso ready!')
@@ -502,7 +514,7 @@ def fit_model(X_train_scaled, y_train_scaled,
     elif model_name == 'ransacregressor':
         # RANSACRegressor has some parameters that were not optimized
         # data points with residual smaller than residual_threshold are inliers
-        print('ML: ransacregressor')
+        print('ML:', model_name)
         
         print(f'ransac, y.shape{y_train_scaled.shape}')
         
@@ -515,11 +527,13 @@ def fit_model(X_train_scaled, y_train_scaled,
             # min_samples, residual_threshold, max_trials, stop_probability
             lb = [0.05, 1e-3,  50.0,  0.8]
             ub = [0.95, 100.0, 300.0, 1.0]
+            n_swarm = n_swarmsize_const+n_swarmsize_lb*len(lb)
+            n_iter = round(N_ITER / n_swarm)
             xopt, fopt = pso(ransacregressor, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
+                            swarmsize=n_swarm,
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_ITER, minstep=1e-8,
+                            maxiter=n_iter, minstep=1e-8,
                             minfunc=1e-5, debug=True,
                             processes=N_CPU)
             print('pso ready!')
@@ -571,7 +585,7 @@ def fit_model(X_train_scaled, y_train_scaled,
 
 
     elif model_name == 'theilsenregressor':
-        print('ML: theilsenregressor')
+        print('ML:', model_name)
         
         if optimization_method == 'pso':
             print('hyperparameter tuning: pso')
@@ -582,11 +596,13 @@ def fit_model(X_train_scaled, y_train_scaled,
                       'return_model': False}
             lb = [1000,  200]
             ub = [10000, 1000]
+            n_swarm = n_swarmsize_const+n_swarmsize_lb*len(lb)
+            n_iter = round(N_ITER / n_swarm)
             xopt, fopt = pso(theilsenregressor, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
+                            swarmsize=n_swarm,
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_ITER, minstep=1e-8,
+                            maxiter=n_iter, minstep=1e-8,
                             minfunc=1e-5, debug=True,
                             processes=N_CPU)
             print('pso ready!')
@@ -635,8 +651,8 @@ def fit_model(X_train_scaled, y_train_scaled,
             
 
     
-    elif model_name == 'kernelridge_cosine':
-        print('ML: kernelridge_cosine')
+    elif model_name == 'kernelridgecosine':
+        print('ML:', model_name)
         
         if optimization_method == 'pso':
             print('hyperparameter tuning: pso')
@@ -648,11 +664,13 @@ def fit_model(X_train_scaled, y_train_scaled,
             # # alpha
             lb = [1.0]
             ub = [1000.0]
+            n_swarm = n_swarmsize_const+n_swarmsize_lb*len(lb)
+            n_iter = round(N_ITER / n_swarm)
             xopt, fopt = pso(kernelridge, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
+                            swarmsize=n_swarm,
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_ITER, minstep=1e-8,
+                            maxiter=n_iter, minstep=1e-8,
                             minfunc=1e-5, debug=True,
                             processes=N_CPU)
             print('pso ready!')
@@ -699,8 +717,8 @@ def fit_model(X_train_scaled, y_train_scaled,
             
     
     
-    elif model_name == 'kernelridge_linear':
-        print('ML: kernelridge_linear')
+    elif model_name == 'kernelridgelinear':
+        print('ML:', model_name)
         
         if optimization_method == 'pso':
             print('hyperparameter tuning: pso')
@@ -712,11 +730,13 @@ def fit_model(X_train_scaled, y_train_scaled,
             # alpha, gamma, degree, coef0
             lb = [1,    1e-3,   1,  0]
             ub = [1000, 1.0,    3,  3]
+            n_swarm = n_swarmsize_const+n_swarmsize_lb*len(lb)
+            n_iter = round(N_ITER / n_swarm)
             xopt, fopt = pso(kernelridge, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
+                            swarmsize=n_swarm,
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_ITER, minstep=1e-8,
+                            maxiter=n_iter, minstep=1e-8,
                             minfunc=1e-5, debug=True,
                             processes=N_CPU)
             print('pso ready!')
@@ -763,8 +783,8 @@ def fit_model(X_train_scaled, y_train_scaled,
             
             
 
-    elif model_name == 'kernelridge_polynomial':
-        print('ML: kernelridge_polynomial')
+    elif model_name == 'kernelridgepolynomial':
+        print('ML:', model_name)
         
         if optimization_method == 'pso':
             print('hyperparameter tuning: pso')
@@ -776,11 +796,13 @@ def fit_model(X_train_scaled, y_train_scaled,
             # alpha, gamma, degree, coef0
             lb = [1,    1e-3,   1,  0]
             ub = [1000, 1.0,    2,  2]
+            n_swarm = n_swarmsize_const+n_swarmsize_lb*len(lb)
+            n_iter = round(N_ITER / n_swarm)
             xopt, fopt = pso(kernelridge, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
+                            swarmsize=n_swarm,
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_ITER, minstep=1e-8,
+                            maxiter=n_iter, minstep=1e-8,
                             minfunc=1e-5, debug=True,
                             processes=N_CPU)
             print('pso ready!')
@@ -832,8 +854,8 @@ def fit_model(X_train_scaled, y_train_scaled,
             print('Model ready!')
 
 
-    elif model_name == 'kernelridge_sigmoid':
-        print('ML: kernelridge_sigmoid')
+    elif model_name == 'kernelridgesigmoid':
+        print('ML:', model_name)
         
         if optimization_method == 'pso':
             print('hyperparameter tuning: pso')
@@ -845,11 +867,13 @@ def fit_model(X_train_scaled, y_train_scaled,
             # alpha, gamma, degree, coef0
             lb = [0.1,  1e-3,   1,  0]
             ub = [1000, 1.0,    2,  2]
+            n_swarm = n_swarmsize_const+n_swarmsize_lb*len(lb)
+            n_iter = round(N_ITER / n_swarm)
             xopt, fopt = pso(kernelridge, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
+                            swarmsize=n_swarm,
                             omega=0.5, phip=0.5, phig=0.5,
-                            maxiter=N_ITER, minstep=1e-8,
+                            maxiter=n_iter, minstep=1e-8,
                             minfunc=1e-5, debug=True,
                             processes=N_CPU)
             print('pso ready!')
@@ -902,8 +926,8 @@ def fit_model(X_train_scaled, y_train_scaled,
 
 
 
-    elif model_name == 'kernelridge_rbf':
-        print('ML: kernelridge_rbf')
+    elif model_name == 'kernelridgerbf':
+        print('ML:', model_name)
         
         if optimization_method == 'pso':
             print('hyperparameter tuning: pso')
@@ -915,11 +939,13 @@ def fit_model(X_train_scaled, y_train_scaled,
             # alpha, gamma, degree, coef0
             lb = [0.01, 1e-4,   1,  0]
             ub = [100,  10.0,    2,  2]
+            n_swarm = n_swarmsize_const+n_swarmsize_lb*len(lb)
+            n_iter = round(N_ITER / n_swarm)
             xopt, fopt = pso(kernelridge, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
+                            swarmsize=n_swarm,
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_ITER, minstep=1e-8,
+                            maxiter=n_iter, minstep=1e-8,
                             minfunc=1e-5, debug=True,
                             processes=N_CPU)
             print('pso ready!')
@@ -972,8 +998,8 @@ def fit_model(X_train_scaled, y_train_scaled,
 
 
 
-    elif model_name == 'kernelridge_laplacian':
-        print('ML: kernelridge_laplacian')
+    elif model_name == 'kernelridgelaplacian':
+        print('ML:', model_name)
         
         if optimization_method == 'pso':
             print('hyperparameter tuning: pso')
@@ -985,11 +1011,13 @@ def fit_model(X_train_scaled, y_train_scaled,
             # alpha, gamma, degree, coef0
             lb = [0.01, 1e-4,   1,  0]
             ub = [100,  10.0,    2,  2]
+            n_swarm = n_swarmsize_const+n_swarmsize_lb*len(lb)
+            n_iter = round(N_ITER / n_swarm)
             xopt, fopt = pso(kernelridge, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
+                            swarmsize=n_swarm,
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_ITER, minstep=1e-8,
+                            maxiter=n_iter, minstep=1e-8,
                             minfunc=1e-5, debug=True,
                             processes=N_CPU)
             print('pso ready!')
@@ -1045,7 +1073,7 @@ def fit_model(X_train_scaled, y_train_scaled,
 
 
     elif model_name == 'linearsvr':
-        print('ML: linearsvr')
+        print('ML:', model_name)
         
         if optimization_method == 'pso':
             print('hyperparameter tuning: pso')
@@ -1059,11 +1087,13 @@ def fit_model(X_train_scaled, y_train_scaled,
             # epsilon, C
             lb = [0.01, 0.1]
             ub = [1.0, 100.0]
+            n_swarm = n_swarmsize_const+n_swarmsize_lb*len(lb)
+            n_iter = round(N_ITER / n_swarm)
             xopt, fopt = pso(linearsvr, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
+                            swarmsize=n_swarm,
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_ITER, minstep=1e-8,
+                            maxiter=n_iter, minstep=1e-8,
                             minfunc=1e-5, debug=True,
                             processes=N_CPU)
             print('pso ready!')
@@ -1119,7 +1149,7 @@ def fit_model(X_train_scaled, y_train_scaled,
 
 
 
-    elif model_name == 'nusvr_linear':
+    elif model_name == 'nusvrlinear':
         print('ML', model_name)
         
         if optimization_method == 'pso':
@@ -1135,11 +1165,13 @@ def fit_model(X_train_scaled, y_train_scaled,
             # nu, C, degree, gamma, coef0
             lb = [0.05, -5, 2, 0.01, 0]
             ub = [0.5,  0, 4,  1.0,  2]
+            n_swarm = n_swarmsize_const+n_swarmsize_lb*len(lb)
+            n_iter = round(N_ITER / n_swarm)
             xopt, fopt = pso(nusvr, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
+                            swarmsize=n_swarm,
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_ITER, minstep=1e-8,
+                            maxiter=n_iter, minstep=1e-8,
                             minfunc=1e-5, debug=True,
                             processes=N_CPU)
             print('pso ready!')
@@ -1203,7 +1235,7 @@ def fit_model(X_train_scaled, y_train_scaled,
 
 
 
-    elif model_name == 'nusvr_poly':
+    elif model_name == 'nusvrpoly':
         print('ML:', model_name)
         # Jos y_lag == 2, niin nusvr_poly -karkaa numeerisesti prediction
         # -vaiheessa inf/nan -arvoihin
@@ -1221,11 +1253,13 @@ def fit_model(X_train_scaled, y_train_scaled,
             # nu, C, degree, gamma, coef0
             lb = [0.2, -5, 2,  0.01, 0]
             ub = [0.5, 0,  3,  0.5,  2]
+            n_swarm = n_swarmsize_const+n_swarmsize_lb*len(lb)
+            n_iter = round(N_ITER / n_swarm)
             xopt, fopt = pso(nusvr, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
+                            swarmsize=n_swarm,
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_ITER, minstep=1e-8,
+                            maxiter=n_iter, minstep=1e-8,
                             minfunc=1e-5, debug=True,
                             processes=N_CPU)
             print('pso ready!')
@@ -1289,7 +1323,7 @@ def fit_model(X_train_scaled, y_train_scaled,
 
 
 
-    elif model_name == 'nusvr_rbf':
+    elif model_name == 'nusvrrbf':
         print('ML:', model_name)
         # Jos y_lag == 2, niin nusvr_poly -karkaa numeerisesti prediction
         # -vaiheessa inf/nan -arvoihin
@@ -1307,11 +1341,13 @@ def fit_model(X_train_scaled, y_train_scaled,
             # nu, C, degree, gamma, coef0
             lb = [0.2, -5, 2,  0.01, 0]
             ub = [0.5,  0, 4,  0.5,  2]
+            n_swarm = n_swarmsize_const+n_swarmsize_lb*len(lb)
+            n_iter = round(N_ITER / n_swarm)
             xopt, fopt = pso(nusvr, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
+                            swarmsize=n_swarm,
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_ITER, minstep=1e-8,
+                            maxiter=n_iter, minstep=1e-8,
                             minfunc=1e-5, debug=True,
                             processes=N_CPU)
             print('pso ready!')
@@ -1375,7 +1411,7 @@ def fit_model(X_train_scaled, y_train_scaled,
 
 
 
-    elif model_name == 'nusvr_sigmoid':
+    elif model_name == 'nusvrsigmoid':
         print('ML:', model_name)
         
         if optimization_method == 'pso':
@@ -1391,11 +1427,13 @@ def fit_model(X_train_scaled, y_train_scaled,
             # nu, C, degree, gamma, coef0
             lb = [0.2, -5, 2,  0.01, 0]
             ub = [0.5,  0, 4,  0.5,  2]
+            n_swarm = n_swarmsize_const+n_swarmsize_lb*len(lb)
+            n_iter = round(N_ITER / n_swarm)
             xopt, fopt = pso(nusvr, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
+                            swarmsize=n_swarm,
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_ITER, minstep=1e-8,
+                            maxiter=n_iter, minstep=1e-8,
                             minfunc=1e-5, debug=True,
                             processes=N_CPU)
             print('pso ready!')
@@ -1460,7 +1498,7 @@ def fit_model(X_train_scaled, y_train_scaled,
 
 
 
-    elif model_name == 'svr_linear':
+    elif model_name == 'svrlinear':
         print('ML:', model_name)
         
         if optimization_method == 'pso':
@@ -1476,11 +1514,13 @@ def fit_model(X_train_scaled, y_train_scaled,
             # epsilon, C, degree, gamma, coef0
             lb = [0.01, -3, 2, 0.01, 0]
             ub = [0.5,  2,  4, 0.5,  2]
+            n_swarm = n_swarmsize_const+n_swarmsize_lb*len(lb)
+            n_iter = round(N_ITER / n_swarm)
             xopt, fopt = pso(svr, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
+                            swarmsize=n_swarm,
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_ITER, minstep=1e-8,
+                            maxiter=n_iter, minstep=1e-8,
                             minfunc=1e-5, debug=True,
                             processes=N_CPU)
             print('pso ready!')
@@ -1544,7 +1584,7 @@ def fit_model(X_train_scaled, y_train_scaled,
 
 
 
-    elif model_name == 'svr_poly':
+    elif model_name == 'svrpoly':
         print('ML:', model_name, flush=True)
         
         if optimization_method == 'pso':
@@ -1560,11 +1600,13 @@ def fit_model(X_train_scaled, y_train_scaled,
             # epsilon, C, degree, gamma, coef0; C is given as log10(C)
             lb = [0.01, -3, 2, 0.01, 0]
             ub = [0.4,  0,  4, 0.5,  2]
+            n_swarm = n_swarmsize_const+n_swarmsize_lb*len(lb)
+            n_iter = round(N_ITER / n_swarm)
             xopt, fopt = pso(svr, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
+                            swarmsize=n_swarm,
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_ITER, minstep=1e-8,
+                            maxiter=n_iter, minstep=1e-8,
                             minfunc=1e-5, debug=True,
                             processes=N_CPU) # This was exceptionally slow with N_CPU
             print('pso ready!', flush=True)
@@ -1630,8 +1672,8 @@ def fit_model(X_train_scaled, y_train_scaled,
 
 
 
-    elif model_name == 'svr_rbf':
-        print('ML: svr_rbf')
+    elif model_name == 'svrrbf':
+        print('ML:', model_name)
         
         if optimization_method == 'pso':
             print('hyperparameter tuning: pso')
@@ -1646,11 +1688,13 @@ def fit_model(X_train_scaled, y_train_scaled,
             # epsilon, C, degree, gamma, coef0
             lb = [0.01, -3, 2, 0.01, 0]
             ub = [0.5,  2,  4, 0.5,  2]
+            n_swarm = n_swarmsize_const+n_swarmsize_lb*len(lb)
+            n_iter = round(N_ITER / n_swarm)
             xopt, fopt = pso(svr, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
+                            swarmsize=n_swarm,
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_ITER, minstep=1e-8,
+                            maxiter=n_iter, minstep=1e-8,
                             minfunc=1e-5, debug=True,
                             processes=N_CPU)
             print('pso ready!')
@@ -1715,7 +1759,7 @@ def fit_model(X_train_scaled, y_train_scaled,
 
 
 
-    elif model_name == 'svr_sigmoid':
+    elif model_name == 'svrsigmoid':
         print('ML:', model_name)
         
         if optimization_method == 'pso':
@@ -1731,11 +1775,13 @@ def fit_model(X_train_scaled, y_train_scaled,
             # epsilon, C, degree, gamma, coef0
             lb = [0.01, -3, 2, 0.01, 0]
             ub = [0.5,  2,  4, 0.5,  2]
+            n_swarm = n_swarmsize_const+n_swarmsize_lb*len(lb)
+            n_iter = round(N_ITER / n_swarm)
             xopt, fopt = pso(svr, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
+                            swarmsize=n_swarm,
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_ITER, minstep=1e-8,
+                            maxiter=n_iter, minstep=1e-8,
                             minfunc=1e-5, debug=True,
                             processes=N_CPU)
             print('pso ready!')
@@ -1800,7 +1846,7 @@ def fit_model(X_train_scaled, y_train_scaled,
 
 
 
-    elif model_name == 'kneighborsregressor_uniform':
+    elif model_name == 'kneighborsregressor_niform':
         print('ML:', model_name)
         
         if optimization_method == 'pso':
@@ -1808,17 +1854,18 @@ def fit_model(X_train_scaled, y_train_scaled,
             kwargs = {'X_train_scaled': X_train_scaled,
                       'y_train_scaled': y_train_scaled.ravel(),
                       'weights': 'uniform',
-                      'n_jobs': 1,
                       'N_CV': N_CV,
                       'return_model': False}
             # n_neighbors, leaf_size, p
             lb = [3,  2,  2]
             ub = [30, 20, 4]
+            n_swarm = n_swarmsize_const+n_swarmsize_lb*len(lb)
+            n_iter = round(N_ITER / n_swarm)
             xopt, fopt = pso(kneighborsregressor, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
+                            swarmsize=n_swarm,
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_ITER, minstep=1e-8,
+                            maxiter=n_iter, minstep=1e-8,
                             minfunc=1e-5, debug=True,
                             processes=N_CPU) # Changed this to 1
             print('pso ready!')
@@ -1872,7 +1919,7 @@ def fit_model(X_train_scaled, y_train_scaled,
 
 
 
-    elif model_name == 'kneighborsregressor_distance':
+    elif model_name == 'kneighborsregressordistance':
         print('ML:', model_name)
         
         if optimization_method == 'pso':
@@ -1886,11 +1933,13 @@ def fit_model(X_train_scaled, y_train_scaled,
             # n_neighbors, leaf_size, p
             lb = [3,  2,  2]
             ub = [30, 20, 4]
+            n_swarm = n_swarmsize_const+n_swarmsize_lb*len(lb)
+            n_iter = round(N_ITER / n_swarm)
             xopt, fopt = pso(kneighborsregressor, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
+                            swarmsize=n_swarm,
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_ITER, minstep=1e-8,
+                            maxiter=n_iter, minstep=1e-8,
                             minfunc=1e-5, debug=True,
                             processes=N_CPU)
             print('pso ready!')
@@ -1945,7 +1994,7 @@ def fit_model(X_train_scaled, y_train_scaled,
     
     
 
-    elif model_name == 'decisiontreeregressor_best':
+    elif model_name == 'decisiontreeregressorbest':
         print('ML:', model_name)
         
         
@@ -1962,11 +2011,13 @@ def fit_model(X_train_scaled, y_train_scaled,
             # 'min_samples_leaf', 'min_samples_split', 'min_weight_fraction_leaf'
             lb = [1,  3,  1e-5]
             ub = [30, 30, 0.1]
+            n_swarm = n_swarmsize_const+n_swarmsize_lb*len(lb)
+            n_iter = round(N_ITER / n_swarm)
             xopt, fopt = pso(decisiontreeregressor, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
+                            swarmsize=n_swarm,
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_ITER, minstep=1e-8,
+                            maxiter=n_iter, minstep=1e-8,
                             minfunc=1e-5, debug=True,
                             processes=N_CPU)
             print('pso ready!')
@@ -2024,7 +2075,7 @@ def fit_model(X_train_scaled, y_train_scaled,
     
 
 
-    elif model_name == 'decisiontreeregressor_random':
+    elif model_name == 'decisiontreeregressorrandom':
         print('ML:', model_name)
         
         
@@ -2041,11 +2092,13 @@ def fit_model(X_train_scaled, y_train_scaled,
             # randint 'min_samples_leaf', randint 'min_samples_split', loguniform 'min_weight_fraction_leaf'
             lb = [1,  3,  1e-5]
             ub = [30, 30, 0.1]
+            n_swarm = n_swarmsize_const+n_swarmsize_lb*len(lb)
+            n_iter = round(N_ITER / n_swarm)
             xopt, fopt = pso(decisiontreeregressor, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
+                            swarmsize=n_swarm,
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_ITER, minstep=1e-8,
+                            maxiter=n_iter, minstep=1e-8,
                             minfunc=1e-5, debug=True,
                             processes=N_CPU)
             print('pso ready!')
@@ -2105,7 +2158,7 @@ def fit_model(X_train_scaled, y_train_scaled,
 
 
 
-    elif model_name == 'extratreeregressor_best':
+    elif model_name == 'extratreeregressorbest':
         print('ML:', model_name)
         
         if optimization_method == 'pso':
@@ -2121,11 +2174,13 @@ def fit_model(X_train_scaled, y_train_scaled,
             # int min_samples_leaf, int min_samples_split, loguniform min_weight_fraction_leaf
             lb = [1,  3,  1e-5]
             ub = [30, 30, 0.1]
+            n_swarm = n_swarmsize_const+n_swarmsize_lb*len(lb)
+            n_iter = round(N_ITER / n_swarm)
             xopt, fopt = pso(extratreeregressor, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
+                            swarmsize=n_swarm,
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_ITER, minstep=1e-8,
+                            maxiter=n_iter, minstep=1e-8,
                             minfunc=1e-5, debug=True,
                             processes=N_CPU)
             print('pso ready!')
@@ -2185,7 +2240,7 @@ def fit_model(X_train_scaled, y_train_scaled,
 
 
 
-    elif model_name == 'extratreeregressor_random':
+    elif model_name == 'extratreeregressorrandom':
         print('ML:', model_name)
         
         if optimization_method == 'pso':
@@ -2201,11 +2256,13 @@ def fit_model(X_train_scaled, y_train_scaled,
             # int min_samples_leaf, int min_samples_split, loguniform min_weight_fraction_leaf
             lb = [1,  3,  1e-5]
             ub = [30, 30, 0.1]
+            n_swarm = n_swarmsize_const+n_swarmsize_lb*len(lb)
+            n_iter = round(N_ITER / n_swarm)
             xopt, fopt = pso(extratreeregressor, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
+                            swarmsize=n_swarm,
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_ITER, minstep=1e-8,
+                            maxiter=n_iter, minstep=1e-8,
                             minfunc=1e-5, debug=True,
                             processes=N_CPU)
             print('pso ready!')
@@ -2263,7 +2320,7 @@ def fit_model(X_train_scaled, y_train_scaled,
 
 
 
-    elif model_name == 'adaboost_decisiontree':
+    elif model_name == 'adaboostdecisiontree':
         print('ML:', model_name)
         
         if optimization_method == 'pso':
@@ -2275,11 +2332,13 @@ def fit_model(X_train_scaled, y_train_scaled,
             # n_estimators, learning_rate, base_estimator__max_depth
             lb = [50,  0.1, 1]
             ub = [300, 1.0, 5]
+            n_swarm = n_swarmsize_const+n_swarmsize_lb*len(lb)
+            n_iter = round(N_ITER / n_swarm)
             xopt, fopt = pso(adaboost_decisiontree, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
+                            swarmsize=n_swarm,
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_ITER, minstep=1e-8,
+                            maxiter=n_iter, minstep=1e-8,
                             minfunc=1e-5, debug=True,
                             processes=N_CPU)
             print('pso ready!')
@@ -2332,7 +2391,7 @@ def fit_model(X_train_scaled, y_train_scaled,
 
 
 
-    elif model_name == 'adaboost_extratree':
+    elif model_name == 'adaboostextratree':
         print('ML:', model_name)
         
         if optimization_method == 'pso':
@@ -2344,11 +2403,13 @@ def fit_model(X_train_scaled, y_train_scaled,
             # n_estimators, learning_rate, base_estimator__max_depth
             lb = [50,  0.1, 1]
             ub = [300, 1.0, 5]
+            n_swarm = n_swarmsize_const+n_swarmsize_lb*len(lb)
+            n_iter = round(N_ITER / n_swarm)
             xopt, fopt = pso(adaboost_extratree, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
+                            swarmsize=n_swarm,
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_ITER, minstep=1e-8,
+                            maxiter=n_iter, minstep=1e-8,
                             minfunc=1e-5, debug=True,
                             processes=N_CPU)
             print('pso ready!')
@@ -2400,24 +2461,25 @@ def fit_model(X_train_scaled, y_train_scaled,
 
 
 
-    elif model_name == 'bagging_decisiontree':
+    elif model_name == 'baggingdecisiontree':
         print('ML:', model_name)
         
         if optimization_method == 'pso':
             print('hyperparameter tuning: pso')
             kwargs = {'X_train_scaled': X_train_scaled,
                       'y_train_scaled': y_train_scaled.ravel(),
-                      'n_jobs': 1,
                       'N_CV': N_CV,
                       'return_model': False}
             # n_estimators, base_estimator__max_depth
             lb = [50,  1]
             ub = [300, 5]
+            n_swarm = n_swarmsize_const+n_swarmsize_lb*len(lb)
+            n_iter = round(N_ITER / n_swarm)
             xopt, fopt = pso(bagging_decisiontree, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
+                            swarmsize=n_swarm,
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_ITER, minstep=1e-8,
+                            maxiter=n_iter, minstep=1e-8,
                             minfunc=1e-5, debug=True,
                             processes=N_CPU)
             print('pso ready!')
@@ -2468,7 +2530,7 @@ def fit_model(X_train_scaled, y_train_scaled,
 
 
 
-    elif model_name == 'bagging_extratree':
+    elif model_name == 'baggingextratree':
         print('ML:', model_name)
         
         if optimization_method == 'pso':
@@ -2481,11 +2543,13 @@ def fit_model(X_train_scaled, y_train_scaled,
             # n_estimators, base_estimator__max_depth
             lb = [50,  1]
             ub = [300, 5]
+            n_swarm = n_swarmsize_const+n_swarmsize_lb*len(lb)
+            n_iter = round(N_ITER / n_swarm)
             xopt, fopt = pso(bagging_extratree, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
+                            swarmsize=n_swarm,
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_ITER, minstep=1e-8,
+                            maxiter=n_iter, minstep=1e-8,
                             minfunc=1e-5, debug=True,
                             processes=N_CPU)
             print('pso ready!')
@@ -2539,7 +2603,7 @@ def fit_model(X_train_scaled, y_train_scaled,
 
 
 
-    elif model_name == 'extratreesregressor_bootstrapfalse':
+    elif model_name == 'extratreesregressorbootstrapfalse':
         print('ML:', model_name)
         
         if optimization_method == 'pso':
@@ -2556,11 +2620,13 @@ def fit_model(X_train_scaled, y_train_scaled,
             # int min_samples_split, int min_samples_leaf, float min_weight_fraction_leaf
             lb = [20,  3,  3,  3,  1e-6]
             ub = [150, 7, 30, 30, 1e-2]
+            n_swarm = n_swarmsize_const+n_swarmsize_lb*len(lb)
+            n_iter = round(N_ITER / n_swarm)
             xopt, fopt = pso(extratreesregressor, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
+                            swarmsize=n_swarm,
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_ITER, minstep=1e-8,
+                            maxiter=n_iter, minstep=1e-8,
                             minfunc=1e-5, debug=True,
                             processes=N_CPU)
             print('pso ready!')
@@ -2622,7 +2688,7 @@ def fit_model(X_train_scaled, y_train_scaled,
 
 
 
-    elif model_name == 'extratreesregressor_bootstraptrue':
+    elif model_name == 'extratreesregressorbootstraptrue':
         print('ML:', model_name)
         
         if optimization_method == 'pso':
@@ -2639,11 +2705,13 @@ def fit_model(X_train_scaled, y_train_scaled,
             # int min_samples_split, int min_samples_leaf, float min_weight_fraction_leaf
             lb = [20,  3, 3,  3,  1e-6]
             ub = [150, 7, 30, 30, 1e-2]
+            n_swarm = n_swarmsize_const+n_swarmsize_lb*len(lb)
+            n_iter = round(N_ITER / n_swarm)
             xopt, fopt = pso(extratreesregressor, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
+                            swarmsize=n_swarm,
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_ITER, minstep=1e-8,
+                            maxiter=n_iter, minstep=1e-8,
                             minfunc=1e-5, debug=True,
                             processes=N_CPU)
             print('pso ready!')
@@ -2705,7 +2773,7 @@ def fit_model(X_train_scaled, y_train_scaled,
             
             
             
-    elif model_name == 'gradientboostingregressor_lad':
+    elif model_name == 'gradientboostingregressor':
         print('ML:', model_name)
         
         if optimization_method == 'pso':
@@ -2721,11 +2789,13 @@ def fit_model(X_train_scaled, y_train_scaled,
             # min_samples_leaf, min_weight_fraction_leaf, max_depth
             lb = [0.01, 5,  0.5, 2,  2, 1e-6,  5]
             ub = [0.9,  20, 1.0, 31, 31, 1e-2, 10]
+            n_swarm = n_swarmsize_const+n_swarmsize_lb*len(lb)
+            n_iter = round(N_ITER / n_swarm)
             xopt, fopt = pso(gradientboostingregressor, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
+                            swarmsize=n_swarm,
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_ITER, minstep=1e-8,
+                            maxiter=n_iter, minstep=1e-8,
                             minfunc=1e-5, debug=True,
                             processes=N_CPU)
             print('pso ready!')
@@ -2789,7 +2859,7 @@ def fit_model(X_train_scaled, y_train_scaled,
 
 
 
-    elif model_name == 'histgradientboostingregressor_lad':
+    elif model_name == 'histgradientboostingregressor':
         print('ML:', model_name)
         
         if optimization_method == 'pso':
@@ -2804,11 +2874,13 @@ def fit_model(X_train_scaled, y_train_scaled,
             # min_samples_leaf, l2_regularization, max_bins, 
             lb = [0.01, 10, 100, 2, 2, 1e-6, 100]
             ub = [0.9, 20, 300, 6, 30, 1e-2, 255]
+            n_swarm = n_swarmsize_const+n_swarmsize_lb*len(lb)
+            n_iter = round(N_ITER / n_swarm)
             xopt, fopt = pso(histgradientboostingregressor, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
+                            swarmsize=n_swarm,
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_ITER, minstep=1e-8,
+                            maxiter=n_iter, minstep=1e-8,
                             minfunc=1e-5, debug=True,
                             processes=N_CPU)
             print('pso ready!')
@@ -2885,16 +2957,17 @@ def fit_model(X_train_scaled, y_train_scaled,
             kwargs = {'X_train_scaled': X_train_scaled,
                       'y_train_scaled': y_train_scaled.ravel(),
                       'criterion': 'squared_error',
-                      'n_jobs': 1,
                       'N_CV': N_CV,
                       'return_model': False}
             lb = [30,  2,  2,  1,  0.2, 0.2]
             ub = [300, 10, 20, 20, 1.0, 0.99]
+            n_swarm = n_swarmsize_const+n_swarmsize_lb*len(lb)
+            n_iter = round(N_ITER / n_swarm)
             xopt, fopt = pso(randomforest, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
+                            swarmsize=n_swarm,
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_ITER, minstep=1e-8,
+                            maxiter=n_iter, minstep=1e-8,
                             minfunc=1e-5, debug=True,
                             processes=N_CPU)
             print('pso ready!')
@@ -2960,25 +3033,27 @@ def fit_model(X_train_scaled, y_train_scaled,
 
 
 
-    elif model_name == 'lgb_gbdt':
+    elif model_name == 'lgbgbdt':
         print('ML:', model_name)    
+        
         if optimization_method == 'pso':
             print('Hyperparameter tuning: PSO')
             kwargs = {'X_train_scaled': X_train_scaled, 
                       'y_train_scaled': y_train_scaled.ravel(),
                       'boosting_type': 'gbdt',
-                      'n_jobs': 1,
                       'N_CV': N_CV,
                       'return_model':False}
             # num_leaves, max_depth, min_child_samples, learning_rate, n_estimators,
             # reg_alpha, reg_lambda
             lb = [2,  4,  10, 0.01, 20,  1e-6, 1e-6]
             ub = [40, 10, 30, 0.9,  300, 1e-1, 1e1]
+            n_swarm = n_swarmsize_const+n_swarmsize_lb*len(lb)
+            n_iter = round(N_ITER / n_swarm)
             xopt, fopt = pso(lgb_regressor, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
+                            swarmsize=n_swarm,
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_ITER, minstep=1e-8,
+                            maxiter=n_iter, minstep=1e-8,
                             minfunc=1e-5, debug=False,
                             processes=N_CPU)
             print(model_name, 'ready!')
@@ -3035,12 +3110,9 @@ def fit_model(X_train_scaled, y_train_scaled,
             fopt = -model.best_score_
 
 
-
-
-
-
-    elif model_name == 'lgb_goss':
+    elif model_name == 'lgbgoss':
         print('ML:', model_name)
+        
         if optimization_method == 'pso':
             print('Hyperparameter tuning: PSO')
             kwargs = {'X_train_scaled': X_train_scaled, 
@@ -3053,11 +3125,13 @@ def fit_model(X_train_scaled, y_train_scaled,
             # reg_alpha, reg_lambda
             lb = [2,  4,  10, 0.01, 20,  1e-6, 1e-6]
             ub = [40, 10, 30, 0.9,  300, 1e-1, 1e1]
+            n_swarm = n_swarmsize_const+n_swarmsize_lb*len(lb)
+            n_iter = round(N_ITER / n_swarm)
             xopt, fopt = pso(lgb_regressor, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
+                            swarmsize=n_swarm,
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_ITER, minstep=1e-8,
+                            maxiter=n_iter, minstep=1e-8,
                             minfunc=1e-5, debug=False,
                             processes=N_CPU)
             print(model_name, 'ready!')
@@ -3115,8 +3189,9 @@ def fit_model(X_train_scaled, y_train_scaled,
 
 
 
-    elif model_name == 'lgb_dart':
-        print('ML:', model_name)    
+    elif model_name == 'lgbdart':
+        print('ML:', model_name)  
+        
         if optimization_method == 'pso':
             print('Hyperparameter tuning: PSO')
             kwargs = {'X_train_scaled': X_train_scaled, 
@@ -3129,11 +3204,13 @@ def fit_model(X_train_scaled, y_train_scaled,
             # reg_alpha, reg_lambda
             lb = [2,  4,  10, 0.01, 20,  1e-6, 1e-6]
             ub = [40, 10, 30, 0.9,  300, 1e-1, 1e1]
+            n_swarm = n_swarmsize_const+n_swarmsize_lb*len(lb)
+            n_iter = round(N_ITER / n_swarm)
             xopt, fopt = pso(lgb_regressor, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
+                            swarmsize=n_swarm,
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_ITER, minstep=1e-8,
+                            maxiter=n_iter, minstep=1e-8,
                             minfunc=1e-5, debug=False,
                             processes=N_CPU)
             print(model_name, 'ready!')
@@ -3191,8 +3268,9 @@ def fit_model(X_train_scaled, y_train_scaled,
 
 
 
-    elif model_name == 'lgb_rf':
+    elif model_name == 'lgbrf':
         print('ML:', model_name)
+        
         if optimization_method == 'pso':
             print('Hyperparameter tuning: PSO')
             kwargs = {'X_train_scaled': X_train_scaled, 
@@ -3205,11 +3283,13 @@ def fit_model(X_train_scaled, y_train_scaled,
             # subsample, subsample_freq, reg_alpha, reg_lambda
             lb = [2,  2, 10, 0.01, 20,  0.5, 1, 1e-6, 1e-6]
             ub = [31, 6, 30, 0.9,  300, 0.9, 3, 1e-1, 1e1]
+            n_swarm = n_swarmsize_const+n_swarmsize_lb*len(lb)
+            n_iter = round(N_ITER / n_swarm)
             xopt, fopt = pso(lgb_regressor, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
+                            swarmsize=n_swarm,
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_ITER, minstep=1e-8,
+                            maxiter=n_iter, minstep=1e-8,
                             minfunc=1e-5, debug=False,
                             processes=N_CPU)
             print(model_name, 'ready!')
@@ -3273,7 +3353,7 @@ def fit_model(X_train_scaled, y_train_scaled,
 
 
 
-    elif model_name == 'xgb_gbtree':
+    elif model_name == 'xgbgbtree':
         print('ML:', model_name)
         
         try:
@@ -3287,18 +3367,19 @@ def fit_model(X_train_scaled, y_train_scaled,
                       'y_train_scaled': y_train_scaled,
                       'booster': 'gbtree',
                       'objective': 'reg:squarederror',
-                      'n_jobs': 1,
                       'N_CV': N_CV,
                       'return_model':False}
             #n_estimators, max_depth, learning_rate, gamma, subsample,
             # reg_alpha, reg_lambda
             lb = [30,  2,  0.1, 1e-6, 0.2, 1e-6, 1e-6]
             ub = [100, 5, 1.0,  1e1,  1.0, 1e-1,  1e1]
+            n_swarm = n_swarmsize_const+n_swarmsize_lb*len(lb)
+            n_iter = round(N_ITER / n_swarm)
             xopt, fopt = pso(xgb_gbtree, lb, ub,
                              kwargs=kwargs,
-                             swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
+                             swarmsize=n_swarm,
                              omega=0.5, phip=0.5, phig=0.5, 
-                             maxiter=N_ITER, minstep=1e-8,
+                             maxiter=n_iter, minstep=1e-8,
                              minfunc=1e-5, debug=False,
                              processes=N_CPU)
             kwargs['return_model'] = True
@@ -3354,12 +3435,10 @@ def fit_model(X_train_scaled, y_train_scaled,
             fopt = -model.best_score_
 
 
-
-
-
     
-    elif model_name == 'xgb_dart':
+    elif model_name == 'xgbdart':
         print('ML:', model_name)
+        
         if optimization_method == 'pso':
             print('Hyperparameter tuning: PSO')
             kwargs = {'X_train_scaled': X_train_scaled, 
@@ -3373,11 +3452,13 @@ def fit_model(X_train_scaled, y_train_scaled,
             # reg_alpha, reg_lambda
             lb = [30,  2,  0.01, 1e-6, 0.2, 1e-6, 1e-6]
             ub = [100, 10, 1.0,  1e1,  1.0, 1e-1,  1e1]
+            n_swarm = n_swarmsize_const+n_swarmsize_lb*len(lb)
+            n_iter = round(N_ITER / n_swarm)
             xopt, fopt = pso(xgb_gbtree, lb, ub,
                             kwargs=kwargs,
-                            swarmsize=n_swarmsize_const+n_swarmsize_lb*len(lb),
+                            swarmsize=n_swarm,
                             omega=0.5, phip=0.5, phig=0.5, 
-                            maxiter=N_ITER, minstep=1e-8,
+                            maxiter=n_iter, minstep=1e-8,
                             minfunc=1e-5, debug=False,
                             processes=N_CPU)
             kwargs['return_model'] = True
@@ -3445,7 +3526,7 @@ def fit_model(X_train_scaled, y_train_scaled,
 
 
         
-# Everything here has n_jobs = 1
+
 def dummyregressor(kwargs):
     # This is not optimized, because only default hyperparameters are used
     X_train_scaled = kwargs['X_train_scaled']
@@ -3675,15 +3756,15 @@ def ransacregressor(x, **kwargs):
     
 
 def theilsenregressor(x, **kwargs):
+    #HERE_njobs
     max_subpopulation = int(np.round(x[0]))
     n_subsamples = int(np.round(x[1]))
-    n_jobs = kwargs['n_jobs']
     X_train_scaled = kwargs['X_train_scaled']
     y_train_scaled = kwargs['y_train_scaled']
     
     model = TheilSenRegressor(max_subpopulation=max_subpopulation,
                               n_subsamples=n_subsamples,
-                              n_jobs=n_jobs)
+                              n_jobs=1)
     tss = TimeSeriesSplit(n_splits=kwargs['N_CV'])
     scores = cross_val_score(model,
                              X_train_scaled,
@@ -3830,6 +3911,7 @@ def svr(x, **kwargs):
 
 
 def kneighborsregressor(x, **kwargs):
+    #HERE_njobs
     print('x:', x)
     n_neighbors = int(np.round(x[0]))
     leaf_size = int(np.round(x[1]))
@@ -3837,11 +3919,10 @@ def kneighborsregressor(x, **kwargs):
     X_train_scaled = kwargs['X_train_scaled']
     y_train_scaled = kwargs['y_train_scaled']
     weights = kwargs['weights']
-    n_jobs = kwargs['n_jobs']
     model = KNeighborsRegressor(n_neighbors=n_neighbors,
                                 leaf_size=leaf_size, p=p,
                                 weights=weights,
-                                n_jobs=n_jobs)
+                                n_jobs=1)
     tss = TimeSeriesSplit(n_splits=kwargs['N_CV'])
     scores = cross_val_score(model,
                              X_train_scaled,
@@ -3987,11 +4068,10 @@ def bagging_decisiontree(x, **kwargs):
     base_estimator_max_depth=int(np.round(x[1]))
     X_train_scaled = kwargs['X_train_scaled']
     y_train_scaled = kwargs['y_train_scaled']
-    n_jobs = kwargs['n_jobs']
     base_estimator = DecisionTreeRegressor(max_depth=base_estimator_max_depth)
     model = BaggingRegressor(base_estimator=base_estimator,
                              n_estimators=n_estimators,
-                             n_jobs=n_jobs)
+                             n_jobs=1)
     tss = TimeSeriesSplit(n_splits=kwargs['N_CV'])
     scores = cross_val_score(model,
                              X_train_scaled,
@@ -4013,11 +4093,10 @@ def bagging_extratree(x, **kwargs):
     base_estimator_max_depth=int(np.round(x[1]))
     X_train_scaled = kwargs['X_train_scaled']
     y_train_scaled = kwargs['y_train_scaled']
-    n_jobs = kwargs['n_jobs']
     base_estimator = ExtraTreeRegressor(max_depth=base_estimator_max_depth)
     model = BaggingRegressor(base_estimator=base_estimator,
                              n_estimators=n_estimators,
-                             n_jobs=n_jobs)
+                             n_jobs=1)
     tss = TimeSeriesSplit(n_splits=kwargs['N_CV'])
     scores = cross_val_score(model,
                              X_train_scaled,
@@ -4047,7 +4126,6 @@ def extratreesregressor(x, **kwargs):
     min_weight_fraction_leaf = x[4]
     X_train_scaled = kwargs['X_train_scaled']
     y_train_scaled = kwargs['y_train_scaled']
-    n_jobs = kwargs['n_jobs']
     model = ExtraTreesRegressor(criterion=kwargs['criterion'],
                                 max_features=kwargs['max_features'],
                                 bootstrap=kwargs['bootstrap'],
@@ -4056,16 +4134,14 @@ def extratreesregressor(x, **kwargs):
                                 min_samples_split=min_samples_split,
                                 min_samples_leaf=min_samples_leaf,
                                 min_weight_fraction_leaf=min_weight_fraction_leaf,
-                                n_jobs=n_jobs,
-                                verbose=1)
+                                n_jobs=1)
     tss = TimeSeriesSplit(n_splits=kwargs['N_CV'])
     scores = cross_val_score(model,
                              X_train_scaled,
                              y_train_scaled,
                              cv=tss,
-                             n_jobs=n_jobs,
-                             scoring='neg_mean_squared_error',
-                             verbose=1)
+                             n_jobs=1,
+                             scoring='neg_mean_squared_error')
     score = -scores.mean()
     if not kwargs['return_model']:
         return(score)
@@ -4160,7 +4236,6 @@ def randomforest(x, **kwargs):
     X_train_scaled = kwargs['X_train_scaled']
     y_train_scaled = kwargs['y_train_scaled']
     criterion = kwargs['criterion']
-    n_jobs = kwargs['n_jobs']
     model = RandomForestRegressor(n_estimators=n_estimators,
                                   criterion=criterion,
                                   max_depth=max_depth,
@@ -4170,7 +4245,7 @@ def randomforest(x, **kwargs):
                                   max_leaf_nodes=None,
                                   min_impurity_decrease=0.0,
                                   max_samples=max_samples,
-                                  n_jobs=n_jobs)
+                                  n_jobs=1)
     tss = TimeSeriesSplit(n_splits=kwargs['N_CV'])
     scores = cross_val_score(model,
                              X_train_scaled,
@@ -4193,7 +4268,6 @@ def lgb_regressor(x, **kwargs):
     X_train_scaled = kwargs['X_train_scaled']
     y_train_scaled = kwargs['y_train_scaled']
     boosting_type = kwargs['boosting_type']
-    n_jobs = kwargs['n_jobs']
     
     if kwargs['boosting_type'] == 'rf':
         num_leaves = int(np.round(x[0]))
@@ -4216,7 +4290,7 @@ def lgb_regressor(x, **kwargs):
                                   subsample_freq=subsample_freq,
                                   reg_alpha=reg_alpha,
                                   reg_lambda=reg_lambda,
-                                  n_jobs=n_jobs)
+                                  n_jobs=1)
     
     else:
         num_leaves = int(np.round(x[0]))
@@ -4235,7 +4309,7 @@ def lgb_regressor(x, **kwargs):
                                   n_estimators=n_estimators,
                                   reg_alpha=reg_alpha,
                                   reg_lambda=reg_lambda,
-                                  n_jobs=n_jobs)
+                                  n_jobs=1)
     
     tss = TimeSeriesSplit(n_splits=kwargs['N_CV'])
     scores = cross_val_score(model, 
@@ -4269,14 +4343,13 @@ def xgb_gbtree(x, **kwargs):
     y_train_scaled = kwargs['y_train_scaled']
     booster=kwargs['booster']
     objective=kwargs['objective']
-    n_jobs = kwargs['n_jobs']
     model = xgb.XGBRegressor(n_estimators=n_estimators,
                              max_depth=max_depth, learning_rate=learning_rate,
                              gamma=gamma, subsample=subsample,
                              reg_alpha=reg_alpha, reg_lambda=reg_lambda,
                              objective=objective,
                              booster=booster,
-                             n_jobs=n_jobs)
+                             n_jobs=1)
     tss = TimeSeriesSplit(n_splits=kwargs['N_CV'])
     scores = cross_val_score(model, 
                              X_train_scaled, 
