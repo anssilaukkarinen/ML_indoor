@@ -7,6 +7,7 @@ Created on Wed Sep  9 00:18:13 2020
 
 import os
 import json
+import pickle
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -32,7 +33,7 @@ def main(output_folder,
                                                 str(n_lags_X),
                                                 str(n_lags_y_max),
                                                 str(N_CV), str(N_ITER), str(N_CPU),
-                                                measurement_point_name,)
+                                                measurement_point_name)
     
     results_folder = os.path.join(output_folder,
                                   dummy)
@@ -41,10 +42,10 @@ def main(output_folder,
         os.makedirs(results_folder)
     
     
-    print('saveplots')
+    print('saveplots', flush=True)
     savePlots(results, results_folder)
     
-    print('save numeric')
+    print('save numeric', flush=True)
     saveNumeric(measurement_point_name,
                 model_name,
                 optimization_method,
@@ -53,6 +54,10 @@ def main(output_folder,
                 results,
                 results_folder)
     
+    print('save model', flush=True)
+    saveModel(results, results_folder)
+    
+    print('saving results done!', flush=True)
 
 
 
@@ -282,7 +287,16 @@ def saveNumeric(measurement_point_name,
     g.close()
     
     
-            
+def saveModel(results, results_folder):
+    
+    for idx_res, res in enumerate(results):
+        
+        fname = os.path.join(results_folder, \
+                             'savemodel_ylag{}.pickle'.format(idx_res))
+        
+        with open(fname, 'wb') as f:
+            pickle.dump(res, f)
+        
             
             
             

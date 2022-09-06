@@ -169,7 +169,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                        scoring='neg_mean_squared_error',
                                        n_jobs=N_CPU,
                                        cv=tss,
-                                       verbose=1)
+                                       verbose=0)
             model.fit(X_train_scaled, y_train_scaled)
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -187,7 +187,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                     n_jobs=N_CPU,
                                     n_points=1,
                                     cv=tss,
-                                    verbose=1)
+                                    verbose=0)
             model.fit(X_train_scaled, y_train_scaled.ravel())
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -232,7 +232,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                        scoring='neg_mean_squared_error',
                                        n_jobs=N_CPU,
                                        cv=tss,
-                                       verbose=1)
+                                       verbose=0)
             model.fit(X_train_scaled, y_train_scaled)
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -250,7 +250,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                     n_jobs=N_CPU,
                                     n_points=1,
                                     cv=tss,
-                                    verbose=1)
+                                    verbose=0)
             model.fit(X_train_scaled, y_train_scaled.ravel())
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -294,7 +294,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                        scoring='neg_mean_squared_error',
                                        n_jobs=N_CPU,
                                        cv=tss,
-                                       verbose=1)
+                                       verbose=0)
             model.fit(X_train_scaled, y_train_scaled)
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -313,7 +313,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                     n_jobs=N_CPU,
                                     n_points=1,
                                     cv=tss,
-                                    verbose=1)
+                                    verbose=0)
             model.fit(X_train_scaled, y_train_scaled.ravel())
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -356,7 +356,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                        scoring='neg_mean_squared_error',
                                        n_jobs=N_CPU,
                                        cv=tss,
-                                       verbose=1)
+                                       verbose=0)
             model.fit(X_train_scaled, y_train_scaled)
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -374,7 +374,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                     n_jobs=N_CPU,
                                     n_points=1,
                                     cv=tss,
-                                    verbose=1)
+                                    verbose=0)
             model.fit(X_train_scaled, y_train_scaled.ravel())
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -417,7 +417,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                        scoring='neg_mean_squared_error',
                                        n_jobs=N_CPU,
                                        cv=tss,
-                                       verbose=1)
+                                       verbose=0)
             model.fit(X_train_scaled, y_train_scaled)
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -435,7 +435,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                     n_jobs=N_CPU,
                                     n_points=1,
                                     cv=tss,
-                                    verbose=1)
+                                    verbose=0)
             model.fit(X_train_scaled, y_train_scaled.ravel())
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -484,7 +484,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                        scoring='neg_mean_squared_error',
                                        n_jobs=N_CPU,
                                        cv=tss,
-                                       verbose=1)
+                                       verbose=0)
             model.fit(X_train_scaled, y_train_scaled.ravel())
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -504,7 +504,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                     n_jobs=N_CPU,
                                     n_points=1,
                                     cv=tss,
-                                    verbose=1)
+                                    verbose=0)
             model.fit(X_train_scaled, y_train_scaled.ravel()) # Adding .values here doesn't help
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -555,7 +555,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                        scoring='neg_mean_squared_error',
                                        n_jobs=N_CPU,
                                        cv=tss,
-                                       verbose=1)
+                                       verbose=0)
             model.fit(X_train_scaled, y_train_scaled)
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -576,7 +576,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                     n_jobs=N_CPU,
                                     n_points=1,
                                     cv=tss,
-                                    verbose=1)
+                                    verbose=0)
             model.fit(X_train_scaled, y_train_scaled.ravel())
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -623,7 +623,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                        scoring='neg_mean_squared_error',
                                        n_jobs=N_CPU,
                                        cv=tss,
-                                       verbose=1)
+                                       verbose=0)
             model.fit(X_train_scaled, y_train_scaled.ravel())
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -643,7 +643,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                     n_jobs=N_CPU, # This was slow with 1; Might have been wrong and this should be 1
                                     n_points=1, # This was slow with 1
                                     cv=tss,
-                                    verbose=1)
+                                    verbose=0)
             model.fit(X_train_scaled, y_train_scaled.ravel())
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -690,7 +690,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                        scoring='neg_mean_squared_error',
                                        n_jobs=N_CPU,
                                        cv=tss,
-                                       verbose=1)
+                                       verbose=0)
             model.fit(X_train_scaled, y_train_scaled.ravel())
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -709,7 +709,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                     n_jobs=N_CPU,
                                     n_points=1,
                                     cv=tss,
-                                    verbose=1)
+                                    verbose=0)
             model.fit(X_train_scaled, y_train_scaled.ravel())
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -756,7 +756,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                        scoring='neg_mean_squared_error',
                                        n_jobs=N_CPU,
                                        cv=tss,
-                                       verbose=1)
+                                       verbose=0)
             model.fit(X_train_scaled, y_train_scaled.ravel())
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -775,7 +775,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                     n_jobs=N_CPU,
                                     n_points=1,
                                     cv=tss,
-                                    verbose=1)
+                                    verbose=0)
             model.fit(X_train_scaled, y_train_scaled.ravel())
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -825,7 +825,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                        scoring='neg_mean_squared_error',
                                        n_jobs=N_CPU,
                                        cv=tss,
-                                       verbose=1)
+                                       verbose=0)
             model.fit(X_train_scaled, y_train_scaled.ravel())
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -847,7 +847,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                     n_jobs=N_CPU,
                                     n_points=1,
                                     cv=tss,
-                                    verbose=1)
+                                    verbose=0)
             model.fit(X_train_scaled, y_train_scaled.ravel())
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -896,7 +896,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                        scoring='neg_mean_squared_error',
                                        n_jobs=N_CPU,
                                        cv=tss,
-                                       verbose=1)
+                                       verbose=0)
             model.fit(X_train_scaled, y_train_scaled.ravel())
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -918,7 +918,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                     n_jobs=N_CPU,
                                     n_points=1,
                                     cv=tss,
-                                    verbose=1)
+                                    verbose=0)
             model.fit(X_train_scaled, y_train_scaled.ravel())
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -968,7 +968,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                        scoring='neg_mean_squared_error',
                                        n_jobs=N_CPU,
                                        cv=tss,
-                                       verbose=1)
+                                       verbose=0)
             model.fit(X_train_scaled, y_train_scaled.ravel())
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -990,7 +990,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                     n_jobs=N_CPU,
                                     n_points=1,
                                     cv=tss,
-                                    verbose=1)
+                                    verbose=0)
             model.fit(X_train_scaled, y_train_scaled.ravel())
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -1040,7 +1040,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                        scoring='neg_mean_squared_error',
                                        n_jobs=N_CPU,
                                        cv=tss,
-                                       verbose=1)
+                                       verbose=0)
             model.fit(X_train_scaled, y_train_scaled.ravel())
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -1062,7 +1062,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                     n_jobs=N_CPU,
                                     n_points=1,
                                     cv=tss,
-                                    verbose=1)
+                                    verbose=0)
             model.fit(X_train_scaled, y_train_scaled.ravel())
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -1118,7 +1118,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                        scoring='neg_mean_squared_error',
                                        n_jobs=N_CPU,
                                        cv=tss,
-                                       verbose=1)
+                                       verbose=0)
             model.fit(X_train_scaled, y_train_scaled.ravel())
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -1140,7 +1140,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                     n_jobs=N_CPU,
                                     n_points=1,
                                     cv=tss,
-                                    verbose=1)
+                                    verbose=0)
             model.fit(X_train_scaled, y_train_scaled.ravel())
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -1200,7 +1200,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                        scoring='neg_mean_squared_error',
                                        n_jobs=N_CPU,
                                        cv=tss,
-                                       verbose=1)
+                                       verbose=0)
             model.fit(X_train_scaled, y_train_scaled.ravel())
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -1226,7 +1226,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                     n_jobs=N_CPU,
                                     n_points=1,
                                     cv=tss,
-                                    verbose=1)
+                                    verbose=0)
             model.fit(X_train_scaled, y_train_scaled.ravel())
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -1288,7 +1288,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                        scoring='neg_mean_squared_error',
                                        n_jobs=N_CPU,
                                        cv=tss,
-                                       verbose=1)
+                                       verbose=0)
             model.fit(X_train_scaled, y_train_scaled.ravel())
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -1314,7 +1314,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                     n_jobs=N_CPU,
                                     n_points=1,
                                     cv=tss,
-                                    verbose=1)
+                                    verbose=0)
             model.fit(X_train_scaled, y_train_scaled.ravel())
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -1376,7 +1376,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                        scoring='neg_mean_squared_error',
                                        n_jobs=N_CPU,
                                        cv=tss,
-                                       verbose=1)
+                                       verbose=0)
             model.fit(X_train_scaled, y_train_scaled.ravel())
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -1402,7 +1402,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                     n_jobs=N_CPU,
                                     n_points=1,
                                     cv=tss,
-                                    verbose=1)
+                                    verbose=0)
             model.fit(X_train_scaled, y_train_scaled.ravel())
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -1462,7 +1462,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                        scoring='neg_mean_squared_error',
                                        n_jobs=N_CPU,
                                        cv=tss,
-                                       verbose=1)
+                                       verbose=0)
             model.fit(X_train_scaled, y_train_scaled.ravel())
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -1488,7 +1488,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                     n_jobs=N_CPU,
                                     n_points=1,
                                     cv=tss,
-                                    verbose=1)
+                                    verbose=0)
             model.fit(X_train_scaled, y_train_scaled.ravel())
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -1549,7 +1549,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                        scoring='neg_mean_squared_error',
                                        n_jobs=N_CPU,
                                        cv=tss,
-                                       verbose=1)
+                                       verbose=0)
             model.fit(X_train_scaled, y_train_scaled.ravel())
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -1575,7 +1575,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                     n_jobs=N_CPU,
                                     n_points=1,
                                     cv=tss,
-                                    verbose=1)
+                                    verbose=0)
             model.fit(X_train_scaled, y_train_scaled.ravel())
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -1635,7 +1635,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                        scoring='neg_mean_squared_error',
                                        n_jobs=N_CPU,
                                        cv=tss,
-                                       verbose=1)
+                                       verbose=0)
             model.fit(X_train_scaled, y_train_scaled.ravel())
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -1661,7 +1661,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                     n_jobs=N_CPU,
                                     n_points=1,
                                     cv=tss,
-                                    verbose=1)
+                                    verbose=0)
             model.fit(X_train_scaled, y_train_scaled.ravel())
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -1723,7 +1723,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                        scoring='neg_mean_squared_error',
                                        n_jobs=N_CPU,
                                        cv=tss,
-                                       verbose=1)
+                                       verbose=0)
             model.fit(X_train_scaled, y_train_scaled.ravel())
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -1749,7 +1749,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                     n_jobs=N_CPU,
                                     n_points=1,
                                     cv=tss,
-                                    verbose=1)
+                                    verbose=0)
             model.fit(X_train_scaled, y_train_scaled.ravel())
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -1810,7 +1810,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                        scoring='neg_mean_squared_error',
                                        n_jobs=N_CPU,
                                        cv=tss,
-                                       verbose=1)
+                                       verbose=0)
             model.fit(X_train_scaled, y_train_scaled.ravel())
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -1836,7 +1836,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                     n_jobs=N_CPU,
                                     n_points=1,
                                     cv=tss,
-                                    verbose=1)
+                                    verbose=0)
             model.fit(X_train_scaled, y_train_scaled.ravel())
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -1846,7 +1846,7 @@ def fit_model(X_train_scaled, y_train_scaled,
 
 
 
-    elif model_name == 'kneighborsregressor_niform':
+    elif model_name == 'kneighborsregressoruniform':
         print('ML:', model_name)
         
         if optimization_method == 'pso':
@@ -1888,7 +1888,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                        scoring='neg_mean_squared_error',
                                        n_jobs=N_CPU,
                                        cv=tss,
-                                       verbose=1)
+                                       verbose=0)
             model.fit(X_train_scaled, y_train_scaled.ravel())
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -1910,7 +1910,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                     n_jobs=N_CPU,
                                     n_points=1,
                                     cv=tss,
-                                    verbose=1)
+                                    verbose=0)
             model.fit(X_train_scaled, y_train_scaled.ravel())
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -1962,7 +1962,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                        scoring='neg_mean_squared_error',
                                        n_jobs=N_CPU,
                                        cv=tss,
-                                       verbose=1)
+                                       verbose=0)
             model.fit(X_train_scaled, y_train_scaled.ravel())
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -1984,7 +1984,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                     n_jobs=N_CPU,
                                     n_points=1,
                                     cv=tss,
-                                    verbose=1)
+                                    verbose=0)
             model.fit(X_train_scaled, y_train_scaled.ravel())
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -2042,7 +2042,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                        scoring='neg_mean_squared_error',
                                        n_jobs=N_CPU,
                                        cv=tss,
-                                       verbose=1)
+                                       verbose=0)
             model.fit(X_train_scaled, y_train_scaled.ravel())
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -2066,7 +2066,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                     n_jobs=N_CPU,
                                     n_points=1,
                                     cv=tss,
-                                    verbose=1)
+                                    verbose=0)
             model.fit(X_train_scaled, y_train_scaled.ravel())
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -2123,7 +2123,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                        scoring='neg_mean_squared_error',
                                        n_jobs=N_CPU,
                                        cv=tss,
-                                       verbose=1)
+                                       verbose=0)
             model.fit(X_train_scaled, y_train_scaled.ravel())
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -2147,7 +2147,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                     n_jobs=N_CPU,
                                     n_points=1,
                                     cv=tss,
-                                    verbose=1)
+                                    verbose=0)
             model.fit(X_train_scaled, y_train_scaled.ravel())
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -2205,7 +2205,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                        scoring='neg_mean_squared_error',
                                        n_jobs=N_CPU,
                                        cv=tss,
-                                       verbose=1)
+                                       verbose=0)
             model.fit(X_train_scaled, y_train_scaled.ravel())
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -2229,7 +2229,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                     n_jobs=N_CPU,
                                     n_points=1,
                                     cv=tss,
-                                    verbose=1)
+                                    verbose=0)
             model.fit(X_train_scaled, y_train_scaled.ravel())
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -2287,7 +2287,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                        scoring='neg_mean_squared_error',
                                        n_jobs=N_CPU,
                                        cv=tss,
-                                       verbose=1)
+                                       verbose=0)
             model.fit(X_train_scaled, y_train_scaled.ravel())
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -2311,7 +2311,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                     n_jobs=N_CPU,
                                     n_points=1,
                                     cv=tss,
-                                    verbose=1)
+                                    verbose=0)
             model.fit(X_train_scaled, y_train_scaled.ravel())
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -2360,7 +2360,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                        scoring='neg_mean_squared_error',
                                        n_jobs=N_CPU,
                                        cv=tss,
-                                       verbose=1)
+                                       verbose=0)
             model.fit(X_train_scaled, y_train_scaled.ravel())
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -2381,7 +2381,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                     n_jobs=N_CPU,
                                     n_points=1,
                                     cv=tss,
-                                    verbose=1)
+                                    verbose=0)
             model.fit(X_train_scaled, y_train_scaled.ravel())
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -2431,7 +2431,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                        scoring='neg_mean_squared_error',
                                        n_jobs=N_CPU,
                                        cv=tss,
-                                       verbose=1)
+                                       verbose=0)
             model.fit(X_train_scaled, y_train_scaled.ravel())
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -2452,7 +2452,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                     n_jobs=N_CPU,
                                     n_points=1,
                                     cv=tss,
-                                    verbose=1)
+                                    verbose=0)
             model.fit(X_train_scaled, y_train_scaled.ravel())
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -2501,7 +2501,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                        scoring='neg_mean_squared_error',
                                        n_jobs=N_CPU,
                                        cv=tss,
-                                       verbose=1)
+                                       verbose=0)
             model.fit(X_train_scaled, y_train_scaled.ravel())
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -2522,7 +2522,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                     n_jobs=N_CPU,
                                     n_points=1,
                                     cv=tss,
-                                    verbose=1)
+                                    verbose=0)
             model.fit(X_train_scaled, y_train_scaled.ravel())
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -2571,7 +2571,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                        scoring='neg_mean_squared_error',
                                        n_jobs=N_CPU,
                                        cv=tss,
-                                       verbose=1)
+                                       verbose=0)
             model.fit(X_train_scaled, y_train_scaled.ravel())
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -2592,7 +2592,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                     n_jobs=N_CPU,
                                     n_points=1,
                                     cv=tss,
-                                    verbose=1)
+                                    verbose=0)
             model.fit(X_train_scaled, y_train_scaled.ravel())
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -2653,7 +2653,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                        scoring='neg_mean_squared_error',
                                        n_jobs=N_CPU,
                                        cv=tss,
-                                       verbose=1)
+                                       verbose=0)
             model.fit(X_train_scaled, y_train_scaled.ravel())
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -2679,7 +2679,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                     n_jobs=N_CPU,
                                     n_points=1,
                                     cv=tss,
-                                    verbose=1)
+                                    verbose=0)
             model.fit(X_train_scaled, y_train_scaled.ravel())
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -2738,7 +2738,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                        scoring='neg_mean_squared_error',
                                        n_jobs=N_CPU,
                                        cv=tss,
-                                       verbose=1)
+                                       verbose=0)
             model.fit(X_train_scaled, y_train_scaled.ravel())
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -2764,7 +2764,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                     n_jobs=N_CPU,
                                     n_points=1,
                                     cv=tss,
-                                    verbose=1)
+                                    verbose=0)
             model.fit(X_train_scaled, y_train_scaled.ravel())
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -2823,7 +2823,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                        scoring='neg_mean_squared_error',
                                        n_jobs=N_CPU,
                                        cv=tss,
-                                       verbose=1)
+                                       verbose=0)
             model.fit(X_train_scaled, y_train_scaled.ravel())
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -2850,7 +2850,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                     n_jobs=N_CPU,
                                     n_points=1,
                                     cv=tss,
-                                    verbose=1)
+                                    verbose=0)
             model.fit(X_train_scaled, y_train_scaled.ravel())
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -2907,7 +2907,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                        scoring='neg_mean_squared_error',
                                        n_jobs=N_CPU,
                                        cv=tss,
-                                       verbose=1)
+                                       verbose=0)
             model.fit(X_train_scaled, y_train_scaled.ravel())
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -2933,7 +2933,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                     n_jobs=N_CPU,
                                     n_points=1,
                                     cv=tss,
-                                    verbose=1)
+                                    verbose=0)
             model.fit(X_train_scaled, y_train_scaled.ravel())
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -2996,7 +2996,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                        scoring='neg_mean_squared_error',
                                        n_jobs=N_CPU,
                                        cv=tss,
-                                       verbose=1)
+                                       verbose=0)
             model.fit(X_train_scaled, y_train_scaled.ravel())
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -3024,7 +3024,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                     n_jobs=N_CPU,
                                     n_points=1,
                                     cv=tss,
-                                    verbose=1)
+                                    verbose=0)
             model.fit(X_train_scaled, y_train_scaled.ravel())
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -3079,7 +3079,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                        scoring='neg_mean_squared_error',
                                        n_jobs=N_CPU,
                                        cv=tss,
-                                       verbose=1)
+                                       verbose=0)
             model.fit(X_train_scaled, y_train_scaled.ravel())
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -3104,7 +3104,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                     n_jobs=N_CPU,
                                     n_points=1,
                                     cv=tss,
-                                    verbose=1)
+                                    verbose=0)
             model.fit(X_train_scaled, y_train_scaled.ravel())
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -3157,7 +3157,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                        scoring='neg_mean_squared_error',
                                        n_jobs=N_CPU,
                                        cv=tss,
-                                       verbose=1)
+                                       verbose=0)
             model.fit(X_train_scaled, y_train_scaled.ravel())
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -3182,7 +3182,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                     n_jobs=N_CPU,
                                     n_points=1,
                                     cv=tss,
-                                    verbose=1)
+                                    verbose=0)
             model.fit(X_train_scaled, y_train_scaled.ravel())
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -3236,7 +3236,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                        scoring='neg_mean_squared_error',
                                        n_jobs=N_CPU,
                                        cv=tss,
-                                       verbose=1)
+                                       verbose=0)
             model.fit(X_train_scaled, y_train_scaled.ravel())
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -3261,7 +3261,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                     n_jobs=N_CPU,
                                     n_points=1,
                                     cv=tss,
-                                    verbose=1)
+                                    verbose=0)
             model.fit(X_train_scaled, y_train_scaled.ravel())
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -3317,7 +3317,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                        scoring='neg_mean_squared_error',
                                        n_jobs=N_CPU,
                                        cv=tss,
-                                       verbose=1)
+                                       verbose=0)
             model.fit(X_train_scaled, y_train_scaled.ravel())
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -3344,7 +3344,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                     n_jobs=N_CPU,
                                     n_points=1,
                                     cv=tss,
-                                    verbose=1)
+                                    verbose=0)
             model.fit(X_train_scaled, y_train_scaled.ravel())
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -3355,11 +3355,6 @@ def fit_model(X_train_scaled, y_train_scaled,
 
     elif model_name == 'xgbgbtree':
         print('ML:', model_name)
-        
-        try:
-            print(xgb.__version__, flush=True)
-        except:
-            print("Could not load xgb!", flush=True)
         
         if optimization_method == 'pso':
             print('Hyperparameter tuning: PSO')
@@ -3403,8 +3398,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                        n_iter=N_ITER,
                                        scoring='neg_mean_squared_error',
                                        n_jobs=N_CPU,
-                                       cv=tss,
-                                       verbose=1)
+                                       cv=tss)
             model.fit(X_train_scaled, y_train_scaled)
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -3428,8 +3422,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                   scoring='neg_mean_squared_error',
                                   n_jobs=N_CPU,
                                   n_points=1,
-                                  cv=tss,
-                                  verbose=1)
+                                  cv=tss)
             model.fit(X_train_scaled, y_train_scaled)
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -3482,8 +3475,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                        n_iter=N_ITER,
                                        scoring='neg_mean_squared_error',
                                        n_jobs=N_CPU,
-                                       cv=tss,
-                                       verbose=1)
+                                       cv=tss)
             model.fit(X_train_scaled, y_train_scaled)
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -3507,8 +3499,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                     scoring='neg_mean_squared_error',
                                     n_jobs=N_CPU,
                                     n_points=1,
-                                    cv=tss,
-                                    verbose=1)
+                                    cv=tss)
             model.fit(X_train_scaled, y_train_scaled)
             xopt = model.best_params_
             fopt = -model.best_score_

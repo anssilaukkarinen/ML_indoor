@@ -281,10 +281,18 @@ if __name__ == '__main__':
     root_folder = r'/home/anssi/Software/github/ML_indoor'
     input_folder = os.path.join(root_folder,
                                 'input')
-    time_str = time.strftime("%Y-%m-%d-%H-%M-%S",
-                                time.localtime())
-    output_folder = os.path.join(os.getcwd(),
-                                 'output_{}'.format(time_str))
+
+    output_folder_custom_str = 'output_2022-09-06-00-06-34'
+    
+    if output_folder_custom_str != '':
+        output_folder = os.path.join(root_folder,
+                                     output_folder_custom_str)
+    else:
+        time_str = time.strftime("%Y-%m-%d-%H-%M-%S",
+                                    time.localtime())
+        output_folder = os.path.join(root_folder,
+                                     'output_{}'.format(time_str))
+    
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
     
@@ -321,6 +329,10 @@ if __name__ == '__main__':
     print(measurement_point_names, flush=True)
     
     
+    # LassoLarsICAIC
+    # LassoLarsICBIC
+    # QuantileRegressor
+    # TweedieRegressor (Poisson, Gamma, Inverse Gaussian)
     
     # ML methods, 0 48
     # kneighbors uniform and onwards 27 48
@@ -375,14 +387,23 @@ if __name__ == '__main__':
     model_names = model_names[int(sys.argv[3]):int(sys.argv[4])]
     print(model_names, flush=True)
     
-    # svr_poly is very slow
+    # UserWarning: The objective has been evaluated at this point before.
+    # -> ridge bayes; lasso bayes; elasticnet bayes; lars bayes; lassolars bayes;
+    # -> theilsen bayes
     
-    # kernelridge_poly is a bit slow compared to earlier methods,
+    # calculations stopped (swap memory full?) at kernelridgecosine pso (counter=1)
+    
+    
+    
+    # kernelridgepoly is a bit slow compared to earlier methods,
     # but stil ran through in a reasonable time
     
     # kernelridge_sigmoid gives dual problem/least squares warnings, and LinAlgError errors
+    # kernelridgesigmoid very slow in some cases (large alpha?)
     
     # nusvr_poly: convergence warning terminated early (max_iter=1000000)
+    
+    # svrpoly is very slow
     
     
     
@@ -445,6 +466,9 @@ if __name__ == '__main__':
                                     'y_train':y_train, 'y_train_pred':y_train_pred,
                                     'y_validate':y_validate, 'y_validate_pred':y_validate_pred,
                                     'y_test':y_test, 'y_test_pred':y_test_pred,
+                                    'X_train_pred_scaled':X_train_pred_scaled,
+                                    'X_validate_pred_scaled': X_validate_pred_scaled,
+                                    'X_test_pred_scaled': X_test_pred_scaled,
                                     'wall_clock_time':wall_clock_time})
                     
                 
