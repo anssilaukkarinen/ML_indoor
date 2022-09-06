@@ -303,22 +303,17 @@ if __name__ == '__main__':
     
     fname = os.path.join(output_folder,
                          'std_out_and_err_file.txt')
-    f_out = open(fname, 'w')
+    
+    if os.path.isfile(fname):
+        f_out = open(fname, 'a')
+        print('File reopened for appending!', file=f_out, flush=True)
+    else:
+        f_out = open(fname, 'w')
+    
     sys.stdout = f_out
     sys.stderr = f_out
-    # sys.stderr = sys.stdout
+
     
-    # fname = os.path.join(output_folder,
-    #                      'std_err_file.txt')
-    # f_stderr = open(fname, 'w')
-    # sys.stderr = f_stderr
-    
-    
-    
-    # sys_stdout = sys.stdout
-    # fname = os.path.join(output_folder,
-    #                      'log_all.txt')
-    # with open(fname, 'w') as sys.stdout:
         
     # Run all the code        
     print(sys.argv, flush=True)
@@ -392,6 +387,7 @@ if __name__ == '__main__':
     # -> theilsen bayes
     
     # calculations stopped (swap memory full?) at kernelridgecosine pso (counter=1)
+    # kernelridge cosine bayessearch: the objective has been evaluated at this point before
     
     
     
