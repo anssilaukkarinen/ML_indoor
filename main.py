@@ -20,11 +20,13 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 from sklearn.preprocessing import StandardScaler
+# https://scikit-learn.org/stable/modules/metrics.html#metrics
 
 from multiprocessing import Pool
 
 import myModels
 import myResults
+import myClasses
 
 
 
@@ -212,10 +214,18 @@ def main(input_folder,
     X_train_scaled, y_train_scaled, scaler_X, scaler_y \
         = scale_train(X_train, y_train)
     print('scale_train ok!', flush=True)
+    
+    # fig, ax = plt.subplots()
+    # ax.plot(X_train_scaled[:,0], y_train_scaled[:,0])
+    # x_dummy = np.linspace(-3, 2)
+    # y_dummy = myClasses.PiecewiseRegressor.piecewise_func(x_dummy, 0.5, -0.5, 0, 2.5)
+    # ax.plot(x_dummy, y_dummy)
+    # plt.show()
+    print(X_train_scaled.shape, y_train_scaled.shape, flush=True)
+    
     xopt, fopt, model = myModels.fit_model(X_train_scaled, y_train_scaled,
                                            model_name, optimization_method,
                                            N_CV, N_ITER, N_CPU)
-    
     
 
     
@@ -282,7 +292,8 @@ if __name__ == '__main__':
     input_folder = os.path.join(root_folder,
                                 'input')
 
-    output_folder_custom_str = 'output_2022-09-06-00-06-34'
+    #output_folder_custom_str = 'output_2022-09-06-00-06-34'
+    output_folder_custom_str = 'output_2022-09-16-21-53-41'
     
     if output_folder_custom_str != '':
         output_folder = os.path.join(root_folder,
@@ -306,6 +317,8 @@ if __name__ == '__main__':
     
     if os.path.isfile(fname):
         f_out = open(fname, 'a')
+        print('\n\n\n\n', file=f_out, flush=True)
+        print('#####################################', file=f_out, flush=True)
         print('File reopened for appending!', file=f_out, flush=True)
     else:
         f_out = open(fname, 'w')
@@ -331,6 +344,8 @@ if __name__ == '__main__':
     
     # ML methods, 0 48
     # kneighbors uniform and onwards 27 48
+    # kernelridge: 12-18
+    # kernelridge sigmoid 15 16
     model_names = ['dummyregressor',
                     'expfunc',
                     'piecewisefunc',
@@ -387,14 +402,16 @@ if __name__ == '__main__':
     # -> theilsen bayes
     
     # calculations stopped (swap memory full?) at kernelridgecosine pso (counter=1)
-    # kernelridge cosine bayessearch: the objective has been evaluated at this point before
-    
+    # kernelridge cosine bayessearch Tampere1 Tampere2: the objective has been evaluated at this point before
     
     
     # kernelridgepoly is a bit slow compared to earlier methods,
     # but stil ran through in a reasonable time
     
     # kernelridge_sigmoid gives dual problem/least squares warnings, and LinAlgError errors
+    # The program crashed here!!! -> Espoo1 ok, Espoo2 (+1 crash)
+    # Valkeakoski crashed
+    
     # kernelridgesigmoid very slow in some cases (large alpha?)
     
     # nusvr_poly: convergence warning terminated early (max_iter=1000000)

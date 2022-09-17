@@ -61,7 +61,9 @@ class ExpFuncRegressor(BaseEstimator):
     
 class PiecewiseRegressor(BaseEstimator):
     
-    def __init__(self, a=10.0, b=20.0, k1=0.0, k2=1.0):
+    def __init__(self, a=0.5, b=-0.5, k1=0.0, k2=2.5):
+        # The init values are for non-scaled data
+        # If the input data is scaled, then lb and ub must be set accordingly
         self.a = a
         self.b = b
         self.k1 = k1
@@ -75,8 +77,8 @@ class PiecewiseRegressor(BaseEstimator):
         # Custom lower and upper bounds are provided, which fixes it.
         
         p0 = [self.a, self.b, self.k1, self.k2]
-        lb = [10.0,  15.0, -0.5, 0.0]
-        ub = [20.0, 25.0,  0.5, 2.0]
+        lb = [-1.0, -2.0, -1.0, 0.0]
+        ub = [1.0, 1.0,  1.0, 4.0]
         
         
         popt, pcov = curve_fit(self.piecewise_func, 

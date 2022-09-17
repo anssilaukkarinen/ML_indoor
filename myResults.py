@@ -10,6 +10,7 @@ import json
 import pickle
 import numpy as np
 import matplotlib.pyplot as plt
+import time
 
 from sklearn.metrics import mean_absolute_error
 from sklearn.metrics import mean_squared_error
@@ -26,7 +27,6 @@ def main(output_folder,
          N_CV, N_ITER, N_CPU,
          results):
     
-    
     dummy = '{}_{}_Xlag{}_ylagmax{}_NCV{}_NITER{}_NCPU{}_{}'.format(
                                                 model_name,
                                                 optimization_method,
@@ -39,6 +39,15 @@ def main(output_folder,
                                   dummy)
     
     if not os.path.exists(results_folder):
+        # The folder didn't exist, so we created a new one
+        os.makedirs(results_folder)
+    else:
+        # The folder already existed, so we append the name with datetime
+        # and make a new folder
+        time_str = time.strftime("%Y-%m-%d-%H-%M-%S",
+                                    time.localtime())
+        results_folder = os.path.join(output_folder,
+                                      dummy +'__' + time_str)
         os.makedirs(results_folder)
     
     
@@ -65,24 +74,30 @@ def main(output_folder,
 
 
 def savePlots(results, results_folder):
+    
+    figseiz = (5.0, 3.0)
+    dpi_val = 200
 
     ## Training
     for idx in range(len(results)):
         
         # Scatter plot
-        plt.figure()
-        plt.plot(results[idx]['y_train'], results[idx]['y_train_pred'],'.')
-        plt.plot((20,30),(20,30))
+        fig, ax = plt.subplots(figsize=figseiz)
+        ax.plot(results[idx]['y_train'], results[idx]['y_train_pred'],'.')
+        ax.set_xlabel('gt')
+        ax.set_ylabel('pred')
+        ax.plot((20,30),(20,30))
         fname = results_folder + '/train_scatter_' + str(idx) + '.png'
-        plt.savefig(fname, bbox_inches='tight')
-        plt.close()
+        fig.savefig(fname, dpi=dpi_val, bbox_inches='tight')
+        plt.close(fig)
 
         # Line plot
-        plt.figure()
-        plt.plot(results[idx]['y_train'])
-        plt.plot(results[idx]['y_train_pred'])
+        fig, ax = plt.subplots(figsize=figseiz)
+        ax.plot(results[idx]['y_train'], label='gt')
+        ax.plot(results[idx]['y_train_pred'], label='pred')
+        ax.legend()
         fname = results_folder + '/train_line_' + str(idx) + '.png'
-        plt.savefig(fname, bbox_inches='tight')
+        plt.savefig(fname, dpi=dpi_val, bbox_inches='tight')
         plt.close()
     
     
@@ -90,40 +105,46 @@ def savePlots(results, results_folder):
     for idx in range(len(results)):
         
         # Scatter plot
-        plt.figure()
-        plt.plot(results[idx]['y_validate'], results[idx]['y_validate_pred'],'.')
-        plt.plot((20,30),(20,30))
+        fig, ax = plt.subplots(figsize=figseiz)
+        ax.plot(results[idx]['y_validate'], results[idx]['y_validate_pred'],'.')
+        ax.plot((20,30),(20,30))
+        ax.set_xlabel('gt')
+        ax.set_ylabel('pred')
         fname = results_folder + '/validate_scatter_' + str(idx) + '.png'
-        plt.savefig(fname, bbox_inches='tight')
-        plt.close()
+        fig.savefig(fname, dpi=dpi_val, bbox_inches='tight')
+        plt.close(fig)
     
         # Line plot
-        plt.figure()
-        plt.plot(results[idx]['y_validate'])
-        plt.plot(results[idx]['y_validate_pred'])
+        fig, ax = plt.subplots(figsize=figseiz)
+        ax.plot(results[idx]['y_validate'], label='gt')
+        ax.plot(results[idx]['y_validate_pred'], label='pred')
+        ax.legend()
         fname = results_folder + '/validate_line_' + str(idx) + '.png'
-        plt.savefig(fname, bbox_inches='tight')
-        plt.close()
+        fig.savefig(fname, dpi=dpi_val, bbox_inches='tight')
+        plt.close(fig)
     
     
     ## Test
     for idx in range(len(results)):
         
         # Scatter plot
-        plt.figure()
-        plt.plot(results[idx]['y_test'], results[idx]['y_test_pred'],'.')
-        plt.plot((20,30),(20,30))
+        fig, ax = plt.subplots(figsize=figseiz)
+        ax.plot(results[idx]['y_test'], results[idx]['y_test_pred'],'.')
+        ax.plot((20,30),(20,30))
+        ax.set_xlabel('gt')
+        ax.set_ylabel('pred')
         fname = results_folder + '/test_scatter_' + str(idx) + '.png'
-        plt.savefig(fname, bbox_inches='tight')
-        plt.close()
+        fig.savefig(fname, dpi=dpi_val, bbox_inches='tight')
+        plt.close(fig)
     
         # Line plot
-        plt.figure()
-        plt.plot(results[idx]['y_test'])
-        plt.plot(results[idx]['y_test_pred'])
+        fig, ax = plt.subplots(figsize=figseiz)
+        ax.plot(results[idx]['y_test'], label='gt')
+        ax.plot(results[idx]['y_test_pred'], label='pred')
+        ax.legend()
         fname = results_folder + '/test_line_' + str(idx) + '.png'
-        plt.savefig(fname, bbox_inches='tight')
-        plt.close()
+        fig.savefig(fname, dpi=dpi_val, bbox_inches='tight')
+        plt.close(fig)
     
 
 
@@ -177,11 +198,14 @@ def saveNumeric(measurement_point_name,
             
             # RMSE
             rmse_train = mean_squared_error(results[idx]['y_train'],
-                                            results[idx]['y_train_pred'])
+                                            results[idx]['y_train_pred'],
+                                            squared=False)
             rmse_validate = mean_squared_error(results[idx]['y_validate'],
-                                               results[idx]['y_validate_pred'])
+                                               results[idx]['y_validate_pred'],
+                                               squared=False)
             rmse_test = mean_squared_error(results[idx]['y_test'],
-                                           results[idx]['y_test_pred'])
+                                           results[idx]['y_test_pred'],
+                                           squared=False)
             s = 'RMSE_y train {:.4f} validate {:.4f} test {:.4f}' \
                 .format(rmse_train, rmse_validate, rmse_test)
             f.write(s + '\n')

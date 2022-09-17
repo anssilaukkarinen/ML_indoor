@@ -71,6 +71,7 @@ from sklearn.ensemble import RandomForestRegressor
 import xgboost as xgb
 import lightgbm as lgb
 
+import matplotlib.pyplot as plt
 
 
 
@@ -113,12 +114,11 @@ def fit_model(X_train_scaled, y_train_scaled,
         print('Hyperparameter tuning: None')
         kwargs = {'X_train_scaled': X_train_scaled, 
                   'y_train_scaled': y_train_scaled,
-                  'N_CV': N_CV}
+                  'N_CV': N_CV}        
         xopt, fopt, model = piecewise(kwargs)
     
     
     elif model_name == 'linearregression':
-        
         print('ML:', model_name)
         print('Hyperparameter tuning: None')
         
@@ -699,7 +699,7 @@ def fit_model(X_train_scaled, y_train_scaled,
         elif optimization_method == 'bayessearchcv':
             print('Hyperparameter tuning: BayesSearchCV')
             reg_model = KernelRidge()
-            distributions = {'kernel':['cosine'],
+            distributions = {'kernel':Categorical(['cosine']),
                              'alpha': Real(1, 1000, prior='uniform')}
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = BayesSearchCV(estimator=reg_model, 
@@ -765,7 +765,7 @@ def fit_model(X_train_scaled, y_train_scaled,
         elif optimization_method == 'bayessearchcv':
             print('Hyperparameter tuning: BayesSearchCV')
             reg_model = KernelRidge()
-            distributions = {'kernel':['linear'],
+            distributions = {'kernel':Categorical(['linear']),
                              'alpha': Real(1, 1000, prior='uniform')}
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = BayesSearchCV(estimator=reg_model, 
@@ -834,8 +834,8 @@ def fit_model(X_train_scaled, y_train_scaled,
         elif optimization_method == 'bayessearchcv':
             print('Hyperparameter tuning: BayesSearchCV')
             reg_model = KernelRidge()
-            distributions = {'kernel':['polynomial'],
-                             'alpha': Real(1, 1000, prior='log-uniform'),
+            distributions = {'kernel':Categorical(['polynomial']),
+                             'alpha': Real(1, 1000, prior='uniform'),
                              'gamma': Real(1e-3, 1, prior='log-uniform'),
                              'degree': Integer(1, 2, prior='uniform'),
                              'coef0': Integer(0, 2, prior='uniform')}
@@ -865,8 +865,8 @@ def fit_model(X_train_scaled, y_train_scaled,
                       'N_CV': N_CV,
                       'return_model': False}
             # alpha, gamma, degree, coef0
-            lb = [0.1,  1e-3,   1,  0]
-            ub = [1000, 1.0,    2,  2]
+            lb = [100.0,  1e-3, 0]
+            ub = [1000, 1.0, 2]
             n_swarm = n_swarmsize_const+n_swarmsize_lb*len(lb)
             n_iter = round(N_ITER / n_swarm)
             xopt, fopt = pso(kernelridge, lb, ub,
@@ -885,9 +885,8 @@ def fit_model(X_train_scaled, y_train_scaled,
             print('Hyperparameter tuning: RandomizedSearchCV')
             reg_model = KernelRidge()
             distributions = {'kernel':['sigmoid'],
-                             'alpha': sp_loguniform(a=1.0, b=999.0),
+                             'alpha': sp_loguniform(a=100.0, b=999.0),
                              'gamma': sp_loguniform(a=1e-3, b=1.0),
-                             'degree': [1, 2],
                              'coef0': [0, 1, 2]}
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = RandomizedSearchCV(estimator=reg_model, 
@@ -904,11 +903,12 @@ def fit_model(X_train_scaled, y_train_scaled,
     
         elif optimization_method == 'bayessearchcv':
             print('Hyperparameter tuning: BayesSearchCV')
+            # alpha=10 -> numerical problems with SVD
+            # -> increased to 50-1000 -> 50-500
             reg_model = KernelRidge()
-            distributions = {'kernel':['sigmoid'],
-                             'alpha': Real(1, 1000, prior='log-uniform'),
+            distributions = {'kernel':Categorical(['sigmoid']),
+                             'alpha': Real(100, 500, prior='log-uniform'),
                              'gamma': Real(1e-3, 1, prior='log-uniform'),
-                             'degree': Integer(1, 2, prior='uniform'),
                              'coef0': Integer(0, 2, prior='uniform')}
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = BayesSearchCV(estimator=reg_model, 
@@ -918,7 +918,7 @@ def fit_model(X_train_scaled, y_train_scaled,
                                     n_jobs=N_CPU,
                                     n_points=1,
                                     cv=tss,
-                                    verbose=0)
+                                    verbose=1000)
             model.fit(X_train_scaled, y_train_scaled.ravel())
             xopt = model.best_params_
             fopt = -model.best_score_
@@ -977,7 +977,7 @@ def fit_model(X_train_scaled, y_train_scaled,
         elif optimization_method == 'bayessearchcv':
             print('Hyperparameter tuning: BayesSearchCV')
             reg_model = KernelRidge()
-            distributions = {'kernel':['rbf'],
+            distributions = {'kernel':Categorical(['rbf']),
                              'alpha': Real(0.01, 100, prior='log-uniform'),
                              'gamma': Real(1e-4, 10, prior='log-uniform'),
                              'degree': Integer(1, 2, prior='uniform'),
@@ -1049,7 +1049,7 @@ def fit_model(X_train_scaled, y_train_scaled,
         elif optimization_method == 'bayessearchcv':
             print('Hyperparameter tuning: BayesSearchCV')
             reg_model = KernelRidge()
-            distributions = {'kernel':['laplacian'],
+            distributions = {'kernel':Categorical(['laplacian']),
                              'alpha': Real(0.01, 100, prior='uniform'),
                              'gamma': Real(1e-4, 10, prior='log-uniform'),
                              'degree': Integer(1, 2, prior='uniform'),
@@ -3775,21 +3775,26 @@ def theilsenregressor(x, **kwargs):
 def kernelridge(x, **kwargs):
     print('x:', x)
     
+    X_train_scaled = kwargs['X_train_scaled']
+    y_train_scaled = kwargs['y_train_scaled']
+    kernel = kwargs['kernel']
+    
     if kwargs['kernel'] == 'cosine':
         alpha = x[0]
-        X_train_scaled = kwargs['X_train_scaled']
-        y_train_scaled = kwargs['y_train_scaled']
-        kernel = kwargs['kernel']
         model = KernelRidge(alpha=alpha)
+    
+    elif kwargs['kernel'] == 'sigmoid':
+        alpha = x[0]
+        gamma = x[1]
+        coef0 = int(np.round(x[2]))
+        model = KernelRidge(alpha=alpha, kernel=kernel, gamma=gamma,
+                            coef0=coef0)
     
     else:
         alpha = x[0]
         gamma = x[1]
         degree = int(np.round(x[2]))
         coef0 = int(np.round(x[3]))
-        X_train_scaled = kwargs['X_train_scaled']
-        y_train_scaled = kwargs['y_train_scaled']
-        kernel = kwargs['kernel']
         model = KernelRidge(alpha=alpha, kernel=kernel, gamma=gamma,
                             degree=degree, coef0=coef0)
     
