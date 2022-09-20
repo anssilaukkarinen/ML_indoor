@@ -661,8 +661,8 @@ def fit_model(X_train_scaled, y_train_scaled,
                       'kernel': 'cosine',
                       'N_CV': N_CV,
                       'return_model': False}
-            # # alpha
-            lb = [1.0]
+            # alpha, changed 1->10
+            lb = [10.0]
             ub = [1000.0]
             n_swarm = n_swarmsize_const+n_swarmsize_lb*len(lb)
             n_iter = round(N_ITER / n_swarm)
@@ -682,7 +682,7 @@ def fit_model(X_train_scaled, y_train_scaled,
             print('Hyperparameter tuning: RandomizedSearchCV')
             reg_model = KernelRidge()
             distributions = {'kernel':['cosine'],
-                             'alpha': sp_uniform(1.0, 999.0)}
+                             'alpha': sp_uniform(10.0, 999.0)}
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = RandomizedSearchCV(estimator=reg_model, 
                                        param_distributions=distributions,
@@ -700,7 +700,7 @@ def fit_model(X_train_scaled, y_train_scaled,
             print('Hyperparameter tuning: BayesSearchCV')
             reg_model = KernelRidge()
             distributions = {'kernel':Categorical(['cosine']),
-                             'alpha': Real(1, 1000, prior='uniform')}
+                             'alpha': Real(10, 1000, prior='uniform')}
             tss = TimeSeriesSplit(n_splits=N_CV)
             model = BayesSearchCV(estimator=reg_model, 
                                     search_spaces=distributions,
@@ -865,8 +865,8 @@ def fit_model(X_train_scaled, y_train_scaled,
                       'N_CV': N_CV,
                       'return_model': False}
             # alpha, gamma, degree, coef0
-            lb = [100.0,  1e-3, 0]
-            ub = [1000, 1.0, 2]
+            lb = [200.0,  1e-3, 0]
+            ub = [1000.0, 1.0, 2]
             n_swarm = n_swarmsize_const+n_swarmsize_lb*len(lb)
             n_iter = round(N_ITER / n_swarm)
             xopt, fopt = pso(kernelridge, lb, ub,
@@ -885,7 +885,7 @@ def fit_model(X_train_scaled, y_train_scaled,
             print('Hyperparameter tuning: RandomizedSearchCV')
             reg_model = KernelRidge()
             distributions = {'kernel':['sigmoid'],
-                             'alpha': sp_loguniform(a=100.0, b=999.0),
+                             'alpha': sp_loguniform(a=200.0, b=1000.0),
                              'gamma': sp_loguniform(a=1e-3, b=1.0),
                              'coef0': [0, 1, 2]}
             tss = TimeSeriesSplit(n_splits=N_CV)
@@ -905,9 +905,12 @@ def fit_model(X_train_scaled, y_train_scaled,
             print('Hyperparameter tuning: BayesSearchCV')
             # alpha=10 -> numerical problems with SVD
             # -> increased to 50-1000 -> 50-500
+            
+            # alpha=100-500 -> numerical problems with SVD
+            # -> increased to alpha=200-500
             reg_model = KernelRidge()
             distributions = {'kernel':Categorical(['sigmoid']),
-                             'alpha': Real(100, 500, prior='log-uniform'),
+                             'alpha': Real(200, 1000, prior='log-uniform'),
                              'gamma': Real(1e-3, 1, prior='log-uniform'),
                              'coef0': Integer(0, 2, prior='uniform')}
             tss = TimeSeriesSplit(n_splits=N_CV)

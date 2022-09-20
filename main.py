@@ -293,7 +293,8 @@ if __name__ == '__main__':
                                 'input')
 
     #output_folder_custom_str = 'output_2022-09-06-00-06-34'
-    output_folder_custom_str = 'output_2022-09-16-21-53-41'
+    # output_folder_custom_str = 'output_2022-09-16-21-53-41'
+    output_folder_custom_str = ''
     
     if output_folder_custom_str != '':
         output_folder = os.path.join(root_folder,
@@ -409,8 +410,7 @@ if __name__ == '__main__':
     # but stil ran through in a reasonable time
     
     # kernelridge_sigmoid gives dual problem/least squares warnings, and LinAlgError errors
-    # The program crashed here!!! -> Espoo1 ok, Espoo2 (+1 crash)
-    # Valkeakoski crashed
+    # The program crashed here!!! -> Espoo1 ok, Espoo2 (+1 crash), Valkeakoski (crash+2)
     
     # kernelridgesigmoid very slow in some cases (large alpha?)
     
