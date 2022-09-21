@@ -17,7 +17,7 @@ import os
 import time
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 
 from sklearn.preprocessing import StandardScaler
 # https://scikit-learn.org/stable/modules/metrics.html#metrics
@@ -26,7 +26,7 @@ from multiprocessing import Pool
 
 import myModels
 import myResults
-import myClasses
+# import myClasses
 
 
 
@@ -288,7 +288,8 @@ if __name__ == '__main__':
     
     # Input and output folder
     
-    root_folder = r'/home/anssi/Software/github/ML_indoor'
+    # root_folder = r'/home/anssi/Software/github/ML_indoor'
+    root_folder = r'C:\Storage\github\ML_indoor'
     input_folder = os.path.join(root_folder,
                                 'input')
 
@@ -410,7 +411,9 @@ if __name__ == '__main__':
     # but stil ran through in a reasonable time
     
     # kernelridge_sigmoid gives dual problem/least squares warnings, and LinAlgError errors
-    # The program crashed here!!! -> Espoo1 ok, Espoo2 (+1 crash), Valkeakoski (crash+2)
+    # The program crashed here!!! -> Espoo1 ok, Espoo2 (+1 crash), Valkeakoski (crash+3)
+    # kernelridgesigmoid Tampere2 randomizedsearchcv -> 12 cpus in use for NCPU=10, is that ok?
+    # kernelridgesigmoid Tampere2 bayessearchcv SVD didn't converge linear least squares
     
     # kernelridgesigmoid very slow in some cases (large alpha?)
     
@@ -505,9 +508,11 @@ if __name__ == '__main__':
     
     
     # End
+    
+    print('End', flush=True)
     sys.stdout = sys_stdout_original
     sys.stderr = sys_stderr_original
-    print('End', flush=True)
+    f_out.close()
     
 
 
