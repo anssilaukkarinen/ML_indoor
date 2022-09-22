@@ -348,7 +348,9 @@ if __name__ == '__main__':
     # kneighbors uniform and onwards 27 48
     # kernelridge: 12-18
     # kernelridge sigmoid 15 16
-    model_names = ['dummyregressor',
+    model_names = ['kernelridgesigmoid',
+                   'svrpoly',
+                   'dummyregressor',
                     'expfunc',
                     'piecewisefunc',
                     'linearregression',
@@ -363,7 +365,6 @@ if __name__ == '__main__':
                     'kernelridgecosine',
                     'kernelridgelinear',
                     'kernelridgepolynomial',
-                    'kernelridgesigmoid',
                     'kernelridgerbf',
                     'kernelridgelaplacian',
                     'linearsvr',
@@ -372,7 +373,6 @@ if __name__ == '__main__':
                     'nusvrrbf',
                     'nusvrsigmoid',
                     'svrlinear',
-                    'svrpoly',
                     'svrrbf',
                     'svrsigmoid',
                     'kneighborsregressoruniform',
