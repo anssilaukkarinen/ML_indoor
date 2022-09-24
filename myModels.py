@@ -3782,6 +3782,7 @@ def kernelridge(x, **kwargs):
     y_train_scaled = kwargs['y_train_scaled']
     kernel = kwargs['kernel']
     
+    # Determine model
     if kwargs['kernel'] == 'cosine':
         alpha = x[0]
         model = KernelRidge(alpha=alpha, kernel=kernel)
@@ -3801,6 +3802,7 @@ def kernelridge(x, **kwargs):
         model = KernelRidge(alpha=alpha, kernel=kernel, gamma=gamma,
                             degree=degree, coef0=coef0)
     
+    # Run cross-validation
     tss = TimeSeriesSplit(n_splits=kwargs['N_CV'])
     scores = cross_val_score(model,
                              X_train_scaled,

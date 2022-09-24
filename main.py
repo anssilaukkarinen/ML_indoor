@@ -348,10 +348,10 @@ if __name__ == '__main__':
     # kneighbors uniform and onwards 27 48
     # kernelridge: 12-18
     # kernelridge sigmoid 15 16
-    model_names = ['kernelridgesigmoid',
+    model_names = ['svrpoly',
+                   'kernelridgesigmoid',
                    'kernelridgecosine',
                    'kernelridgepolynomial',
-                   'svrpoly',
                    'dummyregressor',
                     'expfunc',
                     'piecewisefunc',
