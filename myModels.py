@@ -3784,7 +3784,7 @@ def kernelridge(x, **kwargs):
     
     if kwargs['kernel'] == 'cosine':
         alpha = x[0]
-        model = KernelRidge(alpha=alpha)
+        model = KernelRidge(alpha=alpha, kernel=kernel)
     
     elif kwargs['kernel'] == 'sigmoid':
         alpha = x[0]
