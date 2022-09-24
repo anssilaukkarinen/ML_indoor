@@ -288,8 +288,8 @@ if __name__ == '__main__':
     
     # Input and output folder
     
-    # root_folder = r'/home/anssi/Software/github/ML_indoor'
-    root_folder = r'C:\Storage\github\ML_indoor'
+    root_folder = r'/home/anssi/Software/github/ML_indoor'
+    # root_folder = r'C:\Storage\github\ML_indoor'
     input_folder = os.path.join(root_folder,
                                 'input')
 
@@ -349,6 +349,8 @@ if __name__ == '__main__':
     # kernelridge: 12-18
     # kernelridge sigmoid 15 16
     model_names = ['kernelridgesigmoid',
+                   'kernelridgecosine',
+                   'kernelridgepolynomial',
                    'svrpoly',
                    'dummyregressor',
                     'expfunc',
@@ -362,9 +364,7 @@ if __name__ == '__main__':
                     'huberregressor',
                     'ransacregressor',
                     'theilsenregressor',
-                    'kernelridgecosine',
                     'kernelridgelinear',
-                    'kernelridgepolynomial',
                     'kernelridgerbf',
                     'kernelridgelaplacian',
                     'linearsvr',
@@ -409,12 +409,12 @@ if __name__ == '__main__':
     
     # kernelridgepoly is a bit slow compared to earlier methods,
     # but stil ran through in a reasonable time
+    # kernelridgepolynomial, pso, Espoo2 frozen due to Swap memory full in Linux
     
     # kernelridge_sigmoid gives dual problem/least squares warnings, and LinAlgError errors
     # The program crashed here!!! -> Espoo1 ok, Espoo2 (+1 crash), Valkeakoski (crash+3)
     # kernelridgesigmoid Tampere2 randomizedsearchcv -> 12 cpus in use for NCPU=10, is that ok?
     # kernelridgesigmoid Tampere2 bayessearchcv SVD didn't converge linear least squares
-    
     # kernelridgesigmoid very slow in some cases (large alpha?)
     
     # nusvr_poly: convergence warning terminated early (max_iter=1000000)
