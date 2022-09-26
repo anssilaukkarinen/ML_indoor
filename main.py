@@ -17,7 +17,7 @@ import os
 import time
 import numpy as np
 import pandas as pd
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 
 from sklearn.preprocessing import StandardScaler
 # https://scikit-learn.org/stable/modules/metrics.html#metrics
@@ -150,40 +150,69 @@ def predict(y0, X0, n_lags_X, n_lags_y, scaler_X, scaler_y, model):
 
 
 
-def combine_results_files(output_fold):
-    # Go through the output folder and read the contents of all 'results.txt'
-    # files to a single text file
+
+def combine_results_files_old(output_fold):
+    # In an older version of the code, the formatting of the results.txt
+    # files was a bit different. This functions reads those older format
+    # files.
     
-    ## Read (Old version)
-    # dummy = []
+    # Read
+    df_list = []
     
-    # for item in os.listdir(output_fold):
+    for item in os.listdir(output_fold):
         
-    #     subdir = os.path.join(output_fold, item)
-    #     if os.path.isdir(subdir):
+        subdir = os.path.join(output_fold, item)
+        if os.path.isdir(subdir):
             
-    #         folder_identifiers = item.split('/')[-1].split('_')
+            dummy = {}
             
-    #         fname = os.path.join(output_fold, item, 'results.txt')
+            folder_identifiers = item.split('/')[-1].split('\\')[-1].split('_')[4:7]
+            dummy['N_CV'] = float(folder_identifiers[0][3:])
+            dummy['N_ITER'] = float(folder_identifiers[1][5:])
+            dummy['N_CPU'] = float(folder_identifiers[2][4:])
             
-    #         with open(fname, 'r') as f:
-    #             lines = f.readlines()
-    #             lines = [line.rstrip() for line in lines]
+            fname = os.path.join(output_fold, item, 'results.txt')
+            
+            with open(fname, 'r') as f:
+                lines = f.readlines()
+                lines = [line.rstrip() for line in lines]
                 
-    #             for line in lines:
+                for line in lines:
                     
-    #                 results_identifiers = line.split()
+                    res = line.split()
                     
-    #                 dummy.append(folder_identifiers + results_identifiers)
+                    dummy = {'measurement_point_name': res[0],
+                            'model_name': res[1],
+                            'optimization_method': res[2],
+                            'X_lag': float(res[3].split('_')[-1]),
+                            'y_lag': float(res[4].split('_')[-1]),
+                            'MAE_train': round(float(res[6]), 4),
+                            'MAE_validate': round(float(res[7]), 4),
+                            'MAE_test': round(float(res[8]), 4),
+                            'RMSE_train': round(float(res[10]), 4),
+                            'RMSE_validate': round(float(res[11]), 4),
+                            'RMSE_test': round(float(res[12]), 4),
+                            'R2_train': round(float(res[14]), 4),
+                            'R2_validate': round(float(res[15]), 4),
+                            'R2_test': round(float(res[16]), 4),
+                            'wall_clock_time_minutes': \
+                                round(float(res[18])/60, 4)}
+                    
+                    df_list.append(dummy)
     
-    # # Write
-    # fname = os.path.join(output_fold,
-    #                      'combined.txt')
-    # with open(fname, 'w') as f:
-        
-    #     for line in dummy:
-    #         f.write(f'{line}\n')
+    df_all = pd.DataFrame(data=df_list)
     
+    # Write
+    fname = os.path.join(output_fold,
+                          'combined.csv')
+    df_all.to_csv(path_or_buf=fname, index=False)
+    
+    
+
+
+
+def combine_results_files(output_fold):
+    ## Go through the output folder and read the contents of all 'results.txt'    
     ## Read (New version)
     list_df = []
     
@@ -200,7 +229,7 @@ def combine_results_files(output_fold):
     df_results_all = pd.concat(list_df, ignore_index=True)
     
     fname = os.path.join(output_fold,
-                         'combined.txt')
+                         'combined.csv')
     df_results_all.to_csv(fname)
     
     
@@ -524,11 +553,9 @@ if __name__ == '__main__':
     # combine all results files to single file
     combine_results_files(output_folder)
     
-
     
     
     # End
-    
     print('End', flush=True)
     sys.stdout = sys_stdout_original
     sys.stderr = sys_stderr_original

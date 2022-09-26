@@ -6,11 +6,13 @@
 
 !LICENCE
 !README.md
+!ML_indoor.yml
 
 !main.py
 !myClasses.py
 !myModels.py
 !myResults.py
-!ML_indoor.yml
+!myPostAnalysis.py
+
 
 
