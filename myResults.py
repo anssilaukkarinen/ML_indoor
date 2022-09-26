@@ -165,7 +165,8 @@ def saveNumeric(measurement_point_name,
                              'results.txt')
     
     
-    with open(fname_res, 'w') as f, open(fname_com, 'a') as g:
+    # with open(fname_res, 'w') as f, open(fname_com, 'a') as g:
+    with open(fname_res, 'w') as f:
            
         # Basic info
         s = measurement_point_name
@@ -294,20 +295,6 @@ def saveNumeric(measurement_point_name,
             f.write(s + '\n')
     
     
-            ## the other file, the short results.txt (old version)
-            # line2write = measurement_point_name \
-            #         + ' ' + model_name \
-            #         + ' ' + optimization_method \
-            #         + ' X_lag_' + str(n_lags_X) \
-            #         + ' y_lag_' + str(idx) \
-            #         + ' MAE_y {:.4f} {:.4f} {:.4f}' \
-            #                 .format(mae_train, mae_validate, mae_test) \
-            #         + ' RMSE_y {:.4f} {:.4f} {:.4f}' \
-            #                 .format(rmse_train, rmse_validate, rmse_test) \
-            #         + ' R2 {:.4f} {:.4f} {:.4f}' \
-            #                 .format(R2_train, R2_validate, R2_test) \
-            #         + ' wall_clock_minutes {:.5f}'.format(results[idx]['wall_clock_time']/60)
-            # g.write(line2write + '\n')
             
             ## the other file, the short results.txt
             data_dummy = {'measurement_point_name': measurement_point_name,
@@ -325,9 +312,15 @@ def saveNumeric(measurement_point_name,
                             'R2_validate': round(float(R2_validate), 4),
                             'R2_test': round(float(R2_test), 4),
                             'wall_clock_time_minutes': round(float(results[idx]['wall_clock_time'])/60, 4)}
-            print(data_dummy, flush=True)
+            
             df_dummy = pd.DataFrame(data=data_dummy, index=[0])
-            df_dummy.to_csv(path_or_buf=g)
+
+            fname = os.path.join(results_folder,
+                                 'results.txt')
+            df_dummy.to_csv(path_or_buf=fname, index=False)
+            
+            print(data_dummy, flush=True)
+            print(df_dummy, flush=True)
     
     
     

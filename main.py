@@ -160,13 +160,15 @@ def combine_results_files_old(output_fold):
     df_list = []
     
     for item in os.listdir(output_fold):
+        print(item)
         
         subdir = os.path.join(output_fold, item)
-        if os.path.isdir(subdir):
+        if os.path.isdir(subdir) and 'NCV' in item:
             
             dummy = {}
             
             folder_identifiers = item.split('/')[-1].split('\\')[-1].split('_')[4:7]
+            print(folder_identifiers)
             dummy['N_CV'] = float(folder_identifiers[0][3:])
             dummy['N_ITER'] = float(folder_identifiers[1][5:])
             dummy['N_CPU'] = float(folder_identifiers[2][4:])
@@ -218,7 +220,7 @@ def combine_results_files(output_fold):
     
     for item in os.listdir(output_fold):
         subdir = os.path.join(output_fold, item)
-        if os.path.isdir(subdir):
+        if os.path.isdir(subdir) and 'NCV' in item:
             fname = os.path.join(output_fold, subdir, 'results.txt')
             
             df_single = pd.read_csv(filepath_or_buffer=fname)
@@ -230,7 +232,7 @@ def combine_results_files(output_fold):
     
     fname = os.path.join(output_fold,
                          'combined.csv')
-    df_results_all.to_csv(fname)
+    df_results_all.to_csv(fname, index=False)
     
     
     
