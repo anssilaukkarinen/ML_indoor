@@ -25,7 +25,7 @@ markers = itertools.cycle(['o', '^', 's', 'x', 'd'])
 
 
 output_fold = os.path.join(root_folder,
-                           'output')
+                           '0output')
 if not os.path.exists(output_fold):
     os.makedirs(output_fold)
 
