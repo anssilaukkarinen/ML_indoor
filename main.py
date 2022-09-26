@@ -154,35 +154,55 @@ def combine_results_files(output_fold):
     # Go through the output folder and read the contents of all 'results.txt'
     # files to a single text file
     
-    # Read
-    dummy = []
+    ## Read (Old version)
+    # dummy = []
+    
+    # for item in os.listdir(output_fold):
+        
+    #     subdir = os.path.join(output_fold, item)
+    #     if os.path.isdir(subdir):
+            
+    #         folder_identifiers = item.split('/')[-1].split('_')
+            
+    #         fname = os.path.join(output_fold, item, 'results.txt')
+            
+    #         with open(fname, 'r') as f:
+    #             lines = f.readlines()
+    #             lines = [line.rstrip() for line in lines]
+                
+    #             for line in lines:
+                    
+    #                 results_identifiers = line.split()
+                    
+    #                 dummy.append(folder_identifiers + results_identifiers)
+    
+    # # Write
+    # fname = os.path.join(output_fold,
+    #                      'combined.txt')
+    # with open(fname, 'w') as f:
+        
+    #     for line in dummy:
+    #         f.write(f'{line}\n')
+    
+    ## Read (New version)
+    list_df = []
     
     for item in os.listdir(output_fold):
-        
         subdir = os.path.join(output_fold, item)
         if os.path.isdir(subdir):
+            fname = os.path.join(output_fold, subdir, 'results.txt')
             
-            folder_identifiers = item.split('/')[-1].split('_')
-            
-            fname = os.path.join(output_fold, item, 'results.txt')
-            
-            with open(fname, 'r') as f:
-                lines = f.readlines()
-                lines = [line.rstrip() for line in lines]
-                
-                for line in lines:
-                    
-                    results_identifiers = line.split()
-                    
-                    dummy.append(folder_identifiers + results_identifiers)
+            df_single = pd.read_csv(filepath_or_buffer=fname)
+            list_df.append(df_single)
     
-    # Write
+    # The single-row results.txt files have all row index of 0,
+    # so the row index is ignored while concatenating
+    df_results_all = pd.concat(list_df, ignore_index=True)
+    
     fname = os.path.join(output_fold,
                          'combined.txt')
-    with open(fname, 'w') as f:
-        
-        for line in dummy:
-            f.write(f'{line}\n')
+    df_results_all.to_csv(fname)
+    
     
     
         
@@ -288,8 +308,8 @@ if __name__ == '__main__':
     
     # Input and output folder
     
-    root_folder = r'/home/anssi/Software/github/ML_indoor'
-    # root_folder = r'C:\Storage\github\ML_indoor'
+    # root_folder = r'/home/anssi/Software/github/ML_indoor'
+    root_folder = r'C:\Storage\github\ML_indoor'
     input_folder = os.path.join(root_folder,
                                 'input')
 

@@ -10,6 +10,7 @@ import json
 import pickle
 import numpy as np
 import matplotlib.pyplot as plt
+import pandas as pd
 import time
 
 from sklearn.metrics import mean_absolute_error
@@ -293,22 +294,41 @@ def saveNumeric(measurement_point_name,
             f.write(s + '\n')
     
     
-            # the other file, the short results.txt
-            line2write = measurement_point_name \
-                    + ' ' + model_name \
-                    + ' ' + optimization_method \
-                    + ' X_lag_' + str(n_lags_X) \
-                    + ' y_lag_' + str(idx) \
-                    + ' MAE_y {:.4f} {:.4f} {:.4f}' \
-                            .format(mae_train, mae_validate, mae_test) \
-                    + ' RMSE_y {:.4f} {:.4f} {:.4f}' \
-                            .format(rmse_train, rmse_validate, rmse_test) \
-                    + ' R2 {:.4f} {:.4f} {:.4f}' \
-                            .format(R2_train, R2_validate, R2_test) \
-                    + ' wall_clock_minutes {:.5f}'.format(results[idx]['wall_clock_time']/60)
-            g.write(line2write + '\n')
+            ## the other file, the short results.txt (old version)
+            # line2write = measurement_point_name \
+            #         + ' ' + model_name \
+            #         + ' ' + optimization_method \
+            #         + ' X_lag_' + str(n_lags_X) \
+            #         + ' y_lag_' + str(idx) \
+            #         + ' MAE_y {:.4f} {:.4f} {:.4f}' \
+            #                 .format(mae_train, mae_validate, mae_test) \
+            #         + ' RMSE_y {:.4f} {:.4f} {:.4f}' \
+            #                 .format(rmse_train, rmse_validate, rmse_test) \
+            #         + ' R2 {:.4f} {:.4f} {:.4f}' \
+            #                 .format(R2_train, R2_validate, R2_test) \
+            #         + ' wall_clock_minutes {:.5f}'.format(results[idx]['wall_clock_time']/60)
+            # g.write(line2write + '\n')
+            
+            ## the other file, the short results.txt
+            data_dummy = {'measurement_point_name': measurement_point_name,
+                            'model_name': model_name,
+                            'optimization_method': optimization_method,
+                            'X_lag': str(n_lags_X),
+                            'y_lag': str(idx),
+                            'MAE_y_train': round(mae_train, 4),
+                            'MAE_y_validate': round(mae_validate, 4),
+                            'MAE_y_test': round(mae_test, 4),
+                            'RMSE_y_train': round(rmse_train, 4),
+                            'RMSE_y_validate': round(rmse_validate, 4),
+                            'RMSE_y_test': round(rmse_test, 4),
+                            'R2_train': round(R2_train, 4),
+                            'R2_validate': round(R2_validate, 4),
+                            'R2_test': round(R2_test, 4),
+                            'wall_clock_time_minutes': round(results[idx]['wall_clock_time']/60, 4)}
+            print(data_dummy, flush=True)
+            df_dummy = pd.DataFrame(data=data_dummy, index=[0])
+            df_dummy.to_csv(path_or_buf=g)
     
-    g.close()
     
     
 def saveModel(results, results_folder):
