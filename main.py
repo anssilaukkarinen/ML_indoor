@@ -503,7 +503,7 @@ if __name__ == '__main__':
     
     
     # Other parameters
-    n_lags_X = 0
+    n_lags_X = 1
     n_lags_y_max = 1
     
     
