@@ -160,7 +160,7 @@ def combine_results_files_old(output_fold):
     df_list = []
     
     for item in os.listdir(output_fold):
-        print(item)
+        # print(item)
         
         subdir = os.path.join(output_fold, item)
         if os.path.isdir(subdir) and 'NCV' in item:
@@ -168,10 +168,10 @@ def combine_results_files_old(output_fold):
             dummy = {}
             
             folder_identifiers = item.split('/')[-1].split('\\')[-1].split('_')[4:7]
-            print(folder_identifiers)
-            dummy['N_CV'] = float(folder_identifiers[0][3:])
-            dummy['N_ITER'] = float(folder_identifiers[1][5:])
-            dummy['N_CPU'] = float(folder_identifiers[2][4:])
+            # print(folder_identifiers)
+            N_CV = float(folder_identifiers[0][3:])
+            N_ITER = float(folder_identifiers[1][5:])
+            N_CPU = float(folder_identifiers[2][4:])
             
             fname = os.path.join(output_fold, item, 'results.txt')
             
@@ -188,6 +188,9 @@ def combine_results_files_old(output_fold):
                             'optimization_method': res[2],
                             'X_lag': float(res[3].split('_')[-1]),
                             'y_lag': float(res[4].split('_')[-1]),
+                            'N_CV': N_CV,
+                            'N_ITER': N_ITER,
+                            'N_CPU': N_CPU,
                             'MAE_train': round(float(res[6]), 4),
                             'MAE_validate': round(float(res[7]), 4),
                             'MAE_test': round(float(res[8]), 4),
@@ -221,9 +224,19 @@ def combine_results_files(output_fold):
     for item in os.listdir(output_fold):
         subdir = os.path.join(output_fold, item)
         if os.path.isdir(subdir) and 'NCV' in item:
-            fname = os.path.join(output_fold, subdir, 'results.txt')
             
+            # Data from the results.txt
+            fname = os.path.join(output_fold, subdir, 'results.txt')
             df_single = pd.read_csv(filepath_or_buffer=fname)
+            
+            # Information from the folder name
+            folder_identifiers = item.split('/')[-1].split('\\')[-1].split('_')[4:7]
+            df_single.loc[:, 'N_CV'] = float(folder_identifiers[0][3:])
+            df_single.loc[:, 'N_ITER'] = float(folder_identifiers[1][5:])
+            df_single.loc[:, 'N_CPU'] = float(folder_identifiers[2][4:])
+            
+            
+            # Append to list of dataframes
             list_df.append(df_single)
     
     # The single-row results.txt files have all row index of 0,

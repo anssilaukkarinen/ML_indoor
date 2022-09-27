@@ -8,87 +8,127 @@ This file contains post-analysis and plotting of the results from the
 machine learning fitting prediction.
 1: main.py
 2: myPostAnalysis.py
+
+This file analyses the contents of a single folder 
+that contains a combined.csv file.
+
+The code is developed here and when it is finished, it is moved into
+'myPostAnalysis_helper.py' module.
 """
 
 import os
 import pandas as pd
 import matplotlib.pyplot as plt
-import itertools
-from main import combine_results_files_old
-from main import combine_results_files
+
+import myPostAnalysis_helper
 
 
-## Old results.txt formatting
+path_repo_root = r'C:\Storage\github\ML_indoor'
+run_combiner_bool = True
+
+# Paths for folders that contain combined.csv:
 # LenovoP51
 # root_folder = r'C:\Local\laukkara\Data\github\ML_indoor\output_2022-09-17-09-36-39_säästä'
 
 # Lenovo L340
-# root_folder = r'C:\Storage\github\ML_indoor\output_2022-09-21-00-56-00_säästä'
-# root_folder = r'C:\Storage\github\ML_indoor\output_2022-09-23-00-10-57_säästä'
-# root_folder = r'C:\Storage\github\ML_indoor\output_2022-09-23-17-08-12_säästä'
-# root_folder = r'C:\Storage\github\ML_indoor\output_2022-09-24-13-41-33_säästä'
+# root_folder = 'output_2022-09-21-00-56-00_säästä'
+# root_folder = 'output_2022-09-23-00-10-57_säästä'
+# root_folder = 'output_2022-09-23-17-08-12_säästä'
+# root_folder = 'output_2022-09-24-13-41-33_säästä'
 
 ## New results.txt formatting
-root_folder = r'C:\Storage\github\ML_indoor\output_2022-09-25-21-38-36'
+# root_folder = r'C:\Storage\github\ML_indoor\output_2022-09-25-21-38-36'
+
+# folders = ['output_2022-09-24-13-41-33_säästä',
+#            'output_2022-09-27-01-38-00_save']
+
+folders = [f for f in os.listdir(path_repo_root) if 'output_' in f]
 
 
-if 'säästä' in root_folder:
-    combine_results_files_old(root_folder)
-else:
-    combine_results_files(root_folder)
+folder_res = os.path.join(path_repo_root,
+                                 'merged_results')
+if not os.path.exists(folder_res):
+    os.makedirs(folder_res)
 
 
-fname = os.path.join(root_folder, 'combined.csv')
-df = pd.read_csv(fname)
-
-markers = itertools.cycle(['o', '^', 's', 'x', 'd'])
+########################################
 
 
-output_folder = os.path.join(root_folder,
-                           '0output')
-if not os.path.exists(output_folder):
-    os.makedirs(output_folder)
+# This makes sure that there is the combined.csv files are available
+# and the '0output' folder ready for plotting.
+if run_combiner_bool:
+    # Create combine.csv
+    myPostAnalysis_helper.run_combine_results_files(path_repo_root)
 
-figseiz = (5.5, 3.5)
-dpi_val = 200
+
+# Do some basic plotting for each of the output folders
+for folder in folders:
+    print(folder)
+
+    # Basic plot
+    fname = os.path.join(path_repo_root, folder, 'combined.csv')
+    df_single = pd.read_csv(fname)
+    
+    output_folder = os.path.join(path_repo_root,
+                                 folder,
+                                 '0output')
+    myPostAnalysis_helper.plot_single_series(df_single, output_folder)
+    myPostAnalysis_helper.plot_R2_vs_RMSE(df_single, output_folder)
+    myPostAnalysis_helper.plot_R2_vs_MAE(df_single, output_folder)
+
+
+
+# Read all combined.csv files to a single pandas DataFrame:
+df_list = []
+
+#for folder in folders:
+for folder in folders:
+    
+    fname = os.path.join(path_repo_root, folder, 'combined.csv')
+    df_single = pd.read_csv(fname)
+    df_list.append(df_single)
+
+df_all = pd.concat(df_list, ignore_index=True)
+
+df_all['R2_mean_validate_test'] \
+    = df_all.loc[:, ['R2_validate','R2_test']].mean(axis=1)
+
+df_all['RMSE_mean_validate_test'] \
+    = df_all.loc[:, ['RMSE_validate','RMSE_test']].mean(axis=1)
+
+df_all['MAE_mean_validate_test'] \
+    = df_all.loc[:, ['MAE_validate','MAE_test']].mean(axis=1)
+
+
+
+# markers = itertools.cycle(['o', '^', 's', 'x', 'd'])
+# figseiz = (5.5, 3.5)
+# dpi_val = 200
 
 
 ##########################
 
-idxs = df['model_name']=='dummyregressor'
-df_holder = df.loc[idxs, :].groupby('measurement_point_name').mean()
+# 
+print(df_all.columns)
+
+# 
+idxs = df_all['model_name']=='dummyregressor'
+df_holder = df_all.loc[idxs, :].groupby('measurement_point_name').mean()
 print(df_holder.round(2).T)
 
+# 
+fname = os.path.join(folder_res, 'sorted_all.xlsx')
+df_all.sort_values(by='R2_mean_validate_test', ascending=False).round(2).to_excel(fname)
 
-# wall_clock_time
-fig, ax = plt.subplots(figsize=figseiz)
-df.loc[:, 'wall_clock_time_minutes'].plot()
-fname = os.path.join(output_folder,
-                     'wall_clock_time.png')
-fig.savefig(fname, dpi=dpi_val, bbox_inches='tight')
-plt.close(fig)
+
+# 
 
 
 
-## R2 vs RMSE
+myPostAnalysis_helper.plot_R2_vs_RMSE(df_all, folder_res)
 
-for key in ['train', 'validate', 'test']:
-    # key = 'train'
-    fig, ax = plt.subplots(figsize=figseiz)
-    for label, grp in df.groupby(['measurement_point_name']):
-        ax.scatter(x=f'RMSE_{key}', y=f'R2_{key}', \
-                   s=12.0, marker=next(markers),
-                   data=grp, label=label)
-    ax.set_ylim((-0.1, 1.1))
-    ax.set_xlim((-0.1, 3))
-    ax.grid(True)
-    ax.set_axisbelow(True)
-    ax.legend()
-    ax.set_xlabel(f'RMSE {key}')
-    ax.set_ylabel(f'R$^2$ {key}')
-    fname = os.path.join(output_folder,
-                         f'{key} R2 vs RMSE.png')
-    fig.savefig(fname, dpi=dpi_val, bbox_inches='tight')
+
+
 
 
 

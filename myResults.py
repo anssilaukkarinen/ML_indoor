@@ -320,7 +320,6 @@ def saveNumeric(measurement_point_name,
             df_dummy.to_csv(path_or_buf=fname, index=False)
             
             print(data_dummy, flush=True)
-            print(df_dummy, flush=True)
     
     
     
