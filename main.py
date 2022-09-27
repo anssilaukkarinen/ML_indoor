@@ -353,7 +353,8 @@ if __name__ == '__main__':
     # Input and output folder
     
     # root_folder = r'/home/anssi/Software/github/ML_indoor'
-    root_folder = r'C:\Storage\github\ML_indoor'
+    # root_folder = r'C:\Storage\github\ML_indoor'
+    root_folder = r'C:\Local\laukkara\Data\github\ML_indoor'
     input_folder = os.path.join(root_folder,
                                 'input')
 
