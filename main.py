@@ -13,6 +13,7 @@ import sys
 sys.path.append(".")
 
 import os
+print('Current dir:', os.getcwd())
 
 import time
 import numpy as np
@@ -370,8 +371,10 @@ if __name__ == '__main__':
                                      'output_{}'.format(time_str))
     
     if not os.path.exists(output_folder):
-        os.makedirs(output_folder)
-    
+        try:
+            os.makedirs(output_folder)
+        except:
+            print(f'The folder {output_folder} already existed')
     
     # Redirect stdout and stderr
     sys_stdout_original = sys.stdout
