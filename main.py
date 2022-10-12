@@ -18,7 +18,6 @@ print('Current dir:', os.getcwd())
 import time
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 
 from sklearn.preprocessing import StandardScaler
 # https://scikit-learn.org/stable/modules/metrics.html#metrics
@@ -29,6 +28,7 @@ import myModels
 import myResults
 # import myClasses
 
+import myPostAnalysis_helper
 
 
 
@@ -76,7 +76,7 @@ def create_features(X, y, n_lags_X, n_lags_y):
     print('Create_features...', flush=True)
     
     Te_mean = pd.DataFrame(X[:,0]).rolling(window=12, min_periods=1).mean().values.reshape(-1,1)
-    dTe = pd.DataFrame(X[:,0]).diff(1).values.reshape(-1,1)
+    # dTe = pd.DataFrame(X[:,0]).diff(1).values.reshape(-1,1)
     
     Rglob = np.sum(X[:,1:3], axis=1).reshape(-1,1)
     dRglob_pos = pd.DataFrame(Rglob).diff(1).values.reshape(-1,1)
@@ -86,9 +86,9 @@ def create_features(X, y, n_lags_X, n_lags_y):
     dRglob_neg[0,:] = dRglob_neg[1,:]
     dRglob_neg[dRglob_neg > 0] = 0    
     
-    TeRglob = X[:,0].reshape(-1,1) * Rglob.reshape(-1,1)
+    # TeRglob = X[:,0].reshape(-1,1) * Rglob.reshape(-1,1)
     
-    dws = pd.DataFrame(X[:,4]).diff(1).values.reshape(-1,1)
+    # dws = pd.DataFrame(X[:,4]).diff(1).values.reshape(-1,1)
     
     # X = np.hstack((X, Te_mean, dTe, Rglob, dRglob_pos, dRglob_neg, TeRglob, dws))
     X = np.hstack((X, Te_mean, dRglob_pos, dRglob_neg))
@@ -152,105 +152,6 @@ def predict(y0, X0, n_lags_X, n_lags_y, scaler_X, scaler_y, model):
 
 
 
-def combine_results_files_old(output_fold):
-    # In an older version of the code, the formatting of the results.txt
-    # files was a bit different. This functions reads those older format
-    # files.
-    
-    # Read
-    df_list = []
-    
-    for item in os.listdir(output_fold):
-        # print(item)
-        
-        subdir = os.path.join(output_fold, item)
-        if os.path.isdir(subdir) and 'NCV' in item:
-            
-            dummy = {}
-            
-            folder_identifiers = item.split('/')[-1].split('\\')[-1].split('_')[4:7]
-            # print(folder_identifiers)
-            N_CV = float(folder_identifiers[0][3:])
-            N_ITER = float(folder_identifiers[1][5:])
-            N_CPU = float(folder_identifiers[2][4:])
-            
-            fname = os.path.join(output_fold, item, 'results.txt')
-            
-            with open(fname, 'r') as f:
-                lines = f.readlines()
-                lines = [line.rstrip() for line in lines]
-                
-                for line in lines:
-                    
-                    res = line.split()
-                    
-                    dummy = {'measurement_point_name': res[0],
-                            'model_name': res[1],
-                            'optimization_method': res[2],
-                            'X_lag': float(res[3].split('_')[-1]),
-                            'y_lag': float(res[4].split('_')[-1]),
-                            'N_CV': N_CV,
-                            'N_ITER': N_ITER,
-                            'N_CPU': N_CPU,
-                            'MAE_train': round(float(res[6]), 4),
-                            'MAE_validate': round(float(res[7]), 4),
-                            'MAE_test': round(float(res[8]), 4),
-                            'RMSE_train': round(float(res[10]), 4),
-                            'RMSE_validate': round(float(res[11]), 4),
-                            'RMSE_test': round(float(res[12]), 4),
-                            'R2_train': round(float(res[14]), 4),
-                            'R2_validate': round(float(res[15]), 4),
-                            'R2_test': round(float(res[16]), 4),
-                            'wall_clock_time_minutes': \
-                                round(float(res[18])/60, 4)}
-                    
-                    df_list.append(dummy)
-    
-    df_all = pd.DataFrame(data=df_list)
-    
-    # Write
-    fname = os.path.join(output_fold,
-                          'combined.csv')
-    df_all.to_csv(path_or_buf=fname, index=False)
-    
-    
-
-
-
-def combine_results_files(output_fold):
-    ## Go through the output folder and read the contents of all 'results.txt'    
-    ## Read (New version)
-    list_df = []
-    
-    for item in os.listdir(output_fold):
-        subdir = os.path.join(output_fold, item)
-        if os.path.isdir(subdir) and 'NCV' in item:
-            
-            # Data from the results.txt
-            fname = os.path.join(output_fold, subdir, 'results.txt')
-            df_single = pd.read_csv(filepath_or_buffer=fname)
-            
-            # Information from the folder name
-            folder_identifiers = item.split('/')[-1].split('\\')[-1].split('_')[4:7]
-            df_single.loc[:, 'N_CV'] = float(folder_identifiers[0][3:])
-            df_single.loc[:, 'N_ITER'] = float(folder_identifiers[1][5:])
-            df_single.loc[:, 'N_CPU'] = float(folder_identifiers[2][4:])
-            
-            
-            # Append to list of dataframes
-            list_df.append(df_single)
-    
-    # The single-row results.txt files have all row index of 0,
-    # so the row index is ignored while concatenating
-    df_results_all = pd.concat(list_df, ignore_index=True)
-    
-    fname = os.path.join(output_fold,
-                         'combined.csv')
-    df_results_all.to_csv(fname, index=False)
-    
-    
-    
-        
 
 
 
@@ -265,46 +166,45 @@ def main(input_folder,
          N_CV, N_ITER, N_CPU):
     
 
-    
+    # Record wall clock date and time
     time_start = time.time()
     print('Start time:', \
-          time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time_start)), flush=True)
+          time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time_start)),
+          flush=True)
     
-    # Create and fit model
-    print('Load data, create features and fit model...', flush=True)
+    # Load data and split into train, validate and test sets
+    print('Load and split data...', flush=True)
     X_train0, X_validate0, X_test0, y_train0, y_validate0, y_test0 \
         = load_and_split(input_folder, measurement_point_name)
     
+    # Decide on the features of the data matrix
+    print('Create features...', flush=True)
     X_train, y_train = create_features(X_train0, y_train0, n_lags_X, n_lags_y)
+    
+    # Scale data
+    print('Create scalers based on training data and scale...', flush=True)
     X_train_scaled, y_train_scaled, scaler_X, scaler_y \
         = scale_train(X_train, y_train)
-    print('scale_train ok!', flush=True)
+    print('X.shape:', X_train_scaled.shape, \
+          'y.shape:', y_train_scaled.shape, flush=True)
     
-    # fig, ax = plt.subplots()
-    # ax.plot(X_train_scaled[:,0], y_train_scaled[:,0])
-    # x_dummy = np.linspace(-3, 2)
-    # y_dummy = myClasses.PiecewiseRegressor.piecewise_func(x_dummy, 0.5, -0.5, 0, 2.5)
-    # ax.plot(x_dummy, y_dummy)
-    # plt.show()
-    print(X_train_scaled.shape, y_train_scaled.shape, flush=True)
-    
+    # Fit model
+    print('Fit model...', flush=True)
     xopt, fopt, model = myModels.fit_model(X_train_scaled, y_train_scaled,
                                            model_name, optimization_method,
                                            N_CV, N_ITER, N_CPU)
     
-
     
-    # Create features for validation and test
+    # Create features for validation and test sets
     print('Features for validation and test sets...', flush=True)
     X_validate, y_validate = create_features(X_validate0, y_validate0, n_lags_X, n_lags_y)
     X_test, y_test = create_features(X_test0, y_test0, n_lags_X, n_lags_y)
     
-    
-    
-    # Predict, train
+    # Create predictions for train, validate and test sets
     print('Predict train, validate and test...', flush=True)
     print('Starting prediction at:', \
-        time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())), flush=True)
+        time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())),
+        flush=True)
     
     if 'kernelridge' in model_name or 'histgradientboosting' in model_name:
         y_train_pred, X_train_pred_scaled = predict(y_train0, X_train0, n_lags_X, n_lags_y, scaler_X, scaler_y, model)
@@ -325,17 +225,29 @@ def main(input_folder,
     
     time_end = time.time()
     print('End time:', \
-          time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time_end)), flush=True)
+          time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time_end)),
+          flush=True)
         
     wall_clock_time = time_end - time_start
-    print('Simulation wall clock duration:', wall_clock_time/60, 'min\n', flush=True)
+    print('Simulation wall clock duration:', wall_clock_time/60, 'min\n',
+          flush=True)
     
-    return(xopt, fopt, model, 
-           y_train, y_train_pred,
-           y_validate, y_validate_pred,
-           y_test, y_test_pred,
-           X_train_pred_scaled, X_validate_pred_scaled, X_test_pred_scaled,
-           wall_clock_time)
+    res_main = {'xopt':xopt, 'fopt':fopt, 'model':model,
+               'y_train':y_train, 'y_train_pred':y_train_pred,
+               'y_validate':y_validate, 'y_validate_pred':y_validate_pred,
+               'y_test':y_test, 'y_test_pred':y_test_pred,
+               'X_train_pred_scaled':X_train_pred_scaled,
+               'X_validate_pred_scaled':X_validate_pred_scaled,
+               'X_test_pred_scaled':X_test_pred_scaled,
+               'wall_clock_time':wall_clock_time}
+    
+    # return(xopt, fopt, model, 
+    #        y_train, y_train_pred,
+    #        y_validate, y_validate_pred,
+    #        y_test, y_test_pred,
+    #        X_train_pred_scaled, X_validate_pred_scaled, X_test_pred_scaled,
+    #        wall_clock_time)
+    return(res_main)
     
     
 
@@ -353,9 +265,11 @@ if __name__ == '__main__':
     
     # Input and output folder
 
-    input_folder = '/home/laukkara/github/ML_indoor/input'
+    # input_folder = '/home/laukkara/github/ML_indoor/input'
+    input_folder = r'C:\Local\laukkara\Data\github\ML_indoor\input'
 
-    output_folder_base = '/lustre/scratch/laukkara/ML_indoor'
+    # output_folder_base = '/lustre/scratch/laukkara/ML_indoor'
+    output_folder_base = r'C:\Local\laukkara\Data\github\ML_indoor'
 
     #output_folder_custom_str = 'output_2022-09-06-00-06-34'
     # output_folder_custom_str = 'output_2022-09-16-21-53-41'
@@ -499,14 +413,10 @@ if __name__ == '__main__':
     N_CV = int(sys.argv[7])
     N_ITER = int(sys.argv[8])
     N_CPU = int(sys.argv[9])
-    print('N_CV:', N_CV, 'N_ITER:', N_ITER, 'N_CPU:', N_CPU, flush=True)
-    
-    
-    
-    # Other parameters
-    n_lags_X = 1
-    n_lags_y_max = 1
-    
+    n_lags_X = int(sys.argv[10])
+    n_lags_y = int(sys.argv[11])
+    print('N_CV:', N_CV, 'N_ITER:', N_ITER, 'N_CPU:', N_CPU, \
+          'n_lags_X:', n_lags_X, 'n_lags_y:', n_lags_y, flush=True)    
     
     
     # Loop through different situations
@@ -520,55 +430,29 @@ if __name__ == '__main__':
             for measurement_point_name in measurement_point_names:  
                 print('measurement_point_name:', measurement_point_name, flush=True)
                 
-                results = []
-                
-                for idx in range(n_lags_y_max):
-                    
-                    # Fit model and predict
-                    print('\n\nylag:', idx, flush=True)
-                    
-                    xopt, fopt, model, \
-                    y_train, y_train_pred, \
-                    y_validate, y_validate_pred, \
-                    y_test, y_test_pred, \
-                    X_train_pred_scaled, X_validate_pred_scaled, X_test_pred_scaled, \
-                    wall_clock_time \
-                        = main(input_folder,
+                # Prepare input data, fit model, make predictions
+                results = main(input_folder,
                                measurement_point_name,
                                model_name,
                                optimization_method,
                                n_lags_X,
-                               idx,
+                               n_lags_y,
                                N_CV, N_ITER, N_CPU)
-                        
-                        
-                        
-                    
-                    results.append({'xopt':xopt, 'fopt':fopt, 'model':model,
-                                    'y_train':y_train, 'y_train_pred':y_train_pred,
-                                    'y_validate':y_validate, 'y_validate_pred':y_validate_pred,
-                                    'y_test':y_test, 'y_test_pred':y_test_pred,
-                                    'X_train_pred_scaled':X_train_pred_scaled,
-                                    'X_validate_pred_scaled': X_validate_pred_scaled,
-                                    'X_test_pred_scaled': X_test_pred_scaled,
-                                    'wall_clock_time':wall_clock_time})
-                    
-                
-    
+
                 # Plot and save results
                 print('Export results...', flush=True)
                 myResults.main(output_folder,
-                               measurement_point_name,
                                model_name,
                                optimization_method,
                                n_lags_X,
-                               n_lags_y_max,
+                               n_lags_y,
                                N_CV, N_ITER, N_CPU,
+                               measurement_point_name,
                                results)
     
-    
     # combine all results files to single file
-    combine_results_files(output_folder)
+    # Here the combining is done for a single "output_..." folder
+    myResults.combine_results_files(output_folder)
     
     
     
