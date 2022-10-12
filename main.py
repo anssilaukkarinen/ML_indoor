@@ -13,6 +13,7 @@ import sys
 sys.path.append(".")
 
 import os
+print('Current dir:', os.getcwd())
 
 import time
 import numpy as np
@@ -351,29 +352,29 @@ if __name__ == '__main__':
     """
     
     # Input and output folder
-    
-    # root_folder = r'/home/anssi/Software/github/ML_indoor'
-    # root_folder = r'C:\Storage\github\ML_indoor'
-    root_folder = r'C:\Local\laukkara\Data\github\ML_indoor'
-    input_folder = os.path.join(root_folder,
-                                'input')
+
+    input_folder = '/home/laukkara/github/ML_indoor/input'
+
+    output_folder_base = '/lustre/scratch/laukkara/ML_indoor'
 
     #output_folder_custom_str = 'output_2022-09-06-00-06-34'
     # output_folder_custom_str = 'output_2022-09-16-21-53-41'
     output_folder_custom_str = ''
     
     if output_folder_custom_str != '':
-        output_folder = os.path.join(root_folder,
+        output_folder = os.path.join(output_folder_base,
                                      output_folder_custom_str)
     else:
         time_str = time.strftime("%Y-%m-%d-%H-%M-%S",
                                     time.localtime())
-        output_folder = os.path.join(root_folder,
+        output_folder = os.path.join(output_folder_base,
                                      'output_{}'.format(time_str))
     
     if not os.path.exists(output_folder):
-        os.makedirs(output_folder)
-    
+        try:
+            os.makedirs(output_folder)
+        except:
+            print(f'The folder {output_folder} already existed')
     
     # Redirect stdout and stderr
     sys_stdout_original = sys.stdout
@@ -503,7 +504,7 @@ if __name__ == '__main__':
     
     
     # Other parameters
-    n_lags_X = 0
+    n_lags_X = 1
     n_lags_y_max = 1
     
     
