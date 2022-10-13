@@ -20,16 +20,11 @@ import numpy as np
 import pandas as pd
 
 from sklearn.preprocessing import StandardScaler
-# https://scikit-learn.org/stable/modules/metrics.html#metrics
 
 from multiprocessing import Pool
 
 import myModels
 import myResults
-# import myClasses
-
-import myPostAnalysis_helper
-
 
 
 
@@ -265,11 +260,11 @@ if __name__ == '__main__':
     
     # Input and output folder
 
-    # input_folder = '/home/laukkara/github/ML_indoor/input'
-    input_folder = r'C:\Local\laukkara\Data\github\ML_indoor\input'
+    input_folder = '/home/laukkara/github/ML_indoor/input'
+    # input_folder = r'C:\Local\laukkara\Data\github\ML_indoor\input'
 
-    # output_folder_base = '/lustre/scratch/laukkara/ML_indoor'
-    output_folder_base = r'C:\Local\laukkara\Data\github\ML_indoor'
+    output_folder_base = '/lustre/scratch/laukkara/ML_indoor'
+    # output_folder_base = r'C:\Local\laukkara\Data\github\ML_indoor'
 
     #output_folder_custom_str = 'output_2022-09-06-00-06-34'
     # output_folder_custom_str = 'output_2022-09-16-21-53-41'
@@ -332,7 +327,8 @@ if __name__ == '__main__':
                    'kernelridgesigmoid',
                    'kernelridgecosine',
                    'kernelridgepolynomial',
-                   'dummyregressor',
+                   'nusvrpoly',
+                    'dummyregressor',
                     'expfunc',
                     'piecewisefunc',
                     'linearregression',
@@ -349,7 +345,6 @@ if __name__ == '__main__':
                     'kernelridgelaplacian',
                     'linearsvr',
                     'nusvrlinear',
-                    'nusvrpoly',
                     'nusvrrbf',
                     'nusvrsigmoid',
                     'svrlinear',

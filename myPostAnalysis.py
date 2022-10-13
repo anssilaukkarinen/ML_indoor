@@ -26,7 +26,8 @@ import myResults
 
 
 # This folder contains the one or many "output_..." folders
-path_repo_root = r'C:\Local\laukkara\Data\ML_indoor_Narvi'
+# path_repo_root = r'C:\Local\laukkara\Data\ML_indoor_Narvi'
+path_repo_root = '/lustre/scratch/laukkara/ML_indoor/'
 
 
 # The results files don't need to be run every time. Set this is False,
@@ -156,6 +157,7 @@ if run_combiner:
     for folder in output_folders:
         
         fname = os.path.join(path_repo_root, folder, 'combined.csv')
+        print(fname, flush=True)
         df_single = pd.read_csv(fname)
         df_list.append(df_single)
     
@@ -198,7 +200,7 @@ with open(fname, 'rb') as f:
 print(df_all.columns)
 
 
-
+print('END, myPostAnalysis.py', flush=True)
 
 
 
