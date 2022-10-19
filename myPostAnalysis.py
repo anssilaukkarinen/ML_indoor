@@ -9,14 +9,10 @@ machine learning fitting prediction.
 1: main.py
 2: myPostAnalysis.py
 
-This file analyses the contents of a single folder 
-that contains a combined.csv file.
-
-The code is developed here and when it is finished, it is moved into
-'myPostAnalysis_helper.py' module.
 """
 
 import os
+import time
 import itertools
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -174,15 +170,16 @@ if run_combiner:
     
     
     # Export to pickle file
+    time_str = time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime())
     fname = os.path.join(folder_merged,
-                         'df_all.pickle')
+                         f'df_all_{time_str}.pickle')
     with open(fname, 'wb') as f:
         pickle.dump(df_all, f)
 
     
     # Export to xlsx file
     fname = os.path.join(folder_merged,
-                         'df_all.xlsx')
+                         f'df_all_{time_str}.xlsx')
     df_all.to_excel(fname)
 
 
@@ -192,10 +189,13 @@ if run_combiner:
 
 ##########################################
 
+"""
 fname = os.path.join(folder_merged,
                      'df_all.pickle')
 with open(fname, 'rb') as f:
     df_all = pickle.load(f)
+"""
+
 
 print(df_all.columns)
 
