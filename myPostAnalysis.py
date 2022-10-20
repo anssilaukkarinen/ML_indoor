@@ -172,14 +172,14 @@ if run_combiner:
     # Export to pickle file
     time_str = time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime())
     fname = os.path.join(folder_merged,
-                         f'df_all_{time_str}.pickle')
+                         'df_all_{}.pickle'.format(time_str))
     with open(fname, 'wb') as f:
         pickle.dump(df_all, f)
 
     
     # Export to xlsx file
     fname = os.path.join(folder_merged,
-                         f'df_all_{time_str}.xlsx')
+                         'df_all_{}.xlsx'.format(time_str))
     df_all.to_excel(fname)
 
 

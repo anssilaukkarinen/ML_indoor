@@ -274,7 +274,7 @@ if __name__ == '__main__':
         output_folder = os.path.join(output_folder_base,
                                      output_folder_custom_str)
     else:
-        time_str = time.strftime("%Y-%m-%d-%H-%M-%S",
+        time_str = time.strftime("%Y-%m-%d-%H-%M-00",
                                     time.localtime())
         output_folder = os.path.join(output_folder_base,
                                      'output_{}'.format(time_str))
