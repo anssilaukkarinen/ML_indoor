@@ -34,7 +34,9 @@ def main(output_folder,
                                                 optimization_method,
                                                 str(n_lags_X),
                                                 str(n_lags_y),
-                                                str(N_CV), str(N_ITER), str(N_CPU),
+                                                str(N_CV),
+                                                str(N_ITER),
+                                                str(N_CPU),
                                                 measurement_point_name)
     
     results_folder = os.path.join(output_folder,
@@ -57,14 +59,6 @@ def main(output_folder,
     savePlots(results, results_folder)
     
     print('save numeric', flush=True)
-    # saveNumeric(measurement_point_name,
-    #             model_name,
-    #             optimization_method,
-    #             n_lags_X,
-    #             n_lags_y,
-    #             results,
-    #             results_folder)
-
     saveNumeric(model_name,
                 optimization_method,
                 n_lags_X,
@@ -307,7 +301,7 @@ def saveNumeric(model_name,
 
 
         
-    ## the other file, the short results.txt
+    ## the other file, the short results.csv
     data_dummy = {'measurement_point_name': measurement_point_name,
                     'model_name': model_name,
                     'optimization_method': optimization_method,
@@ -348,6 +342,8 @@ def saveModel(results, results_folder):
 def combine_results_files(output_fold):
     # Go through a single "output_..." folder
     # Read all results.csv files into a single combined.csv file
+    # Note: It might be easier to write all the output data to
+    # a single json-file or similar, but this is left for later times.
     
     list_df = []
     
@@ -366,6 +362,11 @@ def combine_results_files(output_fold):
             df_single.loc[:, 'N_CV'] = float(folder_identifiers[0][3:])
             df_single.loc[:, 'N_ITER'] = float(folder_identifiers[1][5:])
             df_single.loc[:, 'N_CPU'] = float(folder_identifiers[2][4:])
+            
+            datetime_str = output_fold.split(os.sep)[-1].split('_')[-1]
+            pd_timestamp = pd.to_datetime(datetime_str,
+                                          format='%Y-%m-%d-%H-%M-%S')
+            df_single.loc[:, 't_start_local'] = pd_timestamp            
             
             
             # Append to list of dataframes
