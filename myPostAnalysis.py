@@ -16,6 +16,7 @@ import time
 import itertools
 import matplotlib.pyplot as plt
 import pandas as pd
+import numpy as np
 import pickle
 
 import myResults
@@ -29,7 +30,11 @@ path_repo_root = '/lustre/scratch/laukkara/ML_indoor/'
 # The results files don't need to be run every time. Set this is False,
 # if the results data is already collected from the various "output_..."
 # folders.
-run_combiner = True
+run_combiner = True # True, False
+
+run_checker = True # True, False
+
+run_make_sbatch_files = True # True, False
 
 
 
@@ -182,6 +187,211 @@ if run_combiner:
                          'df_all_{}.xlsx'.format(time_str))
     df_all.to_excel(fname)
 
+
+
+
+if run_checker:
+    
+    fname = os.path.join(path_repo_root,
+                         'df_all_2022-10-20-02-01-30.xlsx')
+    df_all = pd.read_excel(fname)
+    
+    measurement_point_names = ['Espoo1', 'Espoo2', 'Tampere1', 'Tampere2', 'Valkeakoski']
+    
+    model_names = ['svrpoly',
+                   'kernelridgesigmoid',
+                   'kernelridgecosine',
+                   'kernelridgepolynomial',
+                   'nusvrpoly',
+                    'dummyregressor',
+                    'expfunc',
+                    'piecewisefunc',
+                    'linearregression',
+                    'ridge',
+                    'lasso',
+                    'elasticnet',
+                    'lars',
+                    'lassolars',
+                    'huberregressor',
+                    'ransacregressor',
+                    'theilsenregressor',
+                    'kernelridgelinear',
+                    'kernelridgerbf',
+                    'kernelridgelaplacian',
+                    'linearsvr',
+                    'nusvrlinear',
+                    'nusvrrbf',
+                    'nusvrsigmoid',
+                    'svrlinear',
+                    'svrrbf',
+                    'svrsigmoid',
+                    'kneighborsregressoruniform',
+                    'kneighborsregressordistance',
+                    'decisiontreeregressorbest',
+                    'decisiontreeregressorrandom',
+                    'extratreeregressorbest',
+                    'extratreeregressorrandom',
+                    'adaboostdecisiontree',
+                    'adaboostextratree',
+                    'baggingdecisiontree',
+                    'baggingextratree',
+                    'extratreesregressorbootstrapfalse',
+                    'extratreesregressorbootstraptrue',
+                    'gradientboostingregressor',
+                    'histgradientboostingregressor',
+                    'randomforest',
+                    'lgbgbdt',
+                    'lgbgoss',
+                    'lgbdart',
+                    'lgbrf',
+                    'xgbgbtree',
+                    'xgbdart']
+    
+    optimization_methods = ['pso', 'randomizedsearchcv', 'bayessearchcv']
+    
+    X_lags = [0] # 0, 1
+    y_lags = [0]    
+    
+    N_CVs = [3] # 3, 4, 5
+    N_ITERs = [10, 20, 50, 100, 200, 500]
+    N_CPUs = [1]
+    
+    n_tot = len(measurement_point_names) \
+            * len(model_names) \
+            * len(optimization_methods) \
+            * len(X_lags) * len(y_lags) \
+            * len(N_CVs) * len(N_ITERs) * len(N_CPUs)
+    
+    print(f'n_tot = {n_tot}')
+    
+    path_to_main = '/home/laukkara/github/ML_indoor/main.py'
+
+    reruns_list = []
+    
+    for mp in measurement_point_names:
+        for mod in model_names:
+            for opt in optimization_methods:
+                for xlag in X_lags:
+                    for ylag in y_lags:
+                        for ncv in N_CVs:
+                            for niter in N_ITERs:
+                                for ncpu in N_CPUs:
+                                    
+                                    
+                                    # This is True for those rows that match
+                                    idxs = (df_all['measurement_point_name'] == mp) \
+                                        & (df_all['model_name'] == mod) \
+                                        & (df_all['optimization_method'] == opt) \
+                                        & (df_all['X_lag'] == xlag) \
+                                        & (df_all['y_lag'] == ylag) \
+                                        & (df_all['N_CV'] == ncv) \
+                                        & (df_all['N_ITER'] == niter) \
+                                        & (df_all['N_CPU'] == ncpu)
+                                    
+                                    # Get indexis from the True rows
+                                    idxs_true = idxs.index[idxs].values
+                                    
+                                    
+                                    if idxs_true.shape[0] == 0 \
+                                        or df_all.loc[idxs_true, 'MAE_mean_validate_test'].min() >= 5.0:
+                                        # There are no corresponding rows or
+                                        # the best rows have been far off.
+                                        
+                                        idx_mp = measurement_point_names.index(mp)
+                                        idx_mod = model_names.index(mod)
+                                        idx_opt = optimization_methods.index(opt)
+                                        
+                                        
+                                        s = f"python3 {path_to_main} "\
+                                            f"{idx_mp} {idx_mp+1} "\
+                                            f"{idx_mod} {idx_mod+1} "\
+                                            f"{idx_opt} {idx_opt+1} "\
+                                            f"{ncv} {niter} {ncpu} "\
+                                            f"{xlag} {ylag}"
+                                        # print(s)
+                                        reruns_list.append(s)
+                                    
+                                        
+    reruns_list = list(set(reruns_list)).copy()
+    print(f"len(reruns_list) = {len(reruns_list)}")
+    
+    # Write file with timestamp in file name
+    time_str = time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime())
+    fname = os.path.join(folder_merged,
+                         'reruns_{}.txt'.format(time_str))
+    with open(fname, 'w') as f:
+        for row in reruns_list:
+            f.write(row + '\n')
+
+
+    # Write file without timestamp in file name
+    fname = os.path.join(folder_merged,
+                         'reruns.txt')
+    with open(fname, 'w') as f:
+        for row in reruns_list:
+            f.write(row + '\n')
+
+
+
+
+if run_make_sbatch_files:
+    
+    # Read in information for the cases that should be rerun
+    reruns_list = []
+    fname = os.path.join(folder_merged,
+                         'reruns.txt')
+    with open(fname, 'r') as f:
+        for line in f:
+            reruns_list.append(line.rstrip())
+    
+    
+    # Read in the base case shell script
+    sbatch_template = []
+    fname = os.path.join(path_repo_root,
+                         'ML_indoor_template.sh')
+    with open(fname, 'r') as f:
+        for line in f:
+            sbatch_template.append(line.rstrip())
+    
+    
+    # Make sure output folder exists
+    folder_sbatch = os.path.join(folder_merged,
+                                 'sbatch_files')
+    if not os.path.exists(folder_sbatch):
+        os.makedirs(folder_sbatch)
+    
+    
+    # Write the new sbatch files
+    filenames_list = []
+    for line_new in reruns_list:
+        
+        str_helper = line_new[48:].replace(' ', '_')
+        sbatch_single_file = 'ML_indoor_{}.sh'.format(str_helper)
+        fname = os.path.join(folder_sbatch,
+                             sbatch_single_file)
+        with open(fname, 'w') as f:
+        
+            for line_template in sbatch_template:
+                if 'python3' in line_template:
+                    # Don't write the template file, write the new line
+                    f.write(line_new + '\n')
+                else:
+                    f.write(line_template + '\n')
+        
+        filenames_list.append(sbatch_single_file)
+    
+    
+    # Write the single sbatch calls to a single shell script file
+    fname = os.path.join(folder_sbatch,
+                         'ML_indoor_rerun_all.sh')
+    with open(fname, 'w') as f:
+        for line in filenames_list:
+            f.write('sbatch ' + line + '\n')
+    
+    
+    
+    
+    
 
 
 
