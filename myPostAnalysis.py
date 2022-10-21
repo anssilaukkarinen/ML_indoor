@@ -18,6 +18,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 import pickle
+import json
 
 import myResults
 
@@ -191,9 +192,12 @@ if run_combiner:
 
 
 if run_checker:
+    # Check if all the listed files have been completed successfully
+    # Add to a list of it hasn't been finished properly
+    
     
     fname = os.path.join(path_repo_root,
-                         'df_all_2022-10-20-02-01-30.xlsx')
+                         'df_all_2022-10-21-21-52-37.xlsx')
     df_all = pd.read_excel(fname)
     
     measurement_point_names = ['Espoo1', 'Espoo2', 'Tampere1', 'Tampere2', 'Valkeakoski']
@@ -269,14 +273,16 @@ if run_checker:
     reruns_list = []
     
     for mp in measurement_point_names:
-        for mod in model_names:
-            for opt in optimization_methods:
-                for xlag in X_lags:
-                    for ylag in y_lags:
-                        for ncv in N_CVs:
-                            for niter in N_ITERs:
-                                for ncpu in N_CPUs:
-                                    
+        for opt in optimization_methods:
+            for xlag in X_lags:
+                for ylag in y_lags:
+                    for ncv in N_CVs:
+                        for niter in N_ITERs:
+                            for ncpu in N_CPUs:
+                                
+                                arr_list = []
+                                
+                                for mod in model_names:
                                     
                                     # This is True for those rows that match
                                     idxs = (df_all['measurement_point_name'] == mp) \
@@ -297,39 +303,41 @@ if run_checker:
                                         # There are no corresponding rows or
                                         # the best rows have been far off.
                                         
-                                        idx_mp = measurement_point_names.index(mp)
-                                        idx_mod = model_names.index(mod)
-                                        idx_opt = optimization_methods.index(opt)
-                                        
-                                        
-                                        s = f"python3 {path_to_main} "\
+                                        # python indexing is 0-based, slurm array is 1-based
+                                        idx_mod = model_names.index(mod) + 1
+                                        arr_list.append(idx_mod)
+                                    
+                                    
+                                ## continue
+                                idx_mp = measurement_point_names.index(mp)
+                                idx_opt = optimization_methods.index(opt)
+                            
+                                str_python = f"python3 {path_to_main} "\
                                             f"{idx_mp} {idx_mp+1} "\
-                                            f"{idx_mod} {idx_mod+1} "\
+                                            f"$SLURM_ARRAY_TASK_ID $(( $SLURM_ARRAY_TASK_ID + 1 )) "\
                                             f"{idx_opt} {idx_opt+1} "\
                                             f"{ncv} {niter} {ncpu} "\
                                             f"{xlag} {ylag}"
-                                        # print(s)
-                                        reruns_list.append(s)
-                                    
-                                        
-    reruns_list = list(set(reruns_list)).copy()
+                                # print(s)
+                                reruns_list.append({'arr': arr_list,
+                                                    'str_python': str_python})
+                            
+    # reruns_list has now been filled
     print(f"len(reruns_list) = {len(reruns_list)}")
     
     # Write file with timestamp in file name
     time_str = time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime())
     fname = os.path.join(folder_merged,
-                         'reruns_{}.txt'.format(time_str))
+                         'reruns_{}.json'.format(time_str))    
     with open(fname, 'w') as f:
-        for row in reruns_list:
-            f.write(row + '\n')
+        json.dump(reruns_list, f, indent=4)
 
 
     # Write file without timestamp in file name
     fname = os.path.join(folder_merged,
-                         'reruns.txt')
+                         'reruns.json')
     with open(fname, 'w') as f:
-        for row in reruns_list:
-            f.write(row + '\n')
+        json.dump(reruns_list, f, indent=4)
 
 
 
@@ -337,12 +345,13 @@ if run_checker:
 if run_make_sbatch_files:
     
     # Read in information for the cases that should be rerun
-    reruns_list = []
+    # reruns_list = []
     fname = os.path.join(folder_merged,
-                         'reruns.txt')
+                         'reruns.json')
     with open(fname, 'r') as f:
-        for line in f:
-            reruns_list.append(line.rstrip())
+        # for line in f:
+        #     reruns_list.append(line.rstrip())
+        reruns_list = json.load(f)
     
     
     # Read in the base case shell script
@@ -363,18 +372,31 @@ if run_make_sbatch_files:
     
     # Write the new sbatch files
     filenames_list = []
-    for line_new in reruns_list:
+    for item in reruns_list:
         
-        str_helper = line_new[48:].replace(' ', '_')
+        str_helper = item['str_python'][48:] \
+                .replace("$SLURM_ARRAY_TASK_ID $(( $SLURM_ARRAY_TASK_ID + 1 )) ",'') \
+                .replace(' ', '_')
+        
         sbatch_single_file = 'ML_indoor_{}.sh'.format(str_helper)
+        
         fname = os.path.join(folder_sbatch,
                              sbatch_single_file)
+        
         with open(fname, 'w') as f:
         
             for line_template in sbatch_template:
-                if 'python3' in line_template:
-                    # Don't write the template file, write the new line
-                    f.write(line_new + '\n')
+                if '#SBATCH --array' in line_template:
+                    # sbatch array definition line
+                    str_dummy = ','.join(str(x) for x in item['arr'])
+                    s_to_write = '#SBATCH --array=' + str_dummy
+                        
+                    f.write(s_to_write + '\n')
+                
+                elif 'python3' in line_template:
+                    # python code line
+                    f.write(item['str_python'] + '\n')
+                    
                 else:
                     f.write(line_template + '\n')
         
