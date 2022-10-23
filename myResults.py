@@ -345,6 +345,8 @@ def combine_results_files(output_fold):
     # Note: It might be easier to write all the output data to
     # a single json-file or similar, but this is left for later times.
     
+    print(f'output_fold: {output_fold}', flush=True)
+
     list_df = []
     
     for case_fold in os.listdir(output_fold):
@@ -352,9 +354,12 @@ def combine_results_files(output_fold):
         case_path = os.path.join(output_fold, case_fold)
         
         if os.path.isdir(case_path) and 'NCV' in case_fold:
+
+            print(f'  case_fold: {case_fold}', flush=True)
             
             # Data from the results.txt
             fname = os.path.join(case_path, 'results.csv')
+            # print(f'results.csv at: {fname}', flush=True)
             df_single = pd.read_csv(filepath_or_buffer=fname)
             
             # Information from the folder name
@@ -368,17 +373,50 @@ def combine_results_files(output_fold):
                                           format='%Y-%m-%d-%H-%M-%S')
             df_single.loc[:, 't_start_local'] = pd_timestamp            
             
-            
+
+            # Check for empty DataFrame
+            if df_single.empty:
+                print('df_single was empty', flush=True)
+                df_single = pd.DataFrame({'measurement_point_name':np.nan,
+                                          'model_name':np.nan,
+                                          'optimization_method':np.nan,
+                                          'X_lag':np.nan,
+                                          'y_lag':np.nan,
+                                          'MAE_train':np.nan,
+                                          'MAE_validate':np.nan,
+                                          'MAE_test':np.nan,
+                                          'RMSE_train':np.nan,
+                                          'RMSE_validate':np.nan,
+                                          'RMSE_test':np.nan,
+                                          'R2_train':np.nan,
+                                          'R2_validate':np.nan,
+                                          'R2_test':np.nan,
+                                          'wall_clock_time_minutes':np.nan,
+                                          'N_CV':np.nan,
+                                          'N_ITER':np.nan,
+                                          'N_CPU':np.nan,
+                                          't_start_local':np.nan})
+
+
+
             # Append to list of dataframes
+            print(df_single, flush=True)
             list_df.append(df_single)
     
     # The single-row results.txt files have all row index of 0,
     # so the row index is ignored while concatenating
-    df_results_all = pd.concat(list_df, ignore_index=True)
+    try:
+        print('df_results_all.to_csv()', flush=True)
+
+        df_results_all = pd.concat(list_df, ignore_index=True)
+        fname = os.path.join(output_fold,
+                             'combined.csv')
+        df_results_all.to_csv(fname, index=False)
+
+    except:
+        print('Concatenating failed!', flush=True)
+        print(list_df, flush=True)
     
-    fname = os.path.join(output_fold,
-                         'combined.csv')
-    df_results_all.to_csv(fname, index=False)
     
 
 

@@ -147,6 +147,8 @@ def plot_R2_vs_MAE(df, output_folder):
 
 if run_combiner:
 
+    print(f'We are at: run_combiner', flush=True)
+
     # Make sure that the combined.csv files exist and are complete
     run_combine_results_files(path_repo_root)
     
@@ -159,9 +161,15 @@ if run_combiner:
     for folder in output_folders:
         
         fname = os.path.join(path_repo_root, folder, 'combined.csv')
-        print(fname, flush=True)
-        df_single = pd.read_csv(fname)
-        df_list.append(df_single)
+        print(f'Starting to read: {fname}', flush=True)
+        try:
+            if os.path.exists(fname):
+                df_single = pd.read_csv(fname)
+                df_list.append(df_single)
+            else:
+                print(f'File: {fname} does not exist!', flush=True)
+        except:
+            print(f'File: {fname} threw and error', flush=True)
     
     df_all = pd.concat(df_list, ignore_index=True)
     
@@ -194,10 +202,35 @@ if run_combiner:
 if run_checker:
     # Check if all the listed files have been completed successfully
     # Add to a list of it hasn't been finished properly
+
+    print('We are at: run_checker', flush=True)
     
-    
-    fname = os.path.join(path_repo_root,
-                         'df_all_2022-10-21-21-52-37.xlsx')
+    # Find the xlsx file with the newest time stamp
+    time_format = '%Y-%m-%d-%H-%M-%S'
+
+    dt_stamps = []
+
+    for xlsx_file in [f for f in os.listdir(folder_merged) if '.xlsx' in f]:
+        
+        dt_str = xlsx_file[7:-5]
+        dt_stamps.append(time.strptime(dt_str, time_format))
+
+
+    if len(dt_stamps) == 0:
+        print('xlsx file with suitable name does not exist')
+    elif len(dt_stamps) == 1:
+        time_str_newest = time.strftime(time_format, dt_stamps[0])
+    else:
+        dt_stamp_newest = dt_stamps[0]
+        for dt_stamp in dt_stamps[1:]:
+            if dt_stamp > dt_stamp_newest:
+                dt_stamp_newest = dt_stamp
+
+    time_str_newest = time.strftime(time_format, dt_stamp_newest)
+
+    fname = os.path.join(folder_merged,
+                         'df_all_{}.xlsx'.format(time_str_newest))
+
     df_all = pd.read_excel(fname)
     
     measurement_point_names = ['Espoo1', 'Espoo2', 'Tampere1', 'Tampere2', 'Valkeakoski']
@@ -266,7 +299,7 @@ if run_checker:
             * len(X_lags) * len(y_lags) \
             * len(N_CVs) * len(N_ITERs) * len(N_CPUs)
     
-    print(f'n_tot = {n_tot}')
+    print(f'n_tot = {n_tot}', flush=True)
     
     path_to_main = '/home/laukkara/github/ML_indoor/main.py'
 
@@ -323,7 +356,7 @@ if run_checker:
                                                     'str_python': str_python})
                             
     # reruns_list has now been filled
-    print(f"len(reruns_list) = {len(reruns_list)}")
+    print(f"len(reruns_list) = {len(reruns_list)}", flush=True)
     
     # Write file with timestamp in file name
     time_str = time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime())
@@ -346,6 +379,9 @@ if run_make_sbatch_files:
     
     # Read in information for the cases that should be rerun
     # reruns_list = []
+
+    print('We are at: run_make_sbatch_files', flush=True)
+
     fname = os.path.join(folder_merged,
                          'reruns.json')
     with open(fname, 'r') as f:
