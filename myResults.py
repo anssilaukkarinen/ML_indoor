@@ -360,21 +360,18 @@ def combine_results_files(output_fold):
             # Data from the results.txt
             fname = os.path.join(case_path, 'results.csv')
             # print(f'results.csv at: {fname}', flush=True)
-            df_single = pd.read_csv(filepath_or_buffer=fname)
             
-            # Information from the folder name
-            folder_identifiers = case_fold.split('_')[4:7]
-            df_single.loc[:, 'N_CV'] = float(folder_identifiers[0][3:])
-            df_single.loc[:, 'N_ITER'] = float(folder_identifiers[1][5:])
-            df_single.loc[:, 'N_CPU'] = float(folder_identifiers[2][4:])
+            if os.path.exists(fname):
+                df_single = pd.read_csv(filepath_or_buffer=fname)
+            else:
+                print('results.csv did not exist!', flush=True)
+                print(f'output_fold: {output_fold}', flush=True)
+                print(f'case_fold: {case_fold}', flush=True)
+                df_single = pd.DataFrame()
             
-            datetime_str = output_fold.split(os.sep)[-1].split('_')[-1]
-            pd_timestamp = pd.to_datetime(datetime_str,
-                                          format='%Y-%m-%d-%H-%M-%S')
-            df_single.loc[:, 't_start_local'] = pd_timestamp            
             
-
             # Check for empty DataFrame
+            # There could be other checks also
             if df_single.empty:
                 print('df_single was empty', flush=True)
                 df_single = pd.DataFrame({'measurement_point_name':np.nan,
@@ -395,7 +392,21 @@ def combine_results_files(output_fold):
                                           'N_CV':np.nan,
                                           'N_ITER':np.nan,
                                           'N_CPU':np.nan,
-                                          't_start_local':np.nan})
+                                          't_start_local': np.nan})
+
+            else:
+                # Information from the folder name
+                folder_identifiers = case_fold.split('_')[4:7]
+                df_single.loc[:, 'N_CV'] = float(folder_identifiers[0][3:])
+                df_single.loc[:, 'N_ITER'] = float(folder_identifiers[1][5:])
+                df_single.loc[:, 'N_CPU'] = float(folder_identifiers[2][4:])
+                
+                datetime_str = output_fold.split(os.sep)[-1].split('_')[-1]
+                pd_timestamp = pd.to_datetime(datetime_str,
+                                              format='%Y-%m-%d-%H-%M-%S')
+                df_single.loc[:, 't_start_local'] = pd_timestamp            
+            
+
 
 
 
@@ -415,6 +426,7 @@ def combine_results_files(output_fold):
 
     except:
         print('Concatenating failed!', flush=True)
+        print(f'output_fold was: {output_fold}', flush=True)
         print(list_df, flush=True)
     
     
