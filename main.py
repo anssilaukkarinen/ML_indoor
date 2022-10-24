@@ -4,8 +4,14 @@ Created on Tue Sep  1 10:35:57 2020
 
 @author: laukkara
 
-python3 main.py 0 5 10 11 0 3 3 4 1
-python3 main.py 0 1 10 11 0 1 3 4 1
+Workflow:
+1) Create slurm sbatch submission files that use arrays
+2) Submit multiple sbatch files by running a bash script ("path/to/./ML_indoor_all.sh")
+3) Submit: "sbatch ML_indoor_merge.sh"
+4) Submit sbatch files for reruns ("/path/to/merged_results/sbatch_files/ML_indoor_rerun.sh")
+5) Move the previous rerun files to storage folder and run: "sbatch ML_indoor_merge.sh"
+6) Copy-paste "df_all.xlsx" to local computer and run: "myPostAnalysis.py"
+7) Report results.
 
 """
 

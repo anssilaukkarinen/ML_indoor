@@ -39,17 +39,6 @@ run_make_sbatch_files = True # True, False
 
 
 
-
-figseiz = (5.5, 3.5)
-dpi_val = 200
-markers = itertools.cycle(['o', '^', 's', 'x', 'd'])
-
-col_names_numeric = ['MAE_train', 'MAE_validate', 'MAE_test',
-                    'RMSE_train','RMSE_validate', 'RMSE_test',
-                    'R2_train', 'R2_validate', 'R2_test',
-                    'wall_clock_time_minutes']
-
-
 folder_merged = os.path.join(path_repo_root,
                              'merged_results')
 if not os.path.exists(folder_merged):
@@ -118,17 +107,26 @@ if run_combiner:
         = df_all.loc[:, ['MAE_validate','MAE_test']].mean(axis=1)
     
     
-    # Export to pickle file
+    # Export to pickle file, with and without time stamp in file name
     time_str = time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime())
     fname = os.path.join(folder_merged,
                          'df_all_{}.pickle'.format(time_str))
     with open(fname, 'wb') as f:
         pickle.dump(df_all, f)
+    
+    fname = os.path.join(folder_merged,
+                         'df_all.pickle'.format(time_str))
+    with open(fname, 'wb') as f:
+        pickle.dump(df_all, f)
 
     
-    # Export to xlsx file
+    # Export to xlsx file, with and without file name
     fname = os.path.join(folder_merged,
                          'df_all_{}.xlsx'.format(time_str))
+    df_all.to_excel(fname)
+
+    fname = os.path.join(folder_merged,
+                         'df_all.xlsx'.format(time_str))
     df_all.to_excel(fname)
 
 
@@ -140,32 +138,36 @@ if run_checker:
 
     print('We are at: run_checker', flush=True)
     
-    # Find the xlsx file with the newest time stamp
-    time_format = '%Y-%m-%d-%H-%M-%S'
+    ## Older versio, where file name with time stamp was used
+#    # Find the xlsx file with the newest time stamp
+#    time_format = '%Y-%m-%d-%H-%M-%S'
+#
+#    dt_stamps = []
+#
+#    for xlsx_file in [f for f in os.listdir(folder_merged) if '.xlsx' in f]:
+#        
+#        dt_str = xlsx_file[7:-5]
+#        dt_stamps.append(time.strptime(dt_str, time_format))
+#
+#
+#    if len(dt_stamps) == 0:
+#        print('xlsx file with suitable name does not exist')
+#    elif len(dt_stamps) == 1:
+#        time_str_newest = time.strftime(time_format, dt_stamps[0])
+#    else:
+#        dt_stamp_newest = dt_stamps[0]
+#        for dt_stamp in dt_stamps[1:]:
+#            if dt_stamp > dt_stamp_newest:
+#                dt_stamp_newest = dt_stamp
+#
+#    time_str_newest = time.strftime(time_format, dt_stamp_newest)
+#
+#    fname = os.path.join(folder_merged,
+#                         'df_all_{}.xlsx'.format(time_str_newest))
 
-    dt_stamps = []
-
-    for xlsx_file in [f for f in os.listdir(folder_merged) if '.xlsx' in f]:
-        
-        dt_str = xlsx_file[7:-5]
-        dt_stamps.append(time.strptime(dt_str, time_format))
-
-
-    if len(dt_stamps) == 0:
-        print('xlsx file with suitable name does not exist')
-    elif len(dt_stamps) == 1:
-        time_str_newest = time.strftime(time_format, dt_stamps[0])
-    else:
-        dt_stamp_newest = dt_stamps[0]
-        for dt_stamp in dt_stamps[1:]:
-            if dt_stamp > dt_stamp_newest:
-                dt_stamp_newest = dt_stamp
-
-    time_str_newest = time.strftime(time_format, dt_stamp_newest)
-
-    fname = os.path.join(folder_merged,
-                         'df_all_{}.xlsx'.format(time_str_newest))
-
+    ## New version, where the file: "df_all.xlsx" is always rewritten
+    ## to contain the newest data
+    fname = os.path.join(folder_merged, 'df_all.xlsx')
     df_all = pd.read_excel(fname)
     
     measurement_point_names = ['Espoo1', 'Espoo2', 'Tampere1', 'Tampere2', 'Valkeakoski']
@@ -313,17 +315,12 @@ if run_checker:
 if run_make_sbatch_files:
     
     # Read in information for the cases that should be rerun
-    # reruns_list = []
-
     print('We are at: run_make_sbatch_files', flush=True)
 
     fname = os.path.join(folder_merged,
                          'reruns.json')
     with open(fname, 'r') as f:
-        # for line in f:
-        #     reruns_list.append(line.rstrip())
         reruns_list = json.load(f)
-    
     
     # Read in the base case shell script
     sbatch_template = []
@@ -384,24 +381,16 @@ if run_make_sbatch_files:
     
     
     
-    
-
-
 
 ##########################################
 
-"""
-fname = os.path.join(folder_merged,
-                     'df_all.pickle')
-with open(fname, 'rb') as f:
-    df_all = pickle.load(f)
-"""
 
 
-print(df_all.columns)
+print('df_all.columns from myMerge:', flush=True)
+print(df_all.columns, flush=True)
 
 
-print('END, myPostAnalysis.py', flush=True)
+print('myMerge.py, END', flush=True)
 
 
 
