@@ -4,11 +4,6 @@ Created on Mon Sep 26 22:53:05 2022
 
 @author: laukkara
 
-This file contains post-analysis and plotting of the results from the 
-machine learning fitting prediction.
-1: main.py
-2: myPostAnalysis.py
-
 """
 
 import os
@@ -26,8 +21,8 @@ import myResults
 
 #
 # This folder contains the one or many "output_..." folders
-path_repo_root = r'C:\Local\laukkara\Data\ML_indoor_Narvi'
-# path_repo_root = '/lustre/scratch/laukkara/ML_indoor/'
+# path_repo_root = r'C:\Local\laukkara\Data\ML_indoor_Narvi'
+path_repo_root = '/lustre/scratch/laukkara/ML_indoor/'
 
 
 
