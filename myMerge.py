@@ -21,8 +21,8 @@ import myResults
 
 #
 # This folder contains the one or many "output_..." folders
-# path_repo_root = r'C:\Local\laukkara\Data\ML_indoor_Narvi'
-path_repo_root = '/lustre/scratch/laukkara/ML_indoor/'
+path_repo_root = r'C:\Local\laukkara\Data\ML_indoor_Narvi'
+# path_repo_root = '/lustre/scratch/laukkara/ML_indoor/'
 
 
 
@@ -314,7 +314,7 @@ if run_checker:
                                           model_names,
                                           path_to_main)
     
-    reruns_list.append(reruns_list_dummy)
+    reruns_list += reruns_list_dummy
     
     
     ## Here could be an another set of cases run, e.g. with high N_ITER
@@ -374,16 +374,13 @@ if run_make_sbatch_files:
 
     # Write the new sbatch files
     filenames_list = []
-    for item in reruns_list:
-        
-        
-        
+    for idx_item, item in enumerate(reruns_list):
         
         str_helper = item['str_python'][48:] \
                 .replace("$SLURM_ARRAY_TASK_ID $(( $SLURM_ARRAY_TASK_ID + 1 )) ",'') \
                 .replace(' ', '_')
         
-        sbatch_single_file = 'ML_indoor_{}.sh'.format(str_helper)
+        sbatch_single_file = 'No{}_ML_indoor_{}.sh'.format(idx_item, str_helper)
         
         fname = os.path.join(folder_sbatch,
                              sbatch_single_file)
