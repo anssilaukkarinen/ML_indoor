@@ -21,8 +21,8 @@ import myResults
 
 #
 # This folder contains the one or many "output_..." folders
-path_repo_root = r'C:\Local\laukkara\Data\ML_indoor_Narvi'
-# path_repo_root = '/lustre/scratch/laukkara/ML_indoor/'
+# path_repo_root = r'C:\Local\laukkara\Data\ML_indoor_Narvi'
+path_repo_root = '/lustre/scratch/laukkara/ML_indoor/'
 
 
 
@@ -92,7 +92,7 @@ def get_reruns_helper(df_all,
                                 
                                 for mod in model_names:
                                     
-                                    # This is True for those rows that match
+                                    # This is True for those rows that match all conditions
                                     idxs = (df_all['measurement_point_name'] == mp) \
                                         & (df_all['model_name'] == mod) \
                                         & (df_all['optimization_method'] == opt) \
@@ -102,19 +102,20 @@ def get_reruns_helper(df_all,
                                         & (df_all['N_ITER'] == niter) \
                                         & (df_all['N_CPU'] == ncpu)
                                     
-                                    # Get indexis from the True rows
+                                    # Get indexis of the matching (True) rows
                                     idxs_true = idxs.index[idxs].values
                                     
                                     
                                     if idxs_true.shape[0] == 0 \
-                                        or df_all.loc[idxs_true, 'MAE_mean_validate_test'].min() >= 10.0:
-                                        # There are no corresponding rows or
+                                        or df_all.loc[idxs_true, 'R2_mean_validate_test'].max() < -3.0:
+                                        # There are no matching rows or
                                         # the best rows have been far off.
                                         
                                         # python indexing is 0-based; start inclusive, end not inclusive
                                         # slurm indexing has smallest value 0, both ends inclusive
                                         # python: 0:3 -> 0, 1, 2
                                         # slurm: 0-3 -> 0, 1, 2, 3
+                                        # The code uses python indexing
                                         idx_mod = model_names.index(mod)
                                         arr_list.append(idx_mod)
                                     
