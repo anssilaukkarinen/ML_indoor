@@ -192,6 +192,8 @@ if combine_combined:
     df_all['MAE_mean_validate_test'] \
         = df_all.loc[:, ['MAE_validate','MAE_test']].mean(axis=1)
     
+    df_all.index.name = 'index'
+    
     
     # Export to pickle file, with and without time stamp in file name
     time_str = time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime())
