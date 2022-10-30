@@ -21,6 +21,7 @@ fname_xlsx_input = os.path.join(r'C:\Local\laukkara\Data\ML_indoor_Narvi',
                                 'df_all_2022-10-28-10-57-03.xlsx')
 
 df = pd.read_excel(fname_xlsx_input, index_col=0)
+df.sort_index(inplace=True)
 
 print(df.columns)
 
@@ -30,6 +31,15 @@ if not os.path.exists(output_folder):
     os.makedirs(output_folder)
 
 
+time_str = time.strftime('%Y-%m-%d-%H-%M-%S',time.localtime())
+xlsx_output_file = os.path.join(output_folder,
+                                'output_{}.xlsx'.format(time_str))
+
+with pd.ExcelWriter(xlsx_output_file,
+                    mode='w',
+                    engine='openpyxl',
+                    if_sheet_exists='replace') as writer:
+    pd.DataFrame(data=[0]).to_excel(writer, sheet_name='start')
 
 figseiz = (5.5, 3.5)
 dpi_val = 200
@@ -201,7 +211,15 @@ def plot_boxplot_by_mp(df, output_folder):
     idxs = (df.loc[:, 'R2_validate'] > 0.0) & (df.loc[:,'R2_test'] > 0.0)
     print('idxs.sum():', idxs.sum())
     
-    print(df.loc[idxs, :].groupby('measurement_point_name').count().iloc[:,0])
+    df_dummy = df.loc[idxs, :].groupby('measurement_point_name').count().iloc[:,0]
+    print(df_dummy)
+    
+    with pd.ExcelWriter(xlsx_output_file,
+                        mode='a',
+                        engine='openpyxl',
+                        if_sheet_exists='replace') as writer:
+        df_dummy.to_excel(writer,
+                          sheet_name='boxp_by_mp')
     
     
     for y_target in ['R2_mean_validate_test',
@@ -267,10 +285,18 @@ def plot_boxplot_by_mp_and_other(df, output_folder):
         
         for y_key2 in ['X_lag', 'y_lag', 'optimization_method', 'N_CV']:
             
+            df_dummy = df.loc[idxs, :] \
+                      .groupby(by=['measurement_point_name', y_key2]) \
+                      .count().iloc[:,0]
             print('\nGroup counts:')
-            print(df.loc[idxs, :] \
-                  .groupby(by=['measurement_point_name', y_key2]) \
-                  .count().iloc[:,0])
+            print(df_dummy)
+            with pd.ExcelWriter(xlsx_output_file,
+                                mode='a',
+                                engine='openpyxl') as writer:
+                sh_name = 'count_{}_{}'.format(y_target.split('_')[0],
+                                            y_key2)
+                df_dummy.to_excel(writer,
+                                  sheet_name=sh_name)
             
             
             fig, ax = plt.subplots(figsize=figseiz)
@@ -321,7 +347,15 @@ def calculate_average_time_per_optimization_method(df):
                  .loc[:,'wall_clock_time_minutes']
     
     print('\nAverage time per optimization_method:')
-    print(df_holder.sort_values(ascending=True).round(1))
+    df_dummy = df_holder.sort_values(ascending=True).round(1)
+    print(df_dummy)
+
+    with pd.ExcelWriter(xlsx_output_file,
+                        mode='a',
+                        engine='openpyxl') as writer:
+    
+        df_dummy.to_excel(writer,
+                          sheet_name='avg_time')
 
 calculate_average_time_per_optimization_method(df)
 # pso 10 min, rand 20 min, bayes 30 min
@@ -369,7 +403,15 @@ def calculate_pivot_table_averages_per_MLO(df, include_all):
         print('\npivot_table results')
 
         print(df_pivot.round(2).to_string())
-
+        
+        
+        with pd.ExcelWriter(xlsx_output_file,
+                            mode='a',
+                            engine='openpyxl') as writer:
+            
+            sh_name = y_key.split('_')[0]
+            df_pivot.round(2).to_excel(writer,
+                                       sheet_name=sh_name)
 
 calculate_pivot_table_averages_per_MLO(df, False)
 # 
@@ -422,12 +464,22 @@ def plot_wall_clock_time_by_grouping(df, output_folder):
         df_holder = df.groupby(by=[key_grouper]).mean() \
                      .loc[:,'wall_clock_time_minutes']
         
-        print(df_holder.sort_values(ascending=True).round(1))
+        df_dummy = df_holder.sort_values(ascending=True)
         
-        df_holder.sort_values(ascending=True).plot(rot=90,
-                                                   style='-o',
-                                                   ms=3,
-                                                   ax=ax)
+        print(df_dummy.round(1))
+        
+        with pd.ExcelWriter(xlsx_output_file,
+                            mode='a',
+                            engine='openpyxl') as writer:
+        
+            sh_name = 'wall_{}'.format(key_grouper)
+            df_dummy.round(1).to_excel(writer,
+                              sheet_name=sh_name)
+        
+        df_dummy.plot(rot=90,
+                        style='-o',
+                        ms=3,
+                        ax=ax)
         
         fname = os.path.join(output_folder,
                              'wall_clock_time {}.png'.format(key_grouper))
@@ -448,7 +500,21 @@ plot_wall_clock_time_by_grouping(df, output_folder)
 
 
 
-def plot_wall_clock_time_by_grouping_and_mp(df, output_folder):
+def plot_var_by_grouping_and_mp(df, output_folder, limit_to_R2_positive):
+    # Other variables were added afterwards
+    # Some of the cases had results way off, which distorts the results
+    # overall. These are however kept here for documentation purposes.
+    
+    if limit_to_R2_positive:
+        # Calculate ranks only for better-than-benchmark cases
+        print('vars only for R2_validate > 0 and R2_test > 0', flush=True)
+        idxs = (df['R2_validate'] > 0) & (df['R2_test'] > 0)
+        fname_key = 'pos'
+    else:
+        # Include all calculated cases in the ranking
+        print('vars among all cases', flush=True)
+        idxs = df.index == df.index
+        fname_key = 'all'
     
     
     for key_grouper in ['model_name', 'optimization_method', 'N_ITER']:
@@ -457,26 +523,42 @@ def plot_wall_clock_time_by_grouping_and_mp(df, output_folder):
         
         for mp in df['measurement_point_name'].unique():
             
-            print('  ', mp)
+            # print('  ', mp)
             
-            idxs_mp = df['measurement_point_name'] == mp
+            idxs_mp = idxs & (df['measurement_point_name'] == mp)
 
             df_holder = df.loc[idxs_mp,:].groupby(by=[key_grouper]).mean() \
-                                     .loc[:,'wall_clock_time_minutes']
+                                     .loc[:,['wall_clock_time_minutes',
+                                             'MAE_mean_validate_test',
+                                             'RMSE_mean_validate_test',
+                                             'R2_mean_validate_test']] \
+                                     .sort_values(by='RMSE_mean_validate_test',
+                                                  ascending=True)
             
-            print(df_holder.sort_values(ascending=True).round(1))
+            # print(df_holder.round(2))
             
-            df_holder.sort_values(ascending=True).plot(rot=90,
-                                                       style='-o',
-                                                       ms=3,
-                                                       ax=ax)
+            
+            with pd.ExcelWriter(xlsx_output_file,
+                                mode='a',
+                                engine='openpyxl') as writer:
+                sh_name = 'vars_{}_{}_{}'.format(key_grouper[0:5],
+                                                 mp,
+                                                 fname_key)
+                df_holder.to_excel(writer,
+                                   sheet_name=sh_name)
+            
+            df_holder.loc[:,'wall_clock_time_minutes'].plot(rot=90,
+                                                            style='-o',
+                                                            ms=3,
+                                                            ax=ax)
         
         fname = os.path.join(output_folder,
                              'wall_clock_time {} mp.png'.format(key_grouper))
         fig.savefig(fname, dpi=dpi_val, bbox_inches='tight')
         plt.close(fig)
 
-plot_wall_clock_time_by_grouping_and_mp(df, output_folder)
+plot_var_by_grouping_and_mp(df, output_folder, True)
+plot_var_by_grouping_and_mp(df, output_folder, False)
 # wall_clock_time curves were pretty similar between different measurement_points
 
 
@@ -490,12 +572,14 @@ def calculate_ranking(df, output_folder, limit_to_R2_positive):
     
     if limit_to_R2_positive:
         # Calculate ranks only for better-than-benchmark cases
-        print('Rankings only for R2_validate > 0 and R2_test > 0')
+        print('Rankings only for R2_validate > 0 and R2_test > 0', flush=True)
         idxs = (df['R2_validate'] > 0) & (df['R2_test'] > 0)
+        fname_key = 'pos'
     else:
         # Include all calculated cases in the ranking
-        print('Rankings among all cases')
+        print('Rankings among all cases', flush=True)
         idxs = df.index
+        fname_key = 'all'
     
     
     # The value are rounded before ranking, so that model_names that are
@@ -510,6 +594,8 @@ def calculate_ranking(df, output_folder, limit_to_R2_positive):
                              'RMSE_mean_validate_test']] \
                     .sort_values(by='MAE_mean_validate_test', ascending=True) \
                     .round(2).copy()
+    
+    df_holder.sort_index(inplace=True)
     
     # Distance to perfect match: R2val + dR2 = 1 -> dR2 = 1 - R2val
     df_holder.loc[:, 'R2inv_mean_validate_test'] \
@@ -531,6 +617,8 @@ def calculate_ranking(df, output_folder, limit_to_R2_positive):
                 
                 max_rank_sum += df_ranks.loc[(mp,opt),:].shape[0] \
                                 * df_ranks.loc[(mp,opt),:].shape[1]
+    
+    
     
     
     # Sum and scale the ranks
@@ -555,6 +643,15 @@ def calculate_ranking(df, output_folder, limit_to_R2_positive):
     df_res_ranks_relative = df_res_ranks / max_rank_sum
     
     print(df_res_ranks_relative.round(2))
+    
+    with pd.ExcelWriter(xlsx_output_file,
+                        mode='a',
+                        engine='openpyxl') as writer:
+        
+        sh_name = 'relrank_{}'.format(fname_key)
+        df_res_ranks_relative.to_excel(writer,
+                                       sheet_name=sh_name)
+    
             
 
 calculate_ranking(df, output_folder, True)
