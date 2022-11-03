@@ -111,14 +111,15 @@ def plot_sorted(df, output_folder):
                     label=key2,
                     linestyle=linetypes[key2])
             
-            # df_single_sorted.plot(label=key2,
-            #                       style=linetypes[key2],
-            #                       ax=ax)
+            ax.set_xlabel('Cases, sorted')
             
             ylim_top = np.max((ylim_top,
                                np.quantile(df.loc[:,col].values, 0.98)))
-            
-        ax.set_ylabel(key1)
+        
+        if key1 != 'R2':
+            ax.set_ylabel(key1)
+        else:
+            ax.set_ylabel('R$^2$')
         ax.set_ylim(bottom=-0.1, top=ylim_top)
         ax.legend()
         fname = os.path.join(output_folder,
@@ -465,6 +466,7 @@ def plot_wall_clock_time_by_grouping(df, output_folder):
                      .loc[:,'wall_clock_time_minutes']
         
         df_dummy = df_holder.sort_values(ascending=True)
+        df_dummy.sort_values(inplace=True)
         
         print(df_dummy.round(1))
         
@@ -482,7 +484,7 @@ def plot_wall_clock_time_by_grouping(df, output_folder):
                         ax=ax)
         
         fname = os.path.join(output_folder,
-                             'wall_clock_time {}.png'.format(key_grouper))
+                             'wall_clock_time all {}.png'.format(key_grouper))
         fig.savefig(fname, dpi=dpi_val, bbox_inches='tight')
         plt.close(fig)
 
@@ -505,6 +507,14 @@ def plot_var_by_grouping_and_mp(df, output_folder, limit_to_R2_positive):
     # Some of the cases had results way off, which distorts the results
     # overall. These are however kept here for documentation purposes.
     
+    
+    cols = ['wall_clock_time_minutes',
+            'MAE_mean_validate_test',
+            'RMSE_mean_validate_test',
+            'R2_mean_validate_test']
+    
+    xticks_max = 0
+    
     if limit_to_R2_positive:
         # Calculate ranks only for better-than-benchmark cases
         print('vars only for R2_validate > 0 and R2_test > 0', flush=True)
@@ -519,43 +529,70 @@ def plot_var_by_grouping_and_mp(df, output_folder, limit_to_R2_positive):
     
     for key_grouper in ['model_name', 'optimization_method', 'N_ITER']:
         
-        fig, ax = plt.subplots(figsize=figseiz)
+        for col in cols:
         
-        for mp in df['measurement_point_name'].unique():
+            fig, ax = plt.subplots(figsize=figseiz)
             
-            # print('  ', mp)
+            for mp in df['measurement_point_name'].unique():
+                
+                # Get rows per measurement_point
+                idxs_mp = idxs & (df['measurement_point_name'] == mp)
+                
+                df_holder = df.loc[idxs_mp, :] \
+                              .groupby(by=[key_grouper]).mean() \
+                              .loc[:, col].copy()
+                
+                if key_grouper == 'model_name':
+                    df_holder.sort_values(ascending=True, inplace=True)
+                
+                df_holder.plot(rot=90,
+                                style='-o',
+                                ms=3,
+                                ax=ax)
+                
+                ax.set_ylabel(col)
+                if ('MAE' in col or 'RMSE' in col) and (fname_key == 'pos'):
+                    ax.set_ylim(bottom=-0.1, top=1.5)
+                elif 'R2' in col:
+                    ax.set_ylim(bottom=-0.1, top=1.1)
+                
+                if key_grouper == 'model_name':
+                    xticks_max_new = df_holder.shape[0]
+                    xticks_max = np.max((xticks_max, xticks_max_new))
+                    
+                
+                
             
-            idxs_mp = idxs & (df['measurement_point_name'] == mp)
-
-            df_holder = df.loc[idxs_mp,:].groupby(by=[key_grouper]).mean() \
-                                     .loc[:,['wall_clock_time_minutes',
-                                             'MAE_mean_validate_test',
-                                             'RMSE_mean_validate_test',
-                                             'R2_mean_validate_test']] \
-                                     .sort_values(by='RMSE_mean_validate_test',
-                                                  ascending=True)
+                # Write to excel
+                with pd.ExcelWriter(xlsx_output_file,
+                                    mode='a',
+                                    engine='openpyxl') as writer:
+                    sh_name = 'gr_{}_{}_{}_{}'.format(key_grouper[0:4],
+                                                   col.split('_')[0],
+                                                   mp.replace(mp[2:-1],''),
+                                                   fname_key)
+                    df_holder.to_excel(writer,
+                                       sheet_name=sh_name)
             
-            # print(df_holder.round(2))
+                        
+            if key_grouper == 'model_name':
+                ax.set_xticks(np.arange(0, xticks_max, 5))
+                ax.set_xticklabels([])
+                ax.set_xlabel('Cases, sorted')
             
+            if 'R2' in col:
+                ax.set_ylabel('R$^2$ mean')
+            elif any(x in col for x in ['MAE', 'RMSE']):
+                y_label_str = col.split('_')[0] + ' mean'
+                ax.set_ylabel(y_label_str)
             
-            with pd.ExcelWriter(xlsx_output_file,
-                                mode='a',
-                                engine='openpyxl') as writer:
-                sh_name = 'vars_{}_{}_{}'.format(key_grouper[0:5],
-                                                 mp,
-                                                 fname_key)
-                df_holder.to_excel(writer,
-                                   sheet_name=sh_name)
-            
-            df_holder.loc[:,'wall_clock_time_minutes'].plot(rot=90,
-                                                            style='-o',
-                                                            ms=3,
-                                                            ax=ax)
+            fname = os.path.join(output_folder,
+                                 'grouped {} {} {}.png'.format(fname_key,
+                                                               key_grouper,
+                                                               col))
+            fig.savefig(fname, dpi=dpi_val, bbox_inches='tight')
+            plt.close(fig)
         
-        fname = os.path.join(output_folder,
-                             'wall_clock_time {} mp.png'.format(key_grouper))
-        fig.savefig(fname, dpi=dpi_val, bbox_inches='tight')
-        plt.close(fig)
 
 plot_var_by_grouping_and_mp(df, output_folder, True)
 plot_var_by_grouping_and_mp(df, output_folder, False)
@@ -657,21 +694,6 @@ def calculate_ranking(df, output_folder, limit_to_R2_positive):
 calculate_ranking(df, output_folder, True)
 
 calculate_ranking(df, output_folder, False)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

@@ -77,23 +77,21 @@ def create_features(X, y, n_lags_X, n_lags_y):
     print('Create_features...', flush=True)
     
     Te_mean = pd.DataFrame(X[:,0]).rolling(window=12, min_periods=1).mean().values.reshape(-1,1)
-    # dTe = pd.DataFrame(X[:,0]).diff(1).values.reshape(-1,1)
     
+    # For the current time stamp, Rglob has increased from the previous time stamp
     Rglob = np.sum(X[:,1:3], axis=1).reshape(-1,1)
     dRglob_pos = pd.DataFrame(Rglob).diff(1).values.reshape(-1,1)
-    dRglob_pos[0,:] = dRglob_pos[1,:]
+    dRglob_pos[0,:] = dRglob_pos[1,:] # First value is NaN, which is approximated
     dRglob_pos[dRglob_pos < 0] = 0
+    
+    # For the current time stamp, Rglob has decreased from the previous time stamp
     dRglob_neg = pd.DataFrame(Rglob).diff(1).values.reshape(-1,1)
     dRglob_neg[0,:] = dRglob_neg[1,:]
-    dRglob_neg[dRglob_neg > 0] = 0    
+    dRglob_neg[dRglob_neg > 0] = 0
     
-    # TeRglob = X[:,0].reshape(-1,1) * Rglob.reshape(-1,1)
-    
-    # dws = pd.DataFrame(X[:,4]).diff(1).values.reshape(-1,1)
-    
-    # X = np.hstack((X, Te_mean, dTe, Rglob, dRglob_pos, dRglob_neg, TeRglob, dws))
+    # Concatenate all columns horizontally (side-by-side)
     X = np.hstack((X, Te_mean, dRglob_pos, dRglob_neg))
-    X[0,:] = X[1,:]
+    X[0,:] = X[1,:] # First row is the same as the second row, because dGlob
     
     # Lagged X
     X_copy = X.copy() # Take from X, put to X_copy
@@ -253,19 +251,12 @@ def main(input_folder,
     
 
 if __name__ == '__main__':
-    """
-    # Run multiple times from command line
-    python main.py Tampere1 $idx_start $idx_end
-    python main.py 3 4 6 7 1 2
     
-    python main.py mp_names models optimization_methods N_CV N_ITER N_CPU
-    python main.py 3 4 6 7 1 2 4 10 1
+    # Run multiple times from command line with different options
+    # python3 main.py 0 5 0 48 0 3 3 200 1 0 0
     
-    python3 main.py 0 5 0 48 0 3 3 2 1
-    """
     
     # Input and output folder
-
     input_folder = '/home/laukkara/github/ML_indoor/input'
     # input_folder = r'C:\Local\laukkara\Data\github\ML_indoor\input'
 
