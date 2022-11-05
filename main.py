@@ -306,7 +306,8 @@ if __name__ == '__main__':
     print(sys.argv, flush=True)
     
     # measurement points
-    measurement_point_names = ['Espoo1', 'Espoo2', 'Tampere1', 'Tampere2', 'Valkeakoski']
+    measurement_point_names = ['Espoo1', 'Espoo2', 'Tampere1', 'Tampere2',
+                               'Valkeakoski', 'Klaukkala']
     measurement_point_names = measurement_point_names[int(sys.argv[1]):int(sys.argv[2])]
     print(measurement_point_names, flush=True)
     

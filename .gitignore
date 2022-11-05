@@ -8,6 +8,14 @@
 !README.md
 !ML_indoor.yml
 
+!input/
+!input/Espoo1.csv
+!input/Espoo2.csv
+!input/Tampere1.csv
+!input/Tampere2.csv
+!input/Valkeakoski.csv
+!input/Klaukkala.csv
+
 !main.py
 !myClasses.py
 !myModels.py
