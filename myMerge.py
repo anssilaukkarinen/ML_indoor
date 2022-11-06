@@ -21,8 +21,8 @@ import myResults
 
 #
 # This folder contains the one or many "output_..." folders
-# path_repo_root = r'C:\Local\laukkara\Data\ML_indoor_Narvi'
-path_repo_root = '/lustre/scratch/laukkara/ML_indoor/'
+path_repo_root = r'C:\Local\laukkara\Data\ML_indoor_Narvi'
+# path_repo_root = '/lustre/scratch/laukkara/ML_indoor/'
 
 
 
@@ -37,8 +37,8 @@ if not os.path.exists(folder_merged):
 
 
 
-create_combined = True
-combine_combined = True # True, False
+create_combined = False
+combine_combined = False # True, False
 run_checker = True # True, False
 run_make_sbatch_files = True # True, False
 
@@ -290,7 +290,7 @@ if run_checker:
     optimization_methods = ['pso', 'randomizedsearchcv', 'bayessearchcv']
     
     X_lags = [0, 1] # 0, 1
-    y_lags = [0]    
+    y_lags = [1]    
     
     N_CVs = [3, 4, 5] # 3, 4, 5
     N_ITERs = [10, 20, 50, 100, 200, 500]
