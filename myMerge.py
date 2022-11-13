@@ -38,8 +38,8 @@ if not os.path.exists(folder_merged):
 
 
 
-create_combined = False
-combine_combined = False # True, False
+create_combined = True
+combine_combined = True # True, False
 run_checker = True # True, False
 run_make_sbatch_files = True # True, False
 
