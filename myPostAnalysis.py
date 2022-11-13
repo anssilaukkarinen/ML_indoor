@@ -15,10 +15,17 @@ import numpy as np
 import pickle
 import json
 
+# xlsx_input_time_str = '2022-10-28-10-57-03'
+xlsx_input_time_str = '2022-11-13-01-09-45'
 
-
+# y0
 fname_xlsx_input = os.path.join(r'C:\Local\laukkara\Data\ML_indoor_Narvi',
-                                'df_all_2022-10-28-10-57-03.xlsx')
+                                'y1',
+                                'df_all_{}.xlsx'.format(xlsx_input_time_str))
+
+# y1
+# fname_xlsx_input = os.path.join(r'C:\Local\laukkara\Data\ML_indoor_Narvi',
+#                                 'df_all_2022-10-28-10-57-03.xlsx')
 
 df = pd.read_excel(fname_xlsx_input, index_col=0)
 df.sort_index(inplace=True)
@@ -31,9 +38,9 @@ if not os.path.exists(output_folder):
     os.makedirs(output_folder)
 
 
-time_str = time.strftime('%Y-%m-%d-%H-%M-%S',time.localtime())
+# time_str = time.strftime('%Y-%m-%d-%H-%M-%S',time.localtime())
 xlsx_output_file = os.path.join(output_folder,
-                                'output_{}.xlsx'.format(time_str))
+                                'output_{}.xlsx'.format(xlsx_input_time_str))
 
 with pd.ExcelWriter(xlsx_output_file,
                     mode='w',
