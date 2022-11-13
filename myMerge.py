@@ -24,6 +24,7 @@ import myResults
 # path_repo_root = r'C:\Local\laukkara\Data\ML_indoor_Narvi'
 path_repo_root = '/lustre/scratch/laukkara/ML_indoor/'
 
+folder_github = '/home/laukkara/github/ML_indoor'
 
 
 
@@ -290,7 +291,7 @@ if run_checker:
     optimization_methods = ['pso', 'randomizedsearchcv', 'bayessearchcv']
     
     X_lags = [0, 1] # 0, 1
-    y_lags = [0]    
+    y_lags = [1]    
     
     N_CVs = [3, 4, 5] # 3, 4, 5
     N_ITERs = [10, 20, 50, 100, 200, 500]
@@ -304,7 +305,8 @@ if run_checker:
     
     print(f'n_tot, set 1 = {n_tot}', flush=True)
     
-    path_to_main = '/home/laukkara/github/ML_indoor/main.py'
+    path_to_main = os.path.join(folder_github,
+                                'main.py')
     
     reruns_list_dummy = get_reruns_helper(df_all,
                                           measurement_point_names,
@@ -358,7 +360,7 @@ if run_make_sbatch_files:
     # Read in the base case shell script
     sbatch_template = []
 
-    fname_ML_indoor_template = os.path.join(path_repo_root,
+    fname_ML_indoor_template = os.path.join(folder_github,
                                             'ML_indoor_template.sh')
 
     with open(fname_ML_indoor_template, 'r') as f:
