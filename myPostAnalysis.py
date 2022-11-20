@@ -15,38 +15,53 @@ import numpy as np
 import pickle
 import json
 
-# xlsx_input_time_str = '2022-10-28-10-57-03'
-xlsx_input_time_str = '2022-11-13-01-09-45'
+# Select best from multiple runs
+# Select best from X_lag is 0 or 1; y_lag is 0 or 1
 
-# y0
-fname_xlsx_input = os.path.join(r'C:\Local\laukkara\Data\ML_indoor_Narvi',
-                                'y1',
-                                'df_all_{}.xlsx'.format(xlsx_input_time_str))
 
-# y1
-# fname_xlsx_input = os.path.join(r'C:\Local\laukkara\Data\ML_indoor_Narvi',
-#                                 'df_all_2022-10-28-10-57-03.xlsx')
+
+Narvi_merged_files_folder = r'C:\Local\laukkara\Data\OneDrive - TUNI.fi\PhD\ML_indoor\ML_indoor_Narvi'
+
+github_folder = r'C:\Local\laukkara\Data\github\ML_indoor'
+
+y_lag = 'y1' # 'y0', 'y1'
+
+
+
+######################
+
+# Read in the merger xlsx file from Narvi
+fname_xlsx_input = os.path.join(Narvi_merged_files_folder,
+                                y_lag,
+                                'merged_results',
+                                'df_all.xlsx')
 
 df = pd.read_excel(fname_xlsx_input, index_col=0)
 df.sort_index(inplace=True)
 
 print(df.columns)
 
-output_folder = os.path.join(r'C:\Local\laukkara\Data\github\ML_indoor',
-                             'myPostAnalysis')
+
+
+# Make sure the output folder and output xlsx file exists
+output_folder = os.path.join(github_folder,
+                             'myPostAnalysis',
+                             y_lag)
 if not os.path.exists(output_folder):
     os.makedirs(output_folder)
 
-
-# time_str = time.strftime('%Y-%m-%d-%H-%M-%S',time.localtime())
 xlsx_output_file = os.path.join(output_folder,
-                                'output_{}.xlsx'.format(xlsx_input_time_str))
+                                'output.xlsx')
 
 with pd.ExcelWriter(xlsx_output_file,
                     mode='w',
                     engine='openpyxl',
                     if_sheet_exists='replace') as writer:
     pd.DataFrame(data=[0]).to_excel(writer, sheet_name='start')
+
+
+
+# Some additional input data
 
 figseiz = (5.5, 3.5)
 dpi_val = 200
@@ -94,6 +109,8 @@ plot_single_series(df, output_folder)
 def plot_sorted(df, output_folder):
     # Three increasing lines for train, validation and test data
     # The x-axis is index sorted according to MAE, RMSE or R2
+    
+    # Sort values
     
     linetypes = {'train': '-',
                  'validate': '--',
@@ -537,8 +554,9 @@ def plot_var_by_grouping_and_mp(df, output_folder, limit_to_R2_positive):
     for key_grouper in ['model_name', 'optimization_method', 'N_ITER']:
         
         for col in cols:
-        
-            fig, ax = plt.subplots(figsize=figseiz)
+            
+            # Collect and then plot
+            df_list = []
             
             for mp in df['measurement_point_name'].unique():
                 
@@ -549,37 +567,42 @@ def plot_var_by_grouping_and_mp(df, output_folder, limit_to_R2_positive):
                               .groupby(by=[key_grouper]).mean() \
                               .loc[:, col].copy()
                 
-                if key_grouper == 'model_name':
-                    df_holder.sort_values(ascending=True, inplace=True)
-                
-                df_holder.plot(rot=90,
-                                style='-o',
-                                ms=3,
-                                ax=ax)
-                
-                ax.set_ylabel(col)
-                if ('MAE' in col or 'RMSE' in col) and (fname_key == 'pos'):
-                    ax.set_ylim(bottom=-0.1, top=1.5)
-                elif 'R2' in col:
-                    ax.set_ylim(bottom=-0.1, top=1.1)
-                
-                if key_grouper == 'model_name':
-                    xticks_max_new = df_holder.shape[0]
-                    xticks_max = np.max((xticks_max, xticks_max_new))
-                    
-                
+                df_list.append(df_holder)
                 
             
-                # Write to excel
-                with pd.ExcelWriter(xlsx_output_file,
-                                    mode='a',
-                                    engine='openpyxl') as writer:
-                    sh_name = 'gr_{}_{}_{}_{}'.format(key_grouper[0:4],
-                                                   col.split('_')[0],
-                                                   mp.replace(mp[2:-1],''),
-                                                   fname_key)
-                    df_holder.to_excel(writer,
-                                       sheet_name=sh_name)
+            # sort
+            df_full = pd.concat(df_list, axis=1)
+            df_full = df_full.reindex(index=df_full.mean(axis=1).sort_values(ascending=True).index)
+            
+            # plot
+            fig, ax = plt.subplots(figsize=figseiz)
+                
+            df_full.plot(rot=90,
+                            style='-o',
+                            ms=3,
+                            ax=ax)
+                
+            ax.set_ylabel(col)
+            if ('MAE' in col or 'RMSE' in col) and (fname_key == 'pos'):
+                ax.set_ylim(bottom=-0.1, top=1.5)
+            elif 'R2' in col:
+                ax.set_ylim(bottom=-0.1, top=1.1)
+            
+            if key_grouper == 'model_name':
+                xticks_max_new = df_holder.shape[0]
+                xticks_max = np.max((xticks_max, xticks_max_new))
+                    
+            
+            
+            # Write to excel
+            with pd.ExcelWriter(xlsx_output_file,
+                                mode='a',
+                                engine='openpyxl') as writer:
+                sh_name = 'gr_{}_{}_{}'.format(key_grouper[0:4],
+                                               col.split('_')[0],
+                                               fname_key)
+                df_full.to_excel(writer,
+                                   sheet_name=sh_name)
             
                         
             if key_grouper == 'model_name':
