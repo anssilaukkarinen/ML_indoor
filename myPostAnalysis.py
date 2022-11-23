@@ -77,6 +77,55 @@ col_names_numeric = ['MAE_train', 'MAE_validate', 'MAE_test',
 
 ########################################
 
+# How to define worst cases?
+# -> MAE > ?
+# -> R2 < -3.0
+# -> R2 < 0.0
+# Worst/best from the duplicates
+
+
+# Can I remoe the worst cases easily?
+
+
+cols = ['measurement_point_name', 'model_name', 'optimization_method', \
+        'X_lag', 'y_lag', 'N_CV', 'N_ITER', 'N_CPU']
+    
+key = 'MAE_validate'
+
+# duplicated() is not good, because keeping just the first/last isn't useful
+# idxs_duplicated = df.loc[:, cols].duplicated()
+# print(df.shape)
+# print(idxs_duplicated.shape)
+
+# groupby()
+df_mae = df.groupby(by=cols).min().loc[:, 'MAE_mean_validate_test']
+df_R2 = df.groupby(by=cols).max().loc[:, 'R2_mean_validate_test']
+fig, ax = plt.subplots(figsize=figseiz)
+ax.plot(df_mae, df_R2, '.')
+ax.set_xlim((-0.1, 3))
+ax.set_ylim((-0.1, 1.1))
+
+
+
+
+# diff = max - min
+key1 = 'MAE_mean_validate_test'
+dy = df.groupby(by=cols).max().loc[:, key1] \
+        - df.groupby(by=cols).min().loc[:, key1]
+print(dy.sort_values().iloc[-50:])
+
+
+
+
+
+
+
+
+
+
+
+
+
 def plot_single_series(df, output_folder):
     # Plot scatter plot of values against index
     
@@ -110,51 +159,117 @@ def plot_sorted(df, output_folder):
     # Three increasing lines for train, validation and test data
     # The x-axis is index sorted according to MAE, RMSE or R2
     
-    # Sort values
+    # Sort values according to train, validate and test mean
     
-    linetypes = {'train': '-',
-                 'validate': '--',
-                 'test': '-.'}
-    
+    ylim_top = 0.0
     
     for key1 in ['MAE', 'RMSE', 'R2']:
         
+        
+        cols = [key1 + '_train',
+                key1 + '_validate',
+                key1 + '_test']
+        
+        df_full = df.loc[:, cols].copy()
+        
+        
+        # Plot
         fig, ax = plt.subplots(figsize=figseiz)
         
-        ylim_top = 0.0
+
         
-        for key2 in ['train', 'validate', 'test']:
-            
-            col = key1 + '_' + key2
-            
-            df_single_sorted = df.loc[:, [col]].sort_values(by=col,
-                                                            ascending=True,
-                                                            ignore_index=True)
-            
-            ax.plot(df_single_sorted,
-                    label=key2,
-                    linestyle=linetypes[key2])
-            
-            ax.set_xlabel('Cases, sorted')
-            
-            ylim_top = np.max((ylim_top,
-                               np.quantile(df.loc[:,col].values, 0.98)))
-        
-        if key1 != 'R2':
-            ax.set_ylabel(key1)
-        else:
+        if key1 == 'R2':
             ax.set_ylabel('R$^2$')
+            ylim_top = 1.05
+            is_ascending=False
+        else:
+            ax.set_ylabel(key1)
+            ylim_top = np.max((ylim_top,
+                               np.quantile(df_full.values, q=0.98, axis=0).min() ))
+            is_ascending=True
+        
+        idx_new = df_full.loc[:, cols[1:]].mean(axis=1).sort_values(ascending=is_ascending).index
+        
+        df_full = df_full.reindex(index=idx_new) \
+                .rolling(window=20, min_periods=1).mean() \
+                .dropna(axis=0, how='any') \
+                .reset_index(drop=True)
+        
+        ax.plot(df_full)
+        ax.set_xlabel('Cases, sorted')
+        
         ax.set_ylim(bottom=-0.1, top=ylim_top)
-        ax.legend()
+        ax.legend(df_full.columns)
         fname = os.path.join(output_folder,
                              f'sorted_{key1}.png')
         fig.savefig(fname, dpi=dpi_val, bbox_inches='tight')
         plt.close(fig)
+    
+    return(df_full)
 
-plot_sorted(df, output_folder)
+df_full = plot_sorted(df, output_folder)
 # In R2 the training, validation and testing lines are visually more apart,
 # than the MAE and RMSE lines.
 # There is a long plateau and small number of very bad and a little bit better cases.
+
+
+
+
+
+
+
+def plot_sorted2(df, output_folder):
+    # Similar to plot_sorted(), but the values to be plotted are group means
+    # from all measurement_points
+    
+    # add ylab, xlabel
+    
+    cols = ['measurement_point_name', 'model_name', 'optimization_method',
+            'X_lag', 'y_lag', 'N_CV', 'N_ITER', 'N_CPU']
+    
+    for key1 in ['MAE', 'RMSE', 'R2']:
+        
+        if key1 == 'R2':
+            ylim_top = 1.1
+            is_ascending = False
+        
+        else:
+            ylim_top = 3.0
+            is_ascending = True
+        
+        cols_to_plot = [key1 + '_train',
+                        key1 + '_validate',
+                        key1 + '_test']
+        
+        # Plot
+        fig, ax = plt.subplots()
+        
+        df_group_means = df.groupby(by=cols[1:]).mean().loc[:, cols_to_plot]
+        
+        idx_new = df_group_means.loc[:, cols_to_plot[1:]].mean(axis=1) \
+                    .sort_values(ascending=is_ascending).index
+        
+        df_group_means_sorted = df_group_means.reindex(index=idx_new) \
+                                    .rolling(window=10, min_periods=1).mean() \
+                                    .dropna(axis=0, how='any') \
+                                    .reset_index(drop=True)
+        
+        df_group_means_sorted.plot(ax=ax)
+        
+        ax.set_ylim((-0.1, ylim_top))
+        ax.set_ylabel(key1 + ', mean of mp, rolling average')
+        ax.set_xlabel('Cases, sorted')
+        ax.grid(visible=True)
+        
+
+plot_sorted2(df, output_folder)
+        
+        
+        
+
+
+
+
 
 
 
