@@ -20,18 +20,19 @@ import json
 
 
 
-Narvi_merged_files_folder = r'C:\Local\laukkara\Data\OneDrive - TUNI.fi\PhD\ML_indoor\ML_indoor_Narvi'
+Narvi_folder = os.path.join(r'C:\Users\laukkara\OneDrive - TUNI.fi\PhD',
+                            r'1_ML_indoor\ML_indoor_Narvi')
 
-github_folder = r'C:\Local\laukkara\Data\github\ML_indoor'
+#github_folder = r'C:\Local\laukkara\Data\github\ML_indoor'
 
-y_lag = 'y1' # 'y0', 'y1'
+y_lag = 'y0' # 'y0', 'y1'
 
 
 
 ######################
 
 # Read in the merger xlsx file from Narvi
-fname_xlsx_input = os.path.join(Narvi_merged_files_folder,
+fname_xlsx_input = os.path.join(Narvi_folder,
                                 y_lag,
                                 'merged_results',
                                 'df_all.xlsx')
@@ -44,7 +45,7 @@ print(df.columns)
 
 
 # Make sure the output folder and output xlsx file exists
-output_folder = os.path.join(github_folder,
+output_folder = os.path.join(Narvi_folder,
                              'myPostAnalysis',
                              y_lag)
 if not os.path.exists(output_folder):
@@ -54,9 +55,12 @@ xlsx_output_file = os.path.join(output_folder,
                                 'output.xlsx')
 
 with pd.ExcelWriter(xlsx_output_file,
-                    mode='w',
+                    mode='a',
                     engine='openpyxl',
                     if_sheet_exists='replace') as writer:
+    # This didn't work first. You need to open a desktop excel program
+    # and save an empty file with this name to this locatio,
+    # and then the current code starts to work.
     pd.DataFrame(data=[0]).to_excel(writer, sheet_name='start')
 
 
@@ -73,6 +77,8 @@ col_names_numeric = ['MAE_train', 'MAE_validate', 'MAE_test',
                     'wall_clock_time_minutes']
 
 
+cols_dup = ['measurement_point_name', 'model_name', 'optimization_method', \
+            'X_lag', 'y_lag', 'N_CV', 'N_ITER', 'N_CPU']
 
 
 ########################################
@@ -84,13 +90,32 @@ col_names_numeric = ['MAE_train', 'MAE_validate', 'MAE_test',
 # Worst/best from the duplicates
 
 
-# Can I remoe the worst cases easily?
 
 
-cols = ['measurement_point_name', 'model_name', 'optimization_method', \
-        'X_lag', 'y_lag', 'N_CV', 'N_ITER', 'N_CPU']
-    
-key = 'MAE_validate'
+# diff = max - min
+key1 = 'MAE_mean_validate_test'
+key1_max = 10
+
+dy = df.groupby(by=cols_dup).max().loc[:, key1] \
+        - df.groupby(by=cols_dup).min().loc[:, key1]
+dy.sort_values(inplace=True, ascending=True)
+print('dy.shape = {}'.format(dy.shape))
+print('n for dy <= {} -> {}'.format(key1_max, ( dy <= key1_max).sum() ))
+print('n for dy > {} -> {}'.format(key1_max, (dy > key1_max).sum() ))
+
+idxs = dy > key1_max
+
+dy_bigdiff = dy.loc[idxs].reset_index(drop=False)
+
+for col_name in dy_bigdiff.columns[:-1]:
+    print('Next coming up:', col_name)
+    print(dy_bigdiff.groupby(by=[col_name]).count().iloc[:,-1])
+    print('\n')
+
+
+
+# Can I remove the worst cases easily?
+
 
 # duplicated() is not good, because keeping just the first/last isn't useful
 # idxs_duplicated = df.loc[:, cols].duplicated()
@@ -98,23 +123,14 @@ key = 'MAE_validate'
 # print(idxs_duplicated.shape)
 
 # groupby()
-df_mae = df.groupby(by=cols).min().loc[:, 'MAE_mean_validate_test']
-df_R2 = df.groupby(by=cols).max().loc[:, 'R2_mean_validate_test']
+key = 'MAE_validate'
+
+df_mae = df.groupby(by=cols_dup).min().loc[:, 'MAE_mean_validate_test']
+df_R2 = df.groupby(by=cols_dup).max().loc[:, 'R2_mean_validate_test']
 fig, ax = plt.subplots(figsize=figseiz)
 ax.plot(df_mae, df_R2, '.')
 ax.set_xlim((-0.1, 3))
 ax.set_ylim((-0.1, 1.1))
-
-
-
-
-# diff = max - min
-key1 = 'MAE_mean_validate_test'
-dy = df.groupby(by=cols).max().loc[:, key1] \
-        - df.groupby(by=cols).min().loc[:, key1]
-print(dy.sort_values().iloc[-50:])
-
-
 
 
 
@@ -188,10 +204,11 @@ def plot_sorted(df, output_folder):
                                np.quantile(df_full.values, q=0.98, axis=0).min() ))
             is_ascending=True
         
-        idx_new = df_full.loc[:, cols[1:]].mean(axis=1).sort_values(ascending=is_ascending).index
+        idx_new = df_full.loc[:, cols[1:]].mean(axis=1) \
+                        .sort_values(ascending=is_ascending).index
         
         df_full = df_full.reindex(index=idx_new) \
-                .rolling(window=20, min_periods=1).mean() \
+                .rolling(window=10, min_periods=10).mean() \
                 .dropna(axis=0, how='any') \
                 .reset_index(drop=True)
         
@@ -244,13 +261,14 @@ def plot_sorted2(df, output_folder):
         # Plot
         fig, ax = plt.subplots()
         
-        df_group_means = df.groupby(by=cols[1:]).mean().loc[:, cols_to_plot]
+        df_group_means = df.groupby(by=cols[1:]) \
+                .mean(numeric_only=True).loc[:, cols_to_plot]
         
         idx_new = df_group_means.loc[:, cols_to_plot[1:]].mean(axis=1) \
                     .sort_values(ascending=is_ascending).index
         
         df_group_means_sorted = df_group_means.reindex(index=idx_new) \
-                                    .rolling(window=10, min_periods=1).mean() \
+                                    .rolling(window=10, min_periods=10).mean() \
                                     .dropna(axis=0, how='any') \
                                     .reset_index(drop=True)
         
@@ -284,10 +302,15 @@ def plot_R2_vs_RMSE(df, output_folder):
         
         fig, ax = plt.subplots(figsize=figseiz)
         
-        for label, grp in df.groupby(['measurement_point_name']):
+        for mp in df['measurement_point_name'].unique():
+            
+            idxs = (df['measurement_point_name'] == mp)
+            
+            df_group = df.loc[idxs, :]
+            
             ax.scatter(x=f'RMSE_{key}', y=f'R2_{key}', \
                        s=5.0, marker=next(markers),
-                       data=grp, label=label)
+                       data=df_group, label=mp)
         ax.set_ylim((-0.1, 1.1))
         ax.set_xlim((-0.1, 2.5))
         ax.grid(True)
@@ -314,10 +337,16 @@ def plot_R2_vs_MAE(df, output_folder):
         
         fig, ax = plt.subplots(figsize=figseiz)
         
-        for label, grp in df.groupby(['measurement_point_name']):
+        # The commented line produced 1-tuple error
+        # for label, grp in df.groupby(['measurement_point_name']):
+        for mp in df['measurement_point_name'].unique():
+            
+            idxs = (df['measurement_point_name'] == mp)
+            df_group = df.loc[idxs, :]
+            
             ax.scatter(x=f'MAE_{key}', y=f'R2_{key}', \
                         s=5.0, marker=next(markers),
-                        data=grp, label=label)
+                        data=df_group, label=mp)
         ax.set_ylim((-0.1, 1.1))
         ax.set_xlim((-0.1, 2.5))
         ax.grid(True)
@@ -432,6 +461,7 @@ def plot_boxplot_by_mp_and_other(df, output_folder):
             print(df_dummy)
             with pd.ExcelWriter(xlsx_output_file,
                                 mode='a',
+                                if_sheet_exists='replace',
                                 engine='openpyxl') as writer:
                 sh_name = 'count_{}_{}'.format(y_target.split('_')[0],
                                             y_key2)
@@ -483,7 +513,8 @@ plot_boxplot_by_mp_and_other(df, output_folder)
 def calculate_average_time_per_optimization_method(df):
     # List of wall_clock_time
 
-    df_holder = df.groupby(by=['optimization_method']).mean() \
+    df_holder = df.groupby(by=['optimization_method']) \
+                .mean(numeric_only=True) \
                  .loc[:,'wall_clock_time_minutes']
     
     print('\nAverage time per optimization_method:')
@@ -492,6 +523,7 @@ def calculate_average_time_per_optimization_method(df):
 
     with pd.ExcelWriter(xlsx_output_file,
                         mode='a',
+                        if_sheet_exists='replace',
                         engine='openpyxl') as writer:
     
         df_dummy.to_excel(writer,
@@ -547,6 +579,7 @@ def calculate_pivot_table_averages_per_MLO(df, include_all):
         
         with pd.ExcelWriter(xlsx_output_file,
                             mode='a',
+                            if_sheet_exists='replace',
                             engine='openpyxl') as writer:
             
             sh_name = y_key.split('_')[0]
@@ -571,7 +604,7 @@ def plot_MAE_vs_wall_clock_time(df, output_folder):
     
     fig, ax = plt.subplots(figsize=figseiz)
     
-    df.groupby(by=['model_name']).mean() \
+    df.groupby(by=['model_name']).mean(numeric_only=True) \
         .plot.scatter(x='wall_clock_time_minutes',
                       y='MAE_mean_validate_test',
                       ax=ax)
@@ -601,7 +634,8 @@ def plot_wall_clock_time_by_grouping(df, output_folder):
     
         fig, ax = plt.subplots(figsize=figseiz)
 
-        df_holder = df.groupby(by=[key_grouper]).mean() \
+        df_holder = df.loc[:, [key_grouper, 'wall_clock_time_minutes'] ] \
+                     .groupby(by=[key_grouper]).mean(numeric_only=True) \
                      .loc[:,'wall_clock_time_minutes']
         
         df_dummy = df_holder.sort_values(ascending=True)
@@ -611,6 +645,7 @@ def plot_wall_clock_time_by_grouping(df, output_folder):
         
         with pd.ExcelWriter(xlsx_output_file,
                             mode='a',
+                            if_sheet_exists='replace',
                             engine='openpyxl') as writer:
         
             sh_name = 'wall_{}'.format(key_grouper)
@@ -678,7 +713,7 @@ def plot_var_by_grouping_and_mp(df, output_folder, limit_to_R2_positive):
                 # Get rows per measurement_point
                 idxs_mp = idxs & (df['measurement_point_name'] == mp)
                 
-                df_holder = df.loc[idxs_mp, :] \
+                df_holder = df.loc[idxs_mp, :].loc[:, [key_grouper, col] ] \
                               .groupby(by=[key_grouper]).mean() \
                               .loc[:, col].copy()
                 
@@ -712,6 +747,7 @@ def plot_var_by_grouping_and_mp(df, output_folder, limit_to_R2_positive):
             # Write to excel
             with pd.ExcelWriter(xlsx_output_file,
                                 mode='a',
+                                if_sheet_exists='replace',
                                 engine='openpyxl') as writer:
                 sh_name = 'gr_{}_{}_{}'.format(key_grouper[0:4],
                                                col.split('_')[0],
@@ -770,7 +806,7 @@ def calculate_ranking(df, output_folder, limit_to_R2_positive):
                     .groupby(by=['measurement_point_name',
                                  'optimization_method',
                                  'model_name']) \
-                    .mean() \
+                    .mean(numeric_only=True) \
                     .loc[:, ['R2_mean_validate_test',
                              'MAE_mean_validate_test',
                              'RMSE_mean_validate_test']] \
@@ -828,6 +864,7 @@ def calculate_ranking(df, output_folder, limit_to_R2_positive):
     
     with pd.ExcelWriter(xlsx_output_file,
                         mode='a',
+                        if_sheet_exists='replace',
                         engine='openpyxl') as writer:
         
         sh_name = 'relrank_{}'.format(fname_key)
@@ -850,7 +887,7 @@ calculate_ranking(df, output_folder, False)
 
 
 
-print('myMerge.py, END', flush=True)
+print('myPostAnalysis.py, END', flush=True)
 
 
 
