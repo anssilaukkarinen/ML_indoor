@@ -40,8 +40,6 @@ fname_xlsx_input = os.path.join(Narvi_folder,
 df = pd.read_excel(fname_xlsx_input, index_col=0)
 df.sort_index(inplace=True)
 
-print(df.columns)
-
 
 
 # Make sure the output folder and output xlsx file exists
@@ -54,14 +52,20 @@ if not os.path.exists(output_folder):
 xlsx_output_file = os.path.join(output_folder,
                                 'output.xlsx')
 
-with pd.ExcelWriter(xlsx_output_file,
-                    mode='a',
-                    engine='openpyxl',
-                    if_sheet_exists='replace') as writer:
-    # This didn't work first. You need to open a desktop excel program
-    # and save an empty file with this name to this locatio,
-    # and then the current code starts to work.
-    pd.DataFrame(data=[0]).to_excel(writer, sheet_name='start')
+if not os.path.exists(xlsx_output_file):
+    with pd.ExcelWriter(xlsx_output_file,
+                        mode='w',
+                        engine='openpyxl') as writer:
+        # This didn't work first. You need to open a desktop excel program
+        # and save an empty file with this name to this locatio,
+        # and then the current code starts to work.
+        pd.DataFrame(data=[0]).to_excel(writer, sheet_name='start')
+
+
+fname_logfile = os.path.join(output_folder,
+                             '{}.log'.format(y_lag))
+log_file_handle = open(fname_logfile, mode='w')
+
 
 
 
@@ -90,6 +94,9 @@ cols_dup = ['measurement_point_name', 'model_name', 'optimization_method', \
 # Worst/best from the duplicates
 
 
+print(df.columns,
+      file=log_file_handle)
+
 
 
 # diff = max - min
@@ -99,18 +106,32 @@ key1_max = 10
 dy = df.groupby(by=cols_dup).max().loc[:, key1] \
         - df.groupby(by=cols_dup).min().loc[:, key1]
 dy.sort_values(inplace=True, ascending=True)
-print('dy.shape = {}'.format(dy.shape))
-print('n for dy <= {} -> {}'.format(key1_max, ( dy <= key1_max).sum() ))
-print('n for dy > {} -> {}'.format(key1_max, (dy > key1_max).sum() ))
+
+print('dy.shape = {}'.format(dy.shape), 
+      file=log_file_handle)
+
+print('n for dy <= {} -> {}'.format(key1_max, ( dy <= key1_max).sum() ),
+      file=log_file_handle)
+
+print('n for dy > {} -> {}'.format(key1_max, (dy > key1_max).sum() ), 
+      file=log_file_handle)
+
+
+
 
 idxs = dy > key1_max
 
 dy_bigdiff = dy.loc[idxs].reset_index(drop=False)
 
 for col_name in dy_bigdiff.columns[:-1]:
-    print('Next coming up:', col_name)
-    print(dy_bigdiff.groupby(by=[col_name]).count().iloc[:,-1])
-    print('\n')
+    print('Next coming up:', col_name, 
+          file=log_file_handle)
+    
+    print(dy_bigdiff.groupby(by=[col_name]).count().iloc[:,-1], 
+          file=log_file_handle)
+    
+    print('\n',
+          file=log_file_handle)
 
 
 
@@ -131,7 +152,10 @@ fig, ax = plt.subplots(figsize=figseiz)
 ax.plot(df_mae, df_R2, '.')
 ax.set_xlim((-0.1, 3))
 ax.set_ylim((-0.1, 1.1))
-
+fname = os.path.join(output_folder,
+                     'diff_MAE_vs_R2.png')
+fig.savefig(fname, dpi=dpi_val, bbox_inches='tight')
+plt.close(fig)
 
 
 
@@ -251,7 +275,8 @@ def plot_sorted2(df, output_folder):
             is_ascending = False
         
         else:
-            ylim_top = 3.0
+            # ylim_top = 3.0
+            ylim_top = 30.0
             is_ascending = True
         
         cols_to_plot = [key1 + '_train',
@@ -278,6 +303,10 @@ def plot_sorted2(df, output_folder):
         ax.set_ylabel(key1 + ', mean of mp, rolling average')
         ax.set_xlabel('Cases, sorted')
         ax.grid(visible=True)
+        fname = os.path.join(output_folder,
+                             'plot_sorted2_{}.png'.format(key1))
+        fig.savefig(fname, dpi=dpi_val, bbox_inches='tight')
+        plt.close(fig)
         
 
 plot_sorted2(df, output_folder)
@@ -377,11 +406,17 @@ def plot_boxplot_by_mp(df, output_folder):
     # Boxplots with five box-and-whiskers plots
     # The y-data is the main indicators
     
+    print('\n\nplot_boxplot_by_mp', file=log_file_handle)
+    
     idxs = (df.loc[:, 'R2_validate'] > 0.0) & (df.loc[:,'R2_test'] > 0.0)
-    print('idxs.sum():', idxs.sum())
+    print('idxs.sum():', idxs.sum(),
+          file=log_file_handle)
     
     df_dummy = df.loc[idxs, :].groupby('measurement_point_name').count().iloc[:,0]
-    print(df_dummy)
+    print('df_dummy:', 
+          file=log_file_handle)
+    print(df_dummy,
+          file=log_file_handle)
     
     with pd.ExcelWriter(xlsx_output_file,
                         mode='a',
@@ -439,8 +474,12 @@ def plot_boxplot_by_mp_and_other(df, output_folder):
     # Boxplots with two controlled variables
     # measurement point and Xlag/ylag/opt/N_CV
     
+    print('\n\nplot_boxplot_ny_mp_and_other',
+          file=log_file_handle)
+    
     idxs = (df.loc[:, 'R2_validate'] > 0.0) & (df.loc[:,'R2_test'] > 0.0)
-    print('idxs.sum():', idxs.sum())
+    print('idxs.sum():', idxs.sum(),
+          file=log_file_handle)
     
     
     xlabelstr = {'X_lag': 'Xlag',
@@ -457,8 +496,10 @@ def plot_boxplot_by_mp_and_other(df, output_folder):
             df_dummy = df.loc[idxs, :] \
                       .groupby(by=['measurement_point_name', y_key2]) \
                       .count().iloc[:,0]
-            print('\nGroup counts:')
-            print(df_dummy)
+            print('\nGroup counts:',
+                  file=log_file_handle)
+            print(df_dummy,
+                  file=log_file_handle)
             with pd.ExcelWriter(xlsx_output_file,
                                 mode='a',
                                 if_sheet_exists='replace',
@@ -512,14 +553,19 @@ plot_boxplot_by_mp_and_other(df, output_folder)
 
 def calculate_average_time_per_optimization_method(df):
     # List of wall_clock_time
+    
+    print('\n\ncalculate_average_time_per_optimization_method',
+          file=log_file_handle)
 
     df_holder = df.groupby(by=['optimization_method']) \
                 .mean(numeric_only=True) \
                  .loc[:,'wall_clock_time_minutes']
     
-    print('\nAverage time per optimization_method:')
+    print('\nAverage time per optimization_method:',
+          file=log_file_handle)
     df_dummy = df_holder.sort_values(ascending=True).round(1)
-    print(df_dummy)
+    print(df_dummy,
+          file=log_file_handle)
 
     with pd.ExcelWriter(xlsx_output_file,
                         mode='a',
@@ -572,9 +618,11 @@ def calculate_pivot_table_averages_per_MLO(df, include_all):
                              ascending=('R2' not in y_key),
                              inplace=True)
         
-        print('\npivot_table results')
+        print('\npivot_table results',
+              file=log_file_handle)
 
-        print(df_pivot.round(2).to_string())
+        print(df_pivot.round(2).to_string(),
+              file=log_file_handle)
         
         
         with pd.ExcelWriter(xlsx_output_file,
@@ -629,6 +677,9 @@ plot_MAE_vs_wall_clock_time(df, output_folder)
 
 def plot_wall_clock_time_by_grouping(df, output_folder):
     
+    print('\n\nplot_wall_clock_time_by_grouping',
+          file=log_file_handle)
+    
     
     for key_grouper in ['model_name', 'optimization_method', 'N_ITER']:
     
@@ -641,7 +692,8 @@ def plot_wall_clock_time_by_grouping(df, output_folder):
         df_dummy = df_holder.sort_values(ascending=True)
         df_dummy.sort_values(inplace=True)
         
-        print(df_dummy.round(1))
+        print(df_dummy.round(1),
+              file=log_file_handle)
         
         with pd.ExcelWriter(xlsx_output_file,
                             mode='a',
@@ -681,6 +733,8 @@ def plot_var_by_grouping_and_mp(df, output_folder, limit_to_R2_positive):
     # Some of the cases had results way off, which distorts the results
     # overall. These are however kept here for documentation purposes.
     
+    print('\n\nplot_var_by_grouping_and_mp',
+          file=log_file_handle)
     
     cols = ['wall_clock_time_minutes',
             'MAE_mean_validate_test',
@@ -691,12 +745,14 @@ def plot_var_by_grouping_and_mp(df, output_folder, limit_to_R2_positive):
     
     if limit_to_R2_positive:
         # Calculate ranks only for better-than-benchmark cases
-        print('vars only for R2_validate > 0 and R2_test > 0', flush=True)
+        print('vars only for R2_validate > 0 and R2_test > 0', flush=True,
+              file=log_file_handle)
         idxs = (df['R2_validate'] > 0) & (df['R2_test'] > 0)
         fname_key = 'pos'
     else:
         # Include all calculated cases in the ranking
-        print('vars among all cases', flush=True)
+        print('vars among all cases', flush=True,
+              file=log_file_handle)
         idxs = df.index == df.index
         fname_key = 'all'
     
@@ -788,14 +844,19 @@ plot_var_by_grouping_and_mp(df, output_folder, False)
 
 def calculate_ranking(df, output_folder, limit_to_R2_positive):
     
+    print('\n\ncalculate_ranking',
+          file=log_file_handle)
+    
     if limit_to_R2_positive:
         # Calculate ranks only for better-than-benchmark cases
-        print('Rankings only for R2_validate > 0 and R2_test > 0', flush=True)
+        print('Rankings only for R2_validate > 0 and R2_test > 0', flush=True,
+              file=log_file_handle)
         idxs = (df['R2_validate'] > 0) & (df['R2_test'] > 0)
         fname_key = 'pos'
     else:
         # Include all calculated cases in the ranking
-        print('Rankings among all cases', flush=True)
+        print('Rankings among all cases', flush=True,
+              file=log_file_handle)
         idxs = df.index
         fname_key = 'all'
     
@@ -860,7 +921,8 @@ def calculate_ranking(df, output_folder, limit_to_R2_positive):
     
     df_res_ranks_relative = df_res_ranks / max_rank_sum
     
-    print(df_res_ranks_relative.round(2))
+    print(df_res_ranks_relative.round(2),
+          file=log_file_handle)
     
     with pd.ExcelWriter(xlsx_output_file,
                         mode='a',
@@ -887,8 +949,9 @@ calculate_ranking(df, output_folder, False)
 
 
 
-print('myPostAnalysis.py, END', flush=True)
+print('myPostAnalysis.py, END', flush=True,
+      file=log_file_handle)
 
 
-
+log_file_handle.close()
 
