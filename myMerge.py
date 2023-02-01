@@ -19,12 +19,14 @@ import myResults
 
 
 
-#
-# This folder contains the one or many "output_..." folders
-# path_repo_root = r'C:\Local\laukkara\Data\ML_indoor_Narvi'
-path_repo_root = '/lustre/scratch/laukkara/ML_indoor/'
 
-folder_github = '/home/laukkara/github/ML_indoor'
+# This folder contains the one or many "output_..." folders
+path_repo_root = r'C:\Users\laukkara\Data\ML_indoor_Narvi'
+# path_repo_root = '/lustre/scratch/laukkara/ML_indoor/'
+
+# Folder for slurm templates
+folder_github = r'C:\Users\laukkara\github\ML_indoor'
+# folder_github = '/home/laukkara/github/ML_indoor'
 
 
 
@@ -32,8 +34,6 @@ folder_merged = os.path.join(path_repo_root,
                              'merged_results')
 if not os.path.exists(folder_merged):
     os.makedirs(folder_merged)
-
-
 
 
 
@@ -297,6 +297,8 @@ if run_checker:
     N_ITERs = [10, 20, 50, 100, 200, 500]
     N_CPUs = [1]
     
+    
+    ## Here is other code
     n_tot = len(measurement_point_names) \
             * len(model_names) \
             * len(optimization_methods) \

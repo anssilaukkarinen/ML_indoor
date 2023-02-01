@@ -23,6 +23,7 @@ from scipy.stats import loguniform as sp_loguniform # half-open, real numbers ->
 # Optimization methods
 # https://pythonhosted.org/pyswarm/
 # This can be installed directly from github using conda
+# pip install git+https://github.com/tisimst/pyswarm
 from pyswarm import pso
 
 from sklearn.model_selection import RandomizedSearchCV

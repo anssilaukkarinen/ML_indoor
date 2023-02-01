@@ -4,7 +4,14 @@ Created on Tue Sep  1 10:35:57 2020
 
 @author: laukkara
 
-Workflow:
+
+Workflow, local laptop:
+python3 main.py <args>
+
+
+
+
+Workflow, Narvi:
 1) Create slurm sbatch submission files that use arrays
 2) Submit multiple sbatch files by running a bash script ("path/to/./ML_indoor_all.sh")
 3) Submit: "sbatch ML_indoor_merge.sh"
@@ -12,6 +19,20 @@ Workflow:
 5) Move the previous rerun files to storage folder and run: "sbatch ML_indoor_merge.sh"
 6) Copy-paste "df_all.xlsx" to local computer and run: "myPostAnalysis.py"
 7) Report results.
+    
+python3 path/to/main.py 
+    idx_case_start
+    idx_case_end
+    idx_model_start
+    idx_model_end
+    idx_optimization_start
+    idx_optimization_end
+    N_CV
+    N_ITER
+    N_CPU
+    n_lags_X
+    n_lags_y
+
 
 """
 
@@ -257,11 +278,11 @@ if __name__ == '__main__':
     
     
     # Input and output folder
-    input_folder = '/home/laukkara/github/ML_indoor/input'
-    # input_folder = r'C:\Local\laukkara\Data\github\ML_indoor\input'
+    # input_folder = '/home/laukkara/github/ML_indoor/input'
+    input_folder = r'C:\Users\laukkara\github\ML_indoor\input'
 
-    output_folder_base = '/lustre/scratch/laukkara/ML_indoor'
-    # output_folder_base = r'C:\Local\laukkara\Data\github\ML_indoor'
+    # output_folder_base = '/lustre/scratch/laukkara/ML_indoor'
+    output_folder_base = r'C:\Users\laukkara\Data\ML_indoor_Narvi'
 
     #output_folder_custom_str = 'output_2022-09-06-00-06-34'
     # output_folder_custom_str = 'output_2022-09-16-21-53-41'
