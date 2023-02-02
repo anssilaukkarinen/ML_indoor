@@ -34,6 +34,8 @@ python3 path/to/main.py
     n_lags_y
 
 
+
+
 """
 
 import sys
@@ -273,18 +275,15 @@ def main(input_folder,
 
 if __name__ == '__main__':
     
-    # Run multiple times from command line with different options
-    # python3 main.py 0 5 0 48 0 3 3 200 1 0 0
-    
     
     # Input and output folder
-    # input_folder = '/home/laukkara/github/ML_indoor/input'
-    input_folder = r'C:\Users\laukkara\github\ML_indoor\input'
+    input_folder = '/home/laukkara/github/ML_indoor/input'
+    # input_folder = r'C:\Users\laukkara\github\ML_indoor\input'
 
-    # output_folder_base = '/lustre/scratch/laukkara/ML_indoor'
-    output_folder_base = r'C:\Users\laukkara\Data\ML_indoor_Narvi'
-
-    #output_folder_custom_str = 'output_2022-09-06-00-06-34'
+    output_folder_base = '/lustre/scratch/laukkara/ML_indoor'
+    # output_folder_base = r'C:\Users\laukkara\Data\ML_indoor_Narvi'
+    
+    
     # output_folder_custom_str = 'output_2022-09-16-21-53-41'
     output_folder_custom_str = ''
     
@@ -338,15 +337,14 @@ if __name__ == '__main__':
     # QuantileRegressor
     # TweedieRegressor (Poisson, Gamma, Inverse Gaussian)
     
-    # ML methods, 0 48
-    # kneighbors uniform and onwards 27 48
-    # kernelridge: 12-18
-    # kernelridge sigmoid 15 16
-    model_names = ['svrpoly',
-                   'kernelridgesigmoid',
-                   'kernelridgecosine',
-                   'kernelridgepolynomial',
+    
+    model_names = ['kernelridgesigmoid',
                    'nusvrpoly',
+                   'nusvrrbf',
+                   'svrlinear',
+                   'svrpoly',
+                   'kneighborsregressoruniform',
+                   'kneighborsregressordistance',
                     'dummyregressor',
                     'expfunc',
                     'piecewisefunc',
@@ -362,15 +360,13 @@ if __name__ == '__main__':
                     'kernelridgelinear',
                     'kernelridgerbf',
                     'kernelridgelaplacian',
+                    'kernelridgecosine',
+                    'kernelridgepolynomial',
                     'linearsvr',
                     'nusvrlinear',
-                    'nusvrrbf',
                     'nusvrsigmoid',
-                    'svrlinear',
                     'svrrbf',
                     'svrsigmoid',
-                    'kneighborsregressoruniform',
-                    'kneighborsregressordistance',
                     'decisiontreeregressorbest',
                     'decisiontreeregressorrandom',
                     'extratreeregressorbest',

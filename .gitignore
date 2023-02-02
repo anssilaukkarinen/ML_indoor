@@ -17,6 +17,7 @@
 !input/Klaukkala.csv
 
 !main.py
+!myCreate_sbatch_files.py
 !myClasses.py
 !myModels.py
 !myResults.py

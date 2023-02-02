@@ -1,14 +1,14 @@
 #!/bin/bash
-#SBATCH --job-name=ML_indoor
+#SBATCH --job-name={JOB_NAME}
 #SBATCH --mail-type=NONE
 # SBATCH --partition=test
 #SBATCH --partition=normal
 #SBATCH --ntasks=1             # Run with single wall clock
 #SBATCH --cpus-per-task=1      # Number of CPU cores per task
 # SBATCH --nodes=1              # Run all processes on a single node
-#SBATCH --mem=16GB
-#SBATCH --time=4-00:00:00
-#SBATCH --array=5-47
+#SBATCH --mem=24GB
+#SBATCH --time=7-00:00:00
+#SBATCH --array={ARRAY}
 #SBATCH --output=/lustre/scratch/laukkara/ML_indoor/%A_%a_stdout.log  # Standard output and error log
 #SBATCH --error=/lustre/scratch/laukkara/ML_indoor/%A_%a_stderr.log
 
@@ -52,8 +52,8 @@ source activate /home/laukkara/.conda/envs/ML_indoor # This didn't give error
 echo "Begin!"
 
 
-python3 /home/laukkara/github/ML_indoor/main.py 0 5 $SLURM_ARRAY_TASK_ID $(( $SLURM_ARRAY_TASK_ID + 1 )) 2 3 3 10 1 0 0
-
+{FUNCTION_CALL}
 
 date
+echo "This is the last line of the sbatch file"
 
