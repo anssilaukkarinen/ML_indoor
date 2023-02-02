@@ -9,8 +9,8 @@
 #SBATCH --mem=24GB
 #SBATCH --time=7-00:00:00
 #SBATCH --array={ARRAY}
-#SBATCH --output=/lustre/scratch/laukkara/ML_indoor/%A_%a_stdout.log  # Standard output and error log
-#SBATCH --error=/lustre/scratch/laukkara/ML_indoor/%A_%a_stderr.log
+#SBATCH --output=/lustre/scratch/laukkara/ML_indoor/slurm_logs/%A_%a_stdout.log  # Standard output and error log
+#SBATCH --error=/lustre/scratch/laukkara/ML_indoor/slurm_logs/%A_%a_stderr.log
 
 # One task is always allocated to one node by default
 # %A and %a are filename patterns that sbatch allows, they are not available in general
