@@ -10,17 +10,11 @@ import time
 
 
 # folder_github = r'C:\Users\laukkara\github\ML_indoor'
-folder_github = r'/home/laukkara/github/ML_indoor/input'
-
-path_to_main = os.path.join(folder_github,
-                            'main.py')
-    
-slurm_template_file_path = os.path.join(folder_github,
-                                        'ML_indoor_template.sh')
+folder_github = r'/home/laukkara/github/ML_indoor'
 
 
 # output_folder_base = os.path.join(r'C:\Users\laukkara\Data\ML_indoor_Narvi')
-output_Folder_base = r'/lustre/scratch/laukkara/ML_indoor'
+output_folder_base = r'/lustre/scratch/laukkara/ML_indoor'
 
 
 
@@ -139,6 +133,9 @@ if create_or_check == 'create':
     
     print('Create new sbatch files', flush=True)
     
+    path_to_main = os.path.join(folder_github,
+                                'main.py')
+    
     
     # Make sure output folder exists
     time_str = time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime())
@@ -148,7 +145,7 @@ if create_or_check == 'create':
         os.makedirs(folder_sbatch)
 
 
-    # Create command line 
+    # Create command line prompts
     
     command_line_prompts_list = []
     
@@ -274,7 +271,7 @@ if create_or_check == 'create':
                 
     
     
-    # Write the single sbatch calls to a single shell script file
+    # Write the single sbatch calls to a shell script file
     fname = os.path.join(folder_sbatch,
                          'ML_indoor_shell_script_for_sbatch_files.sh')
     with open(fname, 'w') as f:
