@@ -12,13 +12,18 @@ python3 main.py <args>
 
 
 Workflow, Narvi:
-1) Create slurm sbatch submission files that use arrays
+1) Create folder structure to Narvi
     - Create base folder to Narvi by hand
     - Create "/.../base/slurm_logs folder to Narvi by hand
-2) Submit multiple sbatch files using the bash script 
-    - 'ML_indoor_shell_script_for_sbatch_files.sh'
-3) Copy-paste "df_all.xlsx" to local computer and run: "myPostAnalysis.py"
-4) Report results.
+2) Create sbatch files and shell script for running them all
+    - Run: sbatch ML_indoor_create_sbatch_files.sh
+3) Submit multiple sbatch files to slurm using the bash script that was created
+    - Run: ./ML_indoor_shell_script_for_sbatch_files.sh
+    - Remember to give execution rights to script
+4) Merge results
+    - Run: sbatch ML_indoor_merge.sh
+5) Copy-paste "df_all.xlsx" to local computer and run: "myPostAnalysis.py"
+6) Report results.
     
 python3 path/to/main.py 
     idx_case_start

@@ -36,8 +36,8 @@ module --ignore-cache load miniconda3
 module list
 
 # conda activate ML_indoor # This didn't work
-conda activate /home/laukkara/.conda/envs/ML_indoor
-# source activate /home/laukkara/.conda/envs/ML_indoor # This didn't give error
+# conda activate /home/laukkara/.conda/envs/ML_indoor
+source activate /home/laukkara/.conda/envs/ML_indoor # This didn't give error
 # source activate ML_indoor # This did not give error -> It did give an error in another case -> Then it didn't give an error again
 
 
