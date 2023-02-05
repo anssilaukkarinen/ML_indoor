@@ -24,6 +24,8 @@
 !myMerge.py
 !myPostAnalysis.py
 
+!ML_indoor_create_sbatch_files.sh
 !ML_indoor_template.sh
 !ML_indoor_merge.sh
+
 
