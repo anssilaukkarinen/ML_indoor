@@ -6,15 +6,20 @@ Created on Thu Feb  2 12:20:08 2023
 """
 
 import os
+import sys
 import time
 
 
-# folder_github = r'C:\Users\laukkara\github\ML_indoor'
-folder_github = r'/home/laukkara/github/ML_indoor'
+if 'win' in sys.platform:
+    folder_github = r'C:\Users\laukkara\github\ML_indoor'
+    output_folder_base = os.path.join(r'C:\Users\laukkara\Data\ML_indoor_Narvi')
+
+elif 'lin' in sys.platform:
+    folder_github = r'/home/laukkara/github/ML_indoor'
+    output_folder_base = r'/lustre/scratch/laukkara/ML_indoor'
+    
 
 
-# output_folder_base = os.path.join(r'C:\Users\laukkara\Data\ML_indoor_Narvi')
-output_folder_base = r'/lustre/scratch/laukkara/ML_indoor'
 
 
 

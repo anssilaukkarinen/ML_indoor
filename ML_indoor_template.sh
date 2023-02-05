@@ -40,9 +40,10 @@ module list
 
 conda info --envs
 
+# (1) worked for a long time, but then it didn't -> Changed to (2)
 # conda activate ML_indoor # This didn't work
-# conda activate /home/laukkara/.conda/envs/ML_indoor
-source activate /home/laukkara/.conda/envs/ML_indoor # This didn't give error
+conda activate /home/laukkara/.conda/envs/ML_indoor # (2)
+# source activate /home/laukkara/.conda/envs/ML_indoor # This didn't give error (1)
 # source activate ML_indoor # This didn't give error -> It did give an error in another case -> Then it didn't give an error again
 
 # idx_start=$SLURM_ARRAY_TASK_ID

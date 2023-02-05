@@ -41,8 +41,14 @@ python3 path/to/main.py
 import sys
 sys.path.append(".")
 
+if 'lin' in sys.platform:
+    sys.path.append(r'/home/laukkara/github/ML_indoor')
+
 import os
 print('Current dir:', os.getcwd())
+print('args:', sys.argv)
+
+
 
 import time
 import numpy as np
@@ -275,13 +281,16 @@ def main(input_folder,
 
 if __name__ == '__main__':
     
-    
     # Input and output folder
-    input_folder = '/home/laukkara/github/ML_indoor/input'
-    # input_folder = r'C:\Users\laukkara\github\ML_indoor\input'
-
-    output_folder_base = '/lustre/scratch/laukkara/ML_indoor'
-    # output_folder_base = r'C:\Users\laukkara\Data\ML_indoor_Narvi'
+    if 'win' in sys.platform:
+        input_folder = r'C:\Users\laukkara\github\ML_indoor\input'
+        output_folder_base = r'C:\Users\laukkara\Data\ML_indoor_Narvi'
+    
+    elif 'lin' in sys.platform:
+        input_folder = '/home/laukkara/github/ML_indoor/input'
+        output_folder_base = '/lustre/scratch/laukkara/ML_indoor'
+    else:
+        print('Unknown platform!', flush=True)
     
     
     # output_folder_custom_str = 'output_2022-09-16-21-53-41'
@@ -322,7 +331,8 @@ if __name__ == '__main__':
 
     
         
-    # Run all the code        
+    # Run all the code
+    # The output goes to the new custom-made stdout file
     print(sys.argv, flush=True)
     
     # measurement points
@@ -461,7 +471,9 @@ if __name__ == '__main__':
                                results)
     
     # combine all results files to single file
-    # Here the combining is done for a single "output_..." folder
+    # Here the combining is done for a single "output_..." folder.
+    # combine_results is removed from here, because it is run in any case
+    # after all the calculations have finished.
     # myResults.combine_results_files(output_folder)
     
     
