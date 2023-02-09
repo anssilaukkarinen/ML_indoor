@@ -7,6 +7,7 @@ Created on Mon Sep 26 22:53:05 2022
 """
 
 import os
+import sys
 import time
 import itertools
 import matplotlib.pyplot as plt
@@ -18,15 +19,14 @@ import json
 import myResults
 
 
+if 'win' in sys.platform:
+    # The output_folder_base contains the one or many "output_..." folders
+    output_folder_base = r'C:\Users\laukkara\Data\ML_indoor_Narvi'
+    folder_github = r'C:\Users\laukkara\github\ML_indoor'
 
-
-# This folder contains the one or many "output_..." folders
-# output_folder_base = r'C:\Users\laukkara\Data\ML_indoor_Narvi'
-output_folder_base = '/lustre/scratch/laukkara/ML_indoor/'
-
-# Folder for slurm templates
-# folder_github = r'C:\Users\laukkara\github\ML_indoor'
-folder_github = '/home/laukkara/github/ML_indoor'
+elif 'lin' in sys.platform:
+    output_folder_base = '/lustre/scratch/laukkara/ML_indoor/'
+    folder_github = '/home/laukkara/github/ML_indoor'
 
 
 
