@@ -45,6 +45,8 @@ echo "conda version: $(conda --version)"
 
 conda info --envs
 
+mkdir -p /lustre/scratch/laukkara/ML_indoor/slurm_logs
+
 python3 /home/laukkara/github/ML_indoor/myCreate_sbatch_files.py
 
 date
