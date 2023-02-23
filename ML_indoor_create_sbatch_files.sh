@@ -18,6 +18,7 @@
 # This causes the bash script to abort immediately if any of the lines throw and error
 #set -e
 
+
 var="Hyper Drive"
 echo "Good day, sir, it is $(date) and we are ready to commence ${var}"
 
@@ -44,8 +45,6 @@ source activate /home/laukkara/.conda/envs/ML_indoor # This didn't give error
 echo "conda version: $(conda --version)"
 
 conda info --envs
-
-mkdir -p /lustre/scratch/laukkara/ML_indoor/slurm_logs
 
 python3 /home/laukkara/github/ML_indoor/myCreate_sbatch_files.py
 

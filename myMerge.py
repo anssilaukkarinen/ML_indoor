@@ -4,6 +4,12 @@ Created on Mon Sep 26 22:53:05 2022
 
 @author: laukkara
 
+output_... -kansiosta löytyy case-kansioita, kuten kernelridgesigmoid_bayessearchcv_...
+- jos kaikki on mennyt hyvin, niin kansiosta löytyy log.txt, jossa on rivi: wall_clock_time, minutes
+- jos tätä riviä ei löydy, niin sitten laskenta ei ole mennyt läpi ja tuloksia ei ole saatu tallennettua
+
+
+
 """
 
 import os

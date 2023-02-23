@@ -104,8 +104,14 @@ if counter_for_parameter_sets == 1:
     
     optimization_methods = ['pso', 'randomizedsearchcv', 'bayessearchcv']
     
-    X_lags = [0, 1, 12, 24] # 0, 1, 6, 12, 24
-    y_lags = [0, 1, 12, 24] # 0, 1, 6, 12, 24
+    # First set
+    # X_lags = [0, 1, 12, 24] # 0, 1, 6, 12, 24
+    # y_lags = [0, 1, 12, 24] # 0, 1, 6, 12, 24
+    
+    # Second set
+    X_lags = [2, 3]
+    y_lags = [2, 3]
+    
     
     N_CVs = [3, 5] # 3, 4, 5
     N_ITERs = [50, 250, 500]
