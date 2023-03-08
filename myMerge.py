@@ -45,7 +45,7 @@ if not os.path.exists(folder_merged):
 
 
 create_combined = True
-combine_combined = True # True, False
+combine_combined = True
 
 
 
@@ -127,7 +127,7 @@ if combine_combined:
         pickle.dump(df_all, f)
 
     
-    # Export to xlsx file, with and without file name
+    # Export to xlsx file, with and without time stamp in file name
     fname = os.path.join(folder_merged,
                          'df_all_{}.xlsx'.format(time_str))
     df_all.to_excel(fname)
@@ -136,12 +136,24 @@ if combine_combined:
                          'df_all.xlsx')
     df_all.to_excel(fname)
 
+    # Export to csv file, with and without time stamp in file name
+    fname = os.path.join(folder_merged,
+                         'df_all_{}.csv'.format(time_str))
+    df_all.to_csv(fname)
+
+    fname = os.path.join(folder_merged,
+                         'df_all.csv')
+    df_all.to_csv(fname)
+
 
 
 
 
 ##########################################
 
+
+print('df_all.shape:', flush=True)
+print(df_all.shape, flush=True)
 
 
 print('df_all.columns from myMerge:', flush=True)
