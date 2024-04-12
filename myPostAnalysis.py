@@ -4,6 +4,7 @@ Created on Mon Sep 26 22:53:05 2022
 
 @author: laukkara
 
+
 """
 
 import os
@@ -15,17 +16,34 @@ import numpy as np
 import pickle
 import json
 
-# Select best from multiple runs
-# Select best from X_lag is 0 or 1; y_lag is 0 or 1
+pd.set_option('display.expand_frame_repr', True)
 
 
 
-Narvi_folder = os.path.join(r'C:\Users\laukkara\OneDrive - TUNI.fi\PhD',
-                            r'1_ML_indoor\ML_indoor_Narvi')
+Narvi_folder = os.path.join(r'C:\Users\laukkara\Data\ML_indoor_Narvi')
 
 #github_folder = r'C:\Local\laukkara\Data\github\ML_indoor'
 
-y_lag = 'y0' # 'y0', 'y1'
+
+
+R2_limit_min = -0.05
+
+figseiz = (5.5, 3.5)
+dpi_val = 200
+markers = itertools.cycle(['o', '^', 's', 'x', 'd'])
+
+colors_mp = ['C0','C1','C2','C3','C4','C5']
+
+
+col_names_numeric = ['MAE_train', 'MAE_validate', 'MAE_test',
+                    'RMSE_train','RMSE_validate', 'RMSE_test',
+                    'R2_train', 'R2_validate', 'R2_test',
+                    'wall_clock_time_minutes']
+
+
+cols_dup = ['measurement_point_name', 'model_name', 'optimization_method', \
+            'X_lag', 'y_lag', 'N_CV', 'N_ITER', 'N_CPU']
+
 
 
 
@@ -33,7 +51,6 @@ y_lag = 'y0' # 'y0', 'y1'
 
 # Read in the merger xlsx file from Narvi
 fname_xlsx_input = os.path.join(Narvi_folder,
-                                y_lag,
                                 'merged_results',
                                 'df_all.xlsx')
 
@@ -42,12 +59,13 @@ df.sort_index(inplace=True)
 
 
 
+
 # Make sure the output folder and output xlsx file exists
 output_folder = os.path.join(Narvi_folder,
-                             'myPostAnalysis',
-                             y_lag)
+                             'myPostAnalysis')
 if not os.path.exists(output_folder):
     os.makedirs(output_folder)
+
 
 xlsx_output_file = os.path.join(output_folder,
                                 'output.xlsx')
@@ -63,97 +81,190 @@ if not os.path.exists(xlsx_output_file):
 
 
 fname_logfile = os.path.join(output_folder,
-                             '{}.log'.format(y_lag))
+                             'logfile.txt')
 log_file_handle = open(fname_logfile, mode='w')
 
 
 
 
-# Some additional input data
 
-figseiz = (5.5, 3.5)
-dpi_val = 200
-markers = itertools.cycle(['o', '^', 's', 'x', 'd'])
+    
+# Are there duplicate rows?
 
-col_names_numeric = ['MAE_train', 'MAE_validate', 'MAE_test',
-                    'RMSE_train','RMSE_validate', 'RMSE_test',
-                    'R2_train', 'R2_validate', 'R2_test',
-                    'wall_clock_time_minutes']
+n_duplicated = df.duplicated(subset=cols_dup,
+                             keep='first').sum()
+n_rows_total = df.shape[0]
+
+print(f'Sum of duplicated rows: {n_duplicated}, ', \
+      f'{100*n_duplicated/n_rows_total:.2f} %\n\n',
+      file=log_file_handle)
+
+    
+    
+df.drop_duplicates(subset=cols_dup,
+                   keep='first',
+                   ignore_index=True,
+                   inplace=True)
 
 
-cols_dup = ['measurement_point_name', 'model_name', 'optimization_method', \
-            'X_lag', 'y_lag', 'N_CV', 'N_ITER', 'N_CPU']
+
+# Convert t_start_local from object to datetime using pd.datetime()
+df['t_start_local'] = pd.to_datetime(df['t_start_local'],
+                                     format='%Y-%m-%d %H:%M:%S')
+
+
+# Sort rows according to MAE_mean_validate_test for dummyregressor
+# First measurement_point_names and then MAE_mean_validate_test
+
+mps = df.loc[:,'measurement_point_name'].unique()
+
+df_per_mp = []
+df_MAE_mean_per_mp = []
+
+for mp in mps:
+    
+    idxs = df['measurement_point_name'] == mp
+    
+    dummy = df.loc[idxs, :].copy()
+    
+    dummy.sort_values(by='MAE_mean_validate_test', inplace=True)
+    
+    idxs_for_mean = dummy['model_name'] == 'dummyregressor'
+    dummy_mean = dummy.loc[idxs_for_mean, 'MAE_mean_validate_test'].mean()
+    
+    df_per_mp.append(dummy)
+    df_MAE_mean_per_mp.append(dummy_mean)
+
+idxs_sorted = np.argsort(df_MAE_mean_per_mp)
+df_per_mp = [df_per_mp[idx] for idx in idxs_sorted]
+df = pd.concat(df_per_mp, ignore_index=True)
+
+
 
 
 ########################################
 
-# How to define worst cases?
-# -> MAE > ?
-# -> R2 < -3.0
-# -> R2 < 0.0
-# Worst/best from the duplicates
+print(df.columns)
 
-
-print(df.columns,
-      file=log_file_handle)
-
-
-
-# diff = max - min
-key1 = 'MAE_mean_validate_test'
-key1_max = 10
-
-dy = df.groupby(by=cols_dup).max().loc[:, key1] \
-        - df.groupby(by=cols_dup).min().loc[:, key1]
-dy.sort_values(inplace=True, ascending=True)
-
-print('dy.shape = {}'.format(dy.shape), 
-      file=log_file_handle)
-
-print('n for dy <= {} -> {}'.format(key1_max, ( dy <= key1_max).sum() ),
-      file=log_file_handle)
-
-print('n for dy > {} -> {}'.format(key1_max, (dy > key1_max).sum() ), 
+print(df.columns, '\n\n',
       file=log_file_handle)
 
 
 
 
-idxs = dy > key1_max
 
-dy_bigdiff = dy.loc[idxs].reset_index(drop=False)
 
-for col_name in dy_bigdiff.columns[:-1]:
-    print('Next coming up:', col_name, 
-          file=log_file_handle)
+## Establish baseline
+
+idxs = df['model_name'] == 'dummyregressor'
+df_dummyregressor_sorted = df.loc[idxs, :] \
+                            .reset_index(drop=True) \
+                            .loc[:, ['measurement_point_name',
+                                     'MAE_train',
+                                     'MAE_validate',
+                                     'MAE_test',
+                                     'MAE_mean_validate_test']]
+
+
+
+# Baseline, numerically
+
+MAE_mean_validate_test_mp = df_dummyregressor_sorted \
+                            .groupby(by='measurement_point_name') \
+                            .mean() \
+                            .sort_values(by='MAE_mean_validate_test')
     
-    print(dy_bigdiff.groupby(by=[col_name]).count().iloc[:,-1], 
-          file=log_file_handle)
-    
-    print('\n',
-          file=log_file_handle)
+
+print('DummyRegressor mean per measurement_point_name:', \
+      file=log_file_handle)
+MAE_mean_validate_test_mp.round(2).to_csv(log_file_handle,
+                                          mode='a',
+                                          index=True,
+                                          header=True,
+                                          sep=',',
+                                          lineterminator='\n')
+print('\n\n', file=log_file_handle)
 
 
 
-# Can I remove the worst cases easily?
 
 
-# duplicated() is not good, because keeping just the first/last isn't useful
-# idxs_duplicated = df.loc[:, cols].duplicated()
-# print(df.shape)
-# print(idxs_duplicated.shape)
+# Baseline, plot
+print('MAE_mean_validate_test:', file=log_file_handle)
 
-# groupby()
-key = 'MAE_validate'
+mps = MAE_mean_validate_test_mp.index.values
 
-df_mae = df.groupby(by=cols_dup).min().loc[:, 'MAE_mean_validate_test']
-df_R2 = df.groupby(by=cols_dup).max().loc[:, 'R2_mean_validate_test']
+
 fig, ax = plt.subplots(figsize=figseiz)
-ax.plot(df_mae, df_R2, '.')
-ax.set_xlim((-0.1, 3))
-ax.set_ylim((-0.1, 1.1))
+
+for idx_mp, mp_val in enumerate(mps):
+    
+    idxs = df_dummyregressor_sorted['measurement_point_name'] == mp_val
+    
+    holder1 = df_dummyregressor_sorted.loc[idxs, 'MAE_test']
+    holder1.plot(ax=ax, style=':', color=colors_mp[idx_mp])
+    
+    holder2 = df_dummyregressor_sorted.loc[idxs, 'MAE_validate']
+    holder2.plot(ax=ax, style='--', color=colors_mp[idx_mp])
+        
+    holder3 = df_dummyregressor_sorted.loc[idxs, 'MAE_train']
+    holder3.plot(ax=ax, style='-', color=colors_mp[idx_mp])
+        
+    print(f'mp={mp_val}',
+          f'test={holder1.mean():.2f}',
+          f'validate={holder2.mean():.2f}',
+          f'train={holder3.mean():.2f}',
+          file=log_file_handle)
+
+print('\n\n', file=log_file_handle)
+    
+ax.set_ylim(bottom=0.0, top=2.0)
+ax.grid()
+ax.set_xlabel('Cases using DummyRegressor')
+ax.set_ylabel('MAE')
+ax.legend(['test','validate','train'], loc='lower right')
+
 fname = os.path.join(output_folder,
-                     'diff_MAE_vs_R2.png')
+                     'baseline.png')
+fig.savefig(fname, dpi=dpi_val, bbox_inches='tight')
+plt.close(fig)
+
+
+
+
+
+
+
+# Scatter plot R2 vs MAE, all points
+fig, ax = plt.subplots(figsize=figseiz)
+df.plot.scatter(x='MAE_mean_validate_test',
+                y='R2_mean_validate_test',
+                s=0.5,
+                ax=ax)
+ax.grid()
+ax.set_xlabel('MAE')
+ax.set_ylabel('$R^2$')
+fname = os.path.join(output_folder,
+                     'R2_vs_MAE_scatter_not_limited.png')
+fig.savefig(fname, dpi=dpi_val, bbox_inches='tight')
+plt.close(fig)
+
+
+
+
+# Scatter plot R2 vs MAE, all points
+fig, ax = plt.subplots(figsize=figseiz)
+df.plot.scatter(x='MAE_mean_validate_test',
+                y='R2_mean_validate_test',
+                s=0.5,
+                ax=ax)
+ax.grid()
+ax.set_xlim((-0.1, 3))
+ax.set_xlabel('MAE')
+ax.set_ylim((-0.1, 1.1))
+ax.set_ylabel('$R^2$')
+fname = os.path.join(output_folder,
+                     'R2_vs_MAE_scatter_limited_axis.png')
 fig.savefig(fname, dpi=dpi_val, bbox_inches='tight')
 plt.close(fig)
 
@@ -165,13 +276,13 @@ plt.close(fig)
 
 
 
+# Scatter plots of single output variables
 
 def plot_single_series(df, output_folder):
     # Plot scatter plot of values against index
     
-    # R2 figures are just point clouds -> uninformative
-    # to_plot = ['MAE', 'RMSE', 'R2', 'clock']
-    to_plot = ['MAE', 'RMSE', 'clock']
+    to_plot = ['MAE', 'RMSE', 'R2', 'clock']
+    # to_plot = ['MAE', 'RMSE', 'clock']
     
     for col in df.columns:
         
@@ -180,31 +291,33 @@ def plot_single_series(df, output_folder):
             fig, ax = plt.subplots(figsize=figseiz)
             df.loc[:, col].plot(ax=ax, style='.', ms=0.5)
             ax.set_ylabel(col)
-            ylim_top = np.quantile(df.loc[:,col].values, 0.98)
+            
+            if 'R2' in col:
+                ylim_top = 1.1
+            else:
+                ylim_top = 10.0
             ax.set_ylim(bottom=-0.1, top=ylim_top)
             fname = os.path.join(output_folder,
-                                 f'single_{col}.png')
+                                 f'single_series_{col}.png')
             fig.savefig(fname, dpi=dpi_val, bbox_inches='tight')
             plt.close(fig)
         
 plot_single_series(df, output_folder)
-# There is a limit at around MAE = 0.5 C on validation and testing accuracy
 
 
 
 
 
 
-def plot_sorted(df, output_folder):
-    # Three increasing lines for train, validation and test data
-    # The x-axis is index sorted according to MAE, RMSE or R2
-    
-    # Sort values according to train, validate and test mean
-    
-    ylim_top = 0.0
+
+
+# Scatter plots of single output variables, but in sorted order
+
+def plot_single_series_sorted(df, output_folder):
     
     for key1 in ['MAE', 'RMSE', 'R2']:
         
+        # Select only a subset of data
         
         cols = [key1 + '_train',
                 key1 + '_validate',
@@ -213,106 +326,91 @@ def plot_sorted(df, output_folder):
         df_full = df.loc[:, cols].copy()
         
         
-        # Plot
-        fig, ax = plt.subplots(figsize=figseiz)
-        
-
+        # Sort rows
         
         if key1 == 'R2':
-            ax.set_ylabel('R$^2$')
-            ylim_top = 1.05
-            is_ascending=False
+            dummy_ylabel= 'R$^2$'
+            ylim_top = 1.1
+            is_ascending = False
         else:
-            ax.set_ylabel(key1)
-            ylim_top = np.max((ylim_top,
-                               np.quantile(df_full.values, q=0.98, axis=0).min() ))
-            is_ascending=True
+            dummy_ylabel = key1
+            ylim_top = 10.0
+            is_ascending = True
         
         idx_new = df_full.loc[:, cols[1:]].mean(axis=1) \
                         .sort_values(ascending=is_ascending).index
         
-        df_full = df_full.reindex(index=idx_new) \
-                .rolling(window=10, min_periods=10).mean() \
-                .dropna(axis=0, how='any') \
-                .reset_index(drop=True)
+        df_full = df_full.reindex(index=idx_new).reset_index(drop=True)
         
-        ax.plot(df_full)
+        
+        
+        # Plot, no averaging
+        fig, ax = plt.subplots(figsize=figseiz)
+        ax.plot(df_full, lw=0.5)
+        ax.set_ylabel(dummy_ylabel)
         ax.set_xlabel('Cases, sorted')
-        
         ax.set_ylim(bottom=-0.1, top=ylim_top)
-        ax.legend(df_full.columns)
+        
+        dummy_legend = [x.replace('_',', ') for x in df_full.columns]
+        ax.legend(dummy_legend)
         fname = os.path.join(output_folder,
-                             f'sorted_{key1}.png')
+                             f'sorted_notgrouped{key1}.png')
         fig.savefig(fname, dpi=dpi_val, bbox_inches='tight')
         plt.close(fig)
+        
+        
+        
+        # Plot, using median plus high and low quantiles
+        q_list = ['0.05', '0.5', '0.95']
+        col_list = ['C0', 'C1', 'C0']
+        linestyle_list = ['--', '-', '--']
+        
+        n_splits = 200
+        dfs_as_list = np.array_split(df_full, n_splits)
+        
+        
+        for col in cols:
+            
+            col_str = col.replace('_',' ')
+            print(col, col_str)
+            
+            
+            fig, ax = plt.subplots(figsize=figseiz)
+            
+            y_vals = np.zeros((n_splits, 3))
+            
+            for idx_split, df_split in enumerate(dfs_as_list):
+        
+                y_vals[idx_split, 0] = df_split.loc[:,col].quantile(0.05)
+                y_vals[idx_split, 1] = df_split.loc[:,col].quantile(0.5)
+                y_vals[idx_split, 2] = df_split.loc[:,col].quantile(0.95)
+            
+            
+            for idx_fmt in range(3):
+                
+                ax.plot(y_vals[:, idx_fmt],
+                        label=f'{col_str}, {q_list[idx_fmt]}',
+                        color=col_list[idx_fmt],
+                        linestyle=linestyle_list[idx_fmt])
+        
+            ax.set_ylabel(dummy_ylabel)
+            ax.set_xlabel('Sorted cases divided into groups')
+            ax.set_ylim(bottom=-0.1, top=ylim_top)
+            
+            ax.legend()
+            fname = os.path.join(output_folder,
+                                 f'sorted_grouped_{col}.png')
+            fig.savefig(fname, dpi=dpi_val, bbox_inches='tight')
+            plt.close(fig)
+
     
     return(df_full)
 
-df_full = plot_sorted(df, output_folder)
-# In R2 the training, validation and testing lines are visually more apart,
-# than the MAE and RMSE lines.
-# There is a long plateau and small number of very bad and a little bit better cases.
+df_full = plot_single_series_sorted(df, output_folder)
 
 
 
 
-
-
-
-def plot_sorted2(df, output_folder):
-    # Similar to plot_sorted(), but the values to be plotted are group means
-    # from all measurement_points
-    
-    # add ylab, xlabel
-    
-    cols = ['measurement_point_name', 'model_name', 'optimization_method',
-            'X_lag', 'y_lag', 'N_CV', 'N_ITER', 'N_CPU']
-    
-    for key1 in ['MAE', 'RMSE', 'R2']:
-        
-        if key1 == 'R2':
-            ylim_top = 1.1
-            is_ascending = False
-        
-        else:
-            # ylim_top = 3.0
-            ylim_top = 30.0
-            is_ascending = True
-        
-        cols_to_plot = [key1 + '_train',
-                        key1 + '_validate',
-                        key1 + '_test']
-        
-        # Plot
-        fig, ax = plt.subplots()
-        
-        df_group_means = df.groupby(by=cols[1:]) \
-                .mean(numeric_only=True).loc[:, cols_to_plot]
-        
-        idx_new = df_group_means.loc[:, cols_to_plot[1:]].mean(axis=1) \
-                    .sort_values(ascending=is_ascending).index
-        
-        df_group_means_sorted = df_group_means.reindex(index=idx_new) \
-                                    .rolling(window=10, min_periods=10).mean() \
-                                    .dropna(axis=0, how='any') \
-                                    .reset_index(drop=True)
-        
-        df_group_means_sorted.plot(ax=ax)
-        
-        ax.set_ylim((-0.1, ylim_top))
-        ax.set_ylabel(key1 + ', mean of mp, rolling average')
-        ax.set_xlabel('Cases, sorted')
-        ax.grid(visible=True)
-        fname = os.path.join(output_folder,
-                             'plot_sorted2_{}.png'.format(key1))
-        fig.savefig(fname, dpi=dpi_val, bbox_inches='tight')
-        plt.close(fig)
-        
-
-plot_sorted2(df, output_folder)
-        
-        
-        
 
 
 
@@ -338,7 +436,7 @@ def plot_R2_vs_RMSE(df, output_folder):
             df_group = df.loc[idxs, :]
             
             ax.scatter(x=f'RMSE_{key}', y=f'R2_{key}', \
-                       s=5.0, marker=next(markers),
+                       s=2.0, marker=next(markers),
                        data=df_group, label=mp)
         ax.set_ylim((-0.1, 1.1))
         ax.set_xlim((-0.1, 2.5))
@@ -353,6 +451,13 @@ def plot_R2_vs_RMSE(df, output_folder):
         plt.close(fig)
 
 plot_R2_vs_RMSE(df, output_folder)
+
+
+
+
+
+
+
 
 
 
@@ -374,7 +479,7 @@ def plot_R2_vs_MAE(df, output_folder):
             df_group = df.loc[idxs, :]
             
             ax.scatter(x=f'MAE_{key}', y=f'R2_{key}', \
-                        s=5.0, marker=next(markers),
+                        s=2.0, marker=next(markers),
                         data=df_group, label=mp)
         ax.set_ylim((-0.1, 1.1))
         ax.set_xlim((-0.1, 2.5))
@@ -401,14 +506,14 @@ plot_R2_vs_MAE(df, output_folder)
 
 
 
-
 def plot_boxplot_by_mp(df, output_folder):
     # Boxplots with five box-and-whiskers plots
     # The y-data is the main indicators
     
-    print('\n\nplot_boxplot_by_mp', file=log_file_handle)
+    print('plot_boxplot_by_mp:', file=log_file_handle)
     
-    idxs = (df.loc[:, 'R2_validate'] > 0.0) & (df.loc[:,'R2_test'] > 0.0)
+    idxs = (df.loc[:, 'R2_validate'] > R2_limit_min) \
+            & (df.loc[:,'R2_test'] > R2_limit_min)
     print('idxs.sum():', idxs.sum(),
           file=log_file_handle)
     
@@ -454,15 +559,12 @@ def plot_boxplot_by_mp(df, output_folder):
                              f'boxplot_mp_{y_target}.png')
         fig.savefig(fname, dpi=dpi_val, bbox_inches='tight')
         plt.close(fig)
-        
+
+print('\n\n', file=log_file_handle)        
 plot_boxplot_by_mp(df, output_folder)
 
-# Boxplots show that there are differences betweeen measurement points.
-# The number of samples is different per measurement point,
-# i.e. some measurement points reacher easier the condition
-# R2_validation > 0 & R2_test > 0.
-# Boxplots with measurement_point categorization might not be needed,
-# if the same information is available from othe boxplots.
+
+
 
 
 
@@ -474,10 +576,11 @@ def plot_boxplot_by_mp_and_other(df, output_folder):
     # Boxplots with two controlled variables
     # measurement point and Xlag/ylag/opt/N_CV
     
-    print('\n\nplot_boxplot_ny_mp_and_other',
+    print('plot_boxplot_ny_mp_and_other',
           file=log_file_handle)
     
-    idxs = (df.loc[:, 'R2_validate'] > 0.0) & (df.loc[:,'R2_test'] > 0.0)
+    idxs = (df.loc[:, 'R2_validate'] > R2_limit_min) \
+            & (df.loc[:,'R2_test'] > R2_limit_min)
     print('idxs.sum():', idxs.sum(),
           file=log_file_handle)
     
@@ -516,6 +619,7 @@ def plot_boxplot_by_mp_and_other(df, output_folder):
                                 rot=90,
                                 flierprops={'markersize':1},
                                 ax=ax)
+            # TODO: Säädä ylim-arvoja
             ax.set_ylim(bottom=-0.1)
             
             if y_target == 'R2_mean_validate_test':
@@ -525,7 +629,7 @@ def plot_boxplot_by_mp_and_other(df, output_folder):
             
             ax.set_title('')
             fig.suptitle('')
-            ax.set_xlabel('{}, {}'.format('Measurement point name',
+            ax.set_xlabel('({}, {})'.format('Measurement point name',
                                           xlabelstr[y_key2]))
             
             y_target_str = y_target.replace('R2','R$^2$') \
@@ -537,14 +641,16 @@ def plot_boxplot_by_mp_and_other(df, output_folder):
                                  f'boxplot2_mp_{y_key2}_{y_target}.png')
             fig.savefig(fname, dpi=dpi_val, bbox_inches='tight')
             plt.close(fig)
-            
+
+print('\n\n', file=log_file_handle)
 plot_boxplot_by_mp_and_other(df, output_folder)
 
-# There was very little difference between Xlag=0/1, ylag=0/1, 
-# optimization_method=pso/rand/bayes or N_CV=3/4/5.
-# In one case the variation between ML_O was smaller, when higher N_CV was used.
-# Using ylag = 1 was (a bit surprisingly) not useful in the first round of
-# calculations to improve prediction accuracy.
+
+
+
+
+
+
 
 
 
@@ -554,14 +660,14 @@ plot_boxplot_by_mp_and_other(df, output_folder)
 def calculate_average_time_per_optimization_method(df):
     # List of wall_clock_time
     
-    print('\n\ncalculate_average_time_per_optimization_method',
+    print('calculate_average_time_per_optimization_method:',
           file=log_file_handle)
 
     df_holder = df.groupby(by=['optimization_method']) \
                 .mean(numeric_only=True) \
                  .loc[:,'wall_clock_time_minutes']
     
-    print('\nAverage time per optimization_method:',
+    print('Average time per optimization_method:',
           file=log_file_handle)
     df_dummy = df_holder.sort_values(ascending=True).round(1)
     print(df_dummy,
@@ -575,8 +681,14 @@ def calculate_average_time_per_optimization_method(df):
         df_dummy.to_excel(writer,
                           sheet_name='avg_time')
 
+print('\n\n', file=log_file_handle)
 calculate_average_time_per_optimization_method(df)
-# pso 10 min, rand 20 min, bayes 30 min
+
+
+
+
+
+
 
 
 
@@ -591,8 +703,8 @@ def calculate_pivot_table_averages_per_MLO(df, include_all):
     if include_all:
         idxs = df.index
     else:
-        idxs = (df['R2_validate'] > 0.0) \
-             & (df['R2_test'] > 0.0)
+        idxs = (df['R2_validate'] > R2_limit_min) \
+             & (df['R2_test'] > R2_limit_min)
     
     
     for y_key in ['wall_clock_time_minutes',
@@ -618,7 +730,7 @@ def calculate_pivot_table_averages_per_MLO(df, include_all):
                              ascending=('R2' not in y_key),
                              inplace=True)
         
-        print('\npivot_table results',
+        print(f'pivot_table results{y_key}:',
               file=log_file_handle)
 
         print(df_pivot.round(2).to_string(),
@@ -630,12 +742,14 @@ def calculate_pivot_table_averages_per_MLO(df, include_all):
                             if_sheet_exists='replace',
                             engine='openpyxl') as writer:
             
-            sh_name = y_key.split('_')[0]
+            sh_name = 'pivot_' + y_key.split('_')[0]
             df_pivot.round(2).to_excel(writer,
                                        sheet_name=sh_name)
 
+print('\n\n', file=log_file_handle)
 calculate_pivot_table_averages_per_MLO(df, False)
-# 
+
+
 
 
 
@@ -664,9 +778,10 @@ def plot_MAE_vs_wall_clock_time(df, output_folder):
     plt.close(fig)
 
 plot_MAE_vs_wall_clock_time(df, output_folder)
-# The variation is pretty big, not much can be said from the correlation 
-# between MAE and wall_clock_time. A small improvement in MAE vs
-# wall_clock_time does however seem to exist.
+
+
+
+
 
 
 
@@ -677,7 +792,7 @@ plot_MAE_vs_wall_clock_time(df, output_folder)
 
 def plot_wall_clock_time_by_grouping(df, output_folder):
     
-    print('\n\nplot_wall_clock_time_by_grouping',
+    print('plot_wall_clock_time_by_grouping:',
           file=log_file_handle)
     
     
@@ -699,8 +814,9 @@ def plot_wall_clock_time_by_grouping(df, output_folder):
                             mode='a',
                             if_sheet_exists='replace',
                             engine='openpyxl') as writer:
-        
-            sh_name = 'wall_{}'.format(key_grouper)
+            
+            # WCT = Wall Clock Time, i.e. wall_clock_time_minutes
+            sh_name = 'WCT_{}'.format(key_grouper)
             df_dummy.round(1).to_excel(writer,
                               sheet_name=sh_name)
         
@@ -714,6 +830,7 @@ def plot_wall_clock_time_by_grouping(df, output_folder):
         fig.savefig(fname, dpi=dpi_val, bbox_inches='tight')
         plt.close(fig)
 
+print('\n\n', file=log_file_handle)
 plot_wall_clock_time_by_grouping(df, output_folder)
 # svrpoly, nusvrpoly, kernelridgesigmoid were very slow
 # pso 10 min, rand 21 min, bayes 31 min
@@ -733,7 +850,7 @@ def plot_var_by_grouping_and_mp(df, output_folder, limit_to_R2_positive):
     # Some of the cases had results way off, which distorts the results
     # overall. These are however kept here for documentation purposes.
     
-    print('\n\nplot_var_by_grouping_and_mp',
+    print('plot_var_by_grouping_and_mp:',
           file=log_file_handle)
     
     cols = ['wall_clock_time_minutes',
@@ -745,13 +862,15 @@ def plot_var_by_grouping_and_mp(df, output_folder, limit_to_R2_positive):
     
     if limit_to_R2_positive:
         # Calculate ranks only for better-than-benchmark cases
-        print('vars only for R2_validate > 0 and R2_test > 0', flush=True,
+        print(f'vars only for R2_validate > {R2_limit_min:.2f} ' \
+              f'and R2_test > {R2_limit_min:.2f}:', flush=True,
               file=log_file_handle)
-        idxs = (df['R2_validate'] > 0) & (df['R2_test'] > 0)
+        idxs = (df['R2_validate'] > R2_limit_min) \
+                & (df['R2_test'] > R2_limit_min)
         fname_key = 'pos'
     else:
         # Include all calculated cases in the ranking
-        print('vars among all cases', flush=True,
+        print('vars among all cases:', flush=True,
               file=log_file_handle)
         idxs = df.index == df.index
         fname_key = 'all'
@@ -778,7 +897,8 @@ def plot_var_by_grouping_and_mp(df, output_folder, limit_to_R2_positive):
             
             # sort
             df_full = pd.concat(df_list, axis=1)
-            df_full = df_full.reindex(index=df_full.mean(axis=1).sort_values(ascending=True).index)
+            df_full = df_full.reindex(index \
+                        =df_full.mean(axis=1).sort_values(ascending=True).index)
             
             # plot
             fig, ax = plt.subplots(figsize=figseiz)
@@ -830,10 +950,10 @@ def plot_var_by_grouping_and_mp(df, output_folder, limit_to_R2_positive):
             fig.savefig(fname, dpi=dpi_val, bbox_inches='tight')
             plt.close(fig)
         
-
+print('\n\n', file=log_file_handle)
 plot_var_by_grouping_and_mp(df, output_folder, True)
 plot_var_by_grouping_and_mp(df, output_folder, False)
-# wall_clock_time curves were pretty similar between different measurement_points
+
 
 
 
@@ -844,18 +964,20 @@ plot_var_by_grouping_and_mp(df, output_folder, False)
 
 def calculate_ranking(df, output_folder, limit_to_R2_positive):
     
-    print('\n\ncalculate_ranking',
+    print('calculate_ranking:',
           file=log_file_handle)
     
     if limit_to_R2_positive:
         # Calculate ranks only for better-than-benchmark cases
-        print('Rankings only for R2_validate > 0 and R2_test > 0', flush=True,
+        print(f'Rankings only for R2_validate > {R2_limit_min:.2f} ' \
+              f'and R2_test > {R2_limit_min:.2f}:', flush=True,
               file=log_file_handle)
-        idxs = (df['R2_validate'] > 0) & (df['R2_test'] > 0)
+        idxs = (df['R2_validate'] > R2_limit_min) \
+                & (df['R2_test'] > R2_limit_min)
         fname_key = 'pos'
     else:
         # Include all calculated cases in the ranking
-        print('Rankings among all cases', flush=True,
+        print('Rankings among all cases:', flush=True,
               file=log_file_handle)
         idxs = df.index
         fname_key = 'all'
@@ -932,11 +1054,9 @@ def calculate_ranking(df, output_folder, limit_to_R2_positive):
         sh_name = 'relrank_{}'.format(fname_key)
         df_res_ranks_relative.to_excel(writer,
                                        sheet_name=sh_name)
-    
-            
 
+print('\n\n', file=log_file_handle)
 calculate_ranking(df, output_folder, True)
-
 calculate_ranking(df, output_folder, False)
 
 
