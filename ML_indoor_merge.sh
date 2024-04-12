@@ -7,7 +7,7 @@
 #SBATCH --cpus-per-task=1      # Number of CPU cores per task
 # SBATCH --nodes=1              # Run all processes on a single node
 #SBATCH --mem=32GB
-#SBATCH --time=1:00:00
+#SBATCH --time=4:00:00
 #SBATCH --output=/lustre/scratch/laukkara/ML_indoor/slurm_logs/%j_stdout.log  # Standard output and error log
 #SBATCH --error=/lustre/scratch/laukkara/ML_indoor/slurm_logs/%j_stderr.log
 
