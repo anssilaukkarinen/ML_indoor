@@ -4,6 +4,18 @@ Created on Mon Sep 26 22:53:05 2022
 
 @author: laukkara
 
+Note!
+The input data was originally divided into three sections:
+    training, validation and testing.
+The training was eventually changed to cross-validation using only
+training data, so the two other parts became available for evaluation.
+The naming wasn't changed throughout the code, but only naming in
+certain outputs are changed.
+
+
+first set 192 shell scripts: 192*3*48*3 = 82 944
+second set 48 shell scripts: 48*3*48*3 = 20 736
+-> 103 680 in total
 
 """
 
@@ -110,12 +122,16 @@ print(f'Sum of duplicated rows: {n_duplicated}, ', \
       f'{100*n_duplicated/n_rows_total:.2f} %\n\n',
       file=log_file_handle)
 
-    
+
     
 df.drop_duplicates(subset=cols_dup,
                    keep='first',
                    ignore_index=True,
                    inplace=True)
+
+print(f'df.shape after dropping duplicated: {df.shape}',
+          file=log_file_handle)
+
 
 
 
@@ -125,7 +141,7 @@ df['t_start_local'] = pd.to_datetime(df['t_start_local'],
 
 
 # Sort rows according to MAE_mean_validate_test for dummyregressor
-# First measurement_point_names and then MAE_mean_validate_test
+# First measurement_point_names and then 
 
 mps = df.loc[:,'measurement_point_name'].unique()
 
@@ -166,6 +182,7 @@ print(df.columns, '\n\n',
 
 
 ## Establish baseline
+# This is in the manuscript
 
 idxs = df['model_name'] == 'dummyregressor'
 df_dummyregressor_sorted = df.loc[idxs, :] \
@@ -194,13 +211,18 @@ MAE_mean_validate_test_mp.round(2).to_csv(log_file_handle,
                                           header=True,
                                           sep=',',
                                           lineterminator='\n')
+baseline_val = MAE_mean_validate_test_mp \
+    .loc[:,['MAE_validate','MAE_test']].stack().mean()
+print(f'Baseline pred1 pred2 mean = {baseline_val:.4f}',
+      file=log_file_handle)
+
 print('\n\n', file=log_file_handle)
 
 
 
 
 
-## Baseline, plot
+# Baseline, plot
 print('MAE_mean_validate_test:', file=log_file_handle)
 
 mps = MAE_mean_validate_test_mp.index.values
@@ -233,7 +255,7 @@ ax.set_ylim(bottom=0.0, top=2.0)
 ax.grid()
 ax.set_xlabel('Cases using DummyRegressor')
 ax.set_ylabel('MAE')
-ax.legend(['test','validate','train'], loc='lower right')
+ax.legend(['pred2','pred1','train'], loc='lower right')
 
 fname = os.path.join(output_folder,
                      'baseline.jpg')
@@ -320,12 +342,20 @@ def plot_all_cases_by_index(df, output_folder):
             else:
                 ylim_top = 5.0
             ax.set_ylim(bottom=-0.1, top=ylim_top)
-            ax.set_xlabel('All cases')
-            ax.set_ylabel(col.replace('_',' '))
+            ax.set_xlabel('Case index (all cases)')
+            
+            ylabel_str = col.replace('_',' ') \
+                            .replace('validate','pred1') \
+                            .replace('test', 'pred2')
+            
+            ax.set_ylabel(ylabel_str)
             
             ax.grid()
+            
+            col_str = col.replace('validate','pred1').replace('test', 'pred2')
+            
             fname = os.path.join(output_folder,
-                                 f'all_cases_by_index_{col}.jpg')
+                                 f'all_cases_by_index_{col_str}.jpg')
             fig.savefig(fname, dpi=dpi_val, bbox_inches='tight')
             plt.close(fig)
         
@@ -516,6 +546,7 @@ plot_R2_vs_RMSE(df, output_folder)
 def plot_R2_vs_MAE(df, output_folder):
     # Basically the same as previous, but with a little bit more variation
     # R2 is calculated using squared errors
+    # This is in manuscript
 
     for key in ['train', 'validate', 'test']:
         
@@ -536,10 +567,23 @@ def plot_R2_vs_MAE(df, output_folder):
         ax.grid(True)
         ax.set_axisbelow(True)
         ax.legend()
-        ax.set_xlabel(f'MAE, {key}')
-        ax.set_ylabel(f'R$^2$, {key}')
+        
+        xlabel_str = f'MAE, {key}' \
+                        .replace('validate','pred1') \
+                        .replace('test', 'pred2')
+        
+        ax.set_xlabel(xlabel_str)
+        
+        ylabel_str = f'R$^2$, {key}' \
+                        .replace('validate','pred1') \
+                        .replace('test', 'pred2')
+        
+        ax.set_ylabel(ylabel_str)
+        
+        key_str = key.replace('validate','pred1').replace('test','pred2')
+        
         fname = os.path.join(output_folder,
-                              f'R2 vs MAE {key}.jpg')
+                              f'R2 vs MAE {key_str}.jpg')
         fig.savefig(fname, dpi=dpi_val, bbox_inches='tight')
         plt.close(fig)
 
@@ -633,6 +677,7 @@ plot_boxplot_by_mp(df, output_folder)
 def plot_boxplot_by_mp_and_other(df, output_folder):
     # Boxplots with two controlled variables
     # measurement point and Xlag/ylag/opt/N_CV
+    # This is in manuscript
     
     R2_limit_min_this = 0.0
     
@@ -699,13 +744,19 @@ def plot_boxplot_by_mp_and_other(df, output_folder):
             
             y_target_str = y_target.replace('R2','R$^2$') \
                             .replace('_mean_validate_test', ', mean') \
-                        + '\n R$^2_{}$ > {:.0f} and R$^2_{}$ > {:.0f}' \
-                            .format('{validate}', R2_limit_min_this, \
-                                    '{test}', R2_limit_min_this)
+                        + '\n ' \
+                        + '$R^2_{pred1}$' + f' > {R2_limit_min_this:.0f}' \
+                        + ' and $R^2_{pred2}$' + f' > {R2_limit_min_this:.0f}'
+            
+            
             ax.set_ylabel(y_target_str)
             
+            y_target_fname = y_target \
+                            .replace('validate', 'pred1') \
+                            .replace('test', 'pred2')
+            
             fname = os.path.join(output_folder,
-                                 f'boxplot2_mp_{y_key2}_{y_target}.jpg')
+                                 f'boxplot2_mp_{y_key2}_{y_target_fname}.jpg')
             fig.savefig(fname, dpi=dpi_val, bbox_inches='tight')
             plt.close(fig)
 
@@ -830,12 +881,57 @@ def calculate_pivot_table_averages_per_MLO(df, include_all):
     # If all data was included, then the badly off values made it more
     # difficult to analysed the data -> option to include or not to include.
     
+    # Counts are in the manuscript
+    # The table in the manuscript is created by hand in the spreadsheet program
+    
     if include_all:
         idxs = df.index
+        
+        key_pivot = 'all'
     else:
         idxs = (df['R2_validate'] > R2_limit_min) \
              & (df['R2_test'] > R2_limit_min)
+        
+        key_pivot = 'pos'
     
+    
+    # Counts
+    
+    print(f'pivot table counts {key_pivot}:',
+          file=log_file_handle, flush=True)
+    print('\n', file=log_file_handle)
+    
+    df_holder = df.loc[idxs, ['model_name',
+                               'optimization_method',
+                               'MAE_mean_validate_test']]
+    
+    df_pivot = pd.pivot_table(data=df_holder,
+                                index='model_name',
+                                columns='optimization_method',
+                                aggfunc='count')
+    
+    index_sorted = df_pivot.sum(axis=1) \
+                    .sort_values(ascending=False).index
+    df_pivot = df_pivot.loc[index_sorted, :]
+    
+    
+    print(df_pivot.to_string(),
+          file=log_file_handle)
+    print('\n', file=log_file_handle)
+    
+    with pd.ExcelWriter(xlsx_output_file,
+                        mode='a',
+                        if_sheet_exists='replace',
+                        engine='openpyxl') as writer:
+        
+        sh_name = 'pivot_' + key_pivot + '_count'
+        df_pivot.to_excel(writer,
+                          sheet_name=sh_name)
+    
+    
+    
+    
+    # Mean of indicators
     
     for y_key in ['wall_clock_time_minutes',
                 'RMSE_mean_validate_test',
@@ -872,11 +968,12 @@ def calculate_pivot_table_averages_per_MLO(df, include_all):
                             if_sheet_exists='replace',
                             engine='openpyxl') as writer:
             
-            sh_name = 'pivot_' + y_key.split('_')[0]
+            sh_name = 'pivot_' + key_pivot + '_' + y_key.split('_')[0]
             df_pivot.round(2).to_excel(writer,
                                        sheet_name=sh_name)
 
 print('\n\n', file=log_file_handle)
+calculate_pivot_table_averages_per_MLO(df, True)
 calculate_pivot_table_averages_per_MLO(df, False)
 
 
@@ -894,7 +991,7 @@ calculate_pivot_table_averages_per_MLO(df, False)
 
 def plot_MAE_vs_wall_clock_time(df, output_folder, bool_limit_axis):
     
-    # use this
+    # This is in the manuscript
     
     fig, ax = plt.subplots(figsize=figseiz)
     
@@ -913,7 +1010,7 @@ def plot_MAE_vs_wall_clock_time(df, output_folder, bool_limit_axis):
         arg1 = 'notLimited'
     
     ax.set_xlabel('wall clock time, minutes')
-    ax.set_ylabel('MAE mean validate test')
+    ax.set_ylabel('MAE mean pred1 pred2')
     
     fname = os.path.join(output_folder,
                          f'MAE_vs_wall_clock_time_{arg1:s}.jpg')
@@ -1501,7 +1598,9 @@ x = calc_group_sizes(dummy_nothing_y, 'dummy_nothing_y')
 
 def calculate_ranking(df, output_folder, limit_to_R2_positive, arg1=''):
     
-    print('calculate_ranking:',
+    # This is in the manuscript
+    
+    print('calculate ranking:',
           file=log_file_handle)
     
     print(f'df.shape = {df.shape}',
@@ -1537,6 +1636,11 @@ def calculate_ranking(df, output_folder, limit_to_R2_positive, arg1=''):
     # Smaller MAE, RMSE and R2inv are better
     # df.loc[(meas_point, optimiz, model_name), ['MAE','RMSE','R2inv']]
     # RMSE is not used, because the information is contained in R2 already
+    
+    # NOTE! .mean(numeric_only=True) includes only finished cases
+    # This means that e.g. in SVR methods, the ranking is about the finished
+    # cases, and unfinished cases are left out
+    
     df_holder = df_dummy \
                     .groupby(by=['measurement_point_name',
                                  'optimization_method',
@@ -1563,22 +1667,34 @@ def calculate_ranking(df, output_folder, limit_to_R2_positive, arg1=''):
     
     # Calculate ranks and max rank sum
     # row-index has three levels (,,)
+    print('calculate max rank sum...',
+          file=log_file_handle)
     df_ranks = df_holder.copy()
     max_rank_sum = 0.0
     
     for mp in df_holder.index.levels[0]:
         
+        print('mp:', mp, flush=True)
+        
         for opt in df_holder.loc[(mp),:].index.levels[0]:
-                
-                df_ranks.loc[(mp, opt), :] \
-                    = df_holder.loc[(mp,opt), :] \
-                        .rank(axis=0, ascending=False).values
-                
-                max_rank_sum += df_ranks.loc[(mp,opt),:].shape[0] \
-                                * df_ranks.loc[(mp,opt),:].shape[1]
-    
-    
-    
+            
+            print('  opt:', opt, flush=True)
+            
+            df_ranks.loc[(mp, opt), :] \
+                = df_holder.loc[(mp,opt), :] \
+                    .rank(axis=0, ascending=False).values
+            
+            
+            helper_value = df_ranks.loc[(mp,opt),:].shape[0] \
+                            * df_ranks.loc[(mp,opt),:].shape[1]
+                            
+            print('helper value:', helper_value,
+                  file=log_file_handle)
+            
+            max_rank_sum += helper_value
+            
+            print('    max rank sum:', max_rank_sum, flush=True)
+            
     
     # sum the ranks to a dict(model_name: sum(ranks))
     res_ranks_dict = {}
@@ -1586,6 +1702,7 @@ def calculate_ranking(df, output_folder, limit_to_R2_positive, arg1=''):
     for tup in df_ranks.index:
         
         if tup[2] not in res_ranks_dict:
+            # tup = (measurement_point, optimization_method, ML_method)
             res_ranks_dict[tup[2]] = df_ranks.loc[tup, :].sum()
         
         else:
@@ -1656,6 +1773,9 @@ df_holder_pos, df_ranks_pos, df_res_ranks_pos, df_ranks_relative_pos \
 # One measurement point at a time
 for mp in df['measurement_point_name'].unique():
     
+    print('mp', mp,
+          file=log_file_handle)
+    
     idxs = (df['measurement_point_name'] == mp)
     
     df_onemp = df.loc[idxs, :].copy()
@@ -1665,6 +1785,12 @@ for mp in df['measurement_point_name'].unique():
         = calculate_ranking(df_onemp, output_folder, True, mp)
     
     
+
+
+
+
+
+
 
 
 
