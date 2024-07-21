@@ -16,6 +16,7 @@
 !input/Valkeakoski.csv
 !input/Klaukkala.csv
 
+!baseline.py
 !main.py
 !myCreate_sbatch_files.py
 !myClasses.py
