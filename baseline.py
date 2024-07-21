@@ -132,11 +132,20 @@ fig.savefig(fname, dpi=dpi_val, bbox_inches='tight')
 
 ### Print numerical values
 
-print('Baseline MAE:')
-print(df_MAE.round(2))
+fname = os.path.join(output_folder,
+                     'baseline_logfile.txt')
 
-print('min and max:')
-print(df_MAE.min().min().round(2), df_MAE.max().max().round(2))
+with open(fname, 'w') as f:
+    
+    print('Baseline MAE:', file=f)
+    print(df_MAE.round(2), file=f)
+    
+    print('min, mean and max:', file=f)
+    print(df_MAE.values.min().round(4), 
+          df_MAE.values.mean().round(4),
+          df_MAE.values.max().round(4), 
+          file=f)
+
 
 
     
